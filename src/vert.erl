@@ -1,4 +1,4 @@
-%% Copyright (c) 2010, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2010-2011, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %% 
 %% Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 -export([
         open/1,
         close/1,
-        vget/2,
+        get/2,
 
         free/1,
         create/2
@@ -68,20 +68,20 @@ close({connect, Ref, Bin}) when is_reference(Ref) ->
 close({connect, Bin}) ->
     connect_close(Bin).
 
-vget({connect, Ref, Bin}, Type) when is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
-    vget({connect, Bin}, Type);
-vget({connect, Bin}, capabilities) ->
+get({connect, Ref, Bin}, Type) when is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
+    ?MODULE:get({connect, Bin}, Type);
+get({connect, Bin}, capabilities) ->
     connect_get_capabilities(Bin);
-vget({connect, Bin}, cellsfreemem) ->
-    {ok, #node_info{nodes = Nodes}} = vget({connect, Bin}, info),
+get({connect, Bin}, cellsfreemem) ->
+    {ok, #node_info{nodes = Nodes}} = get({connect, Bin}, info),
     connect_get_cellsfreememory(Bin, Nodes);
-vget({connect, Bin}, encrypted) ->
+get({connect, Bin}, encrypted) ->
     connect_is_encrypted(Bin);
-vget({connect, Bin}, secure) ->
+get({connect, Bin}, secure) ->
     connect_is_secure(Bin);
-vget({connect, Bin}, freemem) ->
+get({connect, Bin}, freemem) ->
     connect_get_freememory(Bin);
-vget({connect, Bin}, hostname) ->
+get({connect, Bin}, hostname) ->
     connect_get_hostname(Bin);
 
 %% struct _virNodeInfo {
@@ -94,7 +94,7 @@ vget({connect, Bin}, hostname) ->
 %%     unsigned int cores; /* number of core per socket */
 %%     unsigned int threads;/* number of threads per core */
 %% };
-vget({connect, Bin}, info) ->
+get({connect, Bin}, info) ->
     Long = erlang:system_info(wordsize),
     case connect_get_info(Bin) of
         {ok, <<
@@ -120,30 +120,30 @@ vget({connect, Bin}, info) ->
         Error ->
             Error
     end;
-vget({connect, Bin}, libversion) ->
+get({connect, Bin}, libversion) ->
     case connect_get_libversion(Bin) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
-vget({connect, Bin}, version) ->
+get({connect, Bin}, version) ->
     case connect_get_version(Bin) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
-vget({connect, Bin}, maxvcpus) ->
+get({connect, Bin}, maxvcpus) ->
     connect_get_maxvcpus(Bin, []);
-vget({connect, Bin}, {maxvcpus, Type}) when is_list(Type) ->
+get({connect, Bin}, {maxvcpus, Type}) when is_list(Type) ->
     connect_get_maxvcpus(Bin, Type);
 
 %% struct _virSecurityModel {
 %%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
 %%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
 %% }
-vget({connect, Bin}, secmodel) ->
+get({connect, Bin}, secmodel) ->
     case connect_get_securitymodel(Bin) of
         {ok, <<
             Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
@@ -157,36 +157,36 @@ vget({connect, Bin}, secmodel) ->
             Err
     end;
 
-vget({connect, Bin}, num_domains) ->
-    vget({connect, Bin}, {num_domains, active});
-vget({connect, Bin}, {num_domains, active}) ->
+get({connect, Bin}, num_domains) ->
+    ?MODULE:get({connect, Bin}, {num_domains, active});
+get({connect, Bin}, {num_domains, active}) ->
     connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_ACTIVE);
-vget({connect, Bin}, {num_domains, inactive}) ->
+get({connect, Bin}, {num_domains, inactive}) ->
     connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_INACTIVE);
 
-vget({connect, Bin}, type) ->
+get({connect, Bin}, type) ->
     connect_get_type(Bin);
-vget({connect, Bin}, uri) ->
+get({connect, Bin}, uri) ->
     connect_get_uri(Bin);
 
-vget({connect, Bin}, {domain, {id, ID}}) when is_integer(ID) ->
+get({connect, Bin}, {domain, {id, ID}}) when is_integer(ID) ->
     domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_ID, ID);
-vget({connect, Bin}, {domain, {name, Name}}) when is_list(Name) ->
+get({connect, Bin}, {domain, {name, Name}}) when is_list(Name) ->
     domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_NAME, Name);
-vget({connect, Bin}, {domain, {uuid, UUID}}) when is_list(UUID) ->
+get({connect, Bin}, {domain, {uuid, UUID}}) when is_list(UUID) ->
     domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_UUID, UUID);
-vget({connect, Bin}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
+get({connect, Bin}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
     domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
 
-vget({connect, Bin}, domains) ->
-    vget({connect, Bin}, {domains, active});
-vget({connect, Bin}, {domains, active}) ->
+get({connect, Bin}, domains) ->
+    ?MODULE:get({connect, Bin}, {domains, active});
+get({connect, Bin}, {domains, active}) ->
     case connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_ACTIVE) of
         {ok, 0} -> [];
         {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_ACTIVE, Max);
         Err -> Err
     end;
-vget({connect, Bin}, {domains, inactive}) ->
+get({connect, Bin}, {domains, inactive}) ->
     case connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_INACTIVE) of
         {ok, 0} -> [];
         {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_INACTIVE, Max);
