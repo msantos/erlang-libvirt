@@ -67,27 +67,22 @@ open({connect, Name, auth}) when is_list(Name) ->
     % connect_open_readonly(Name, ?VERT_CONNECT_OPEN_AUTH);
     erlang:error(not_implemented).
 
-close({connect, Ref, Bin}) when is_reference(Ref) ->
-    close({connect, Bin});
-close({connect, Bin}) ->
-    connect_close(Bin).
+close(#connect{res = Res}) ->
+    connect_close(Res).
 
-get({Ptr, Ref, Bin}, Type) when ( Ptr == connect orelse Ptr == domain ),
-is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
-    ?MODULE:get({Ptr, Bin}, Type);
-get({connect, Bin}, capabilities) ->
-    connect_get_capabilities(Bin);
-get({connect, Bin}, cellsfreemem) ->
-    {ok, #node_info{nodes = Nodes}} = get({connect, Bin}, info),
-    connect_get_cellsfreememory(Bin, Nodes);
-get({connect, Bin}, encrypted) ->
-    connect_is_encrypted(Bin);
-get({connect, Bin}, secure) ->
-    connect_is_secure(Bin);
-get({connect, Bin}, freemem) ->
-    connect_get_freememory(Bin);
-get({connect, Bin}, hostname) ->
-    connect_get_hostname(Bin);
+get(#connect{res = Res}, capabilities) ->
+    connect_get_capabilities(Res);
+get(#connect{} = Res, cellsfreemem) ->
+    {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Res, info),
+    connect_get_cellsfreememory(Res, Nodes);
+get(#connect{res = Res}, encrypted) ->
+    connect_is_encrypted(Res);
+get(#connect{res = Res}, secure) ->
+    connect_is_secure(Res);
+get(#connect{res = Res}, freemem) ->
+    connect_get_freememory(Res);
+get(#connect{res = Res}, hostname) ->
+    connect_get_hostname(Res);
 
 %% struct _virNodeInfo {
 %%     char model[32];     /* string indicating the CPU model */
@@ -99,9 +94,9 @@ get({connect, Bin}, hostname) ->
 %%     unsigned int cores; /* number of core per socket */
 %%     unsigned int threads;/* number of threads per core */
 %% };
-get({connect, Bin}, info) ->
+get(#connect{res = Res}, info) ->
     Long = erlang:system_info(wordsize),
-    case connect_get_info(Bin) of
+    case connect_get_info(Res) of
         {ok, <<
             Model:32/native-bytes,
             Memory:Long/native-unsigned-integer-unit:8,
@@ -125,31 +120,31 @@ get({connect, Bin}, info) ->
         Error ->
             Error
     end;
-get({connect, Bin}, libversion) ->
-    case connect_get_libversion(Bin) of
+get(#connect{res = Res}, libversion) ->
+    case connect_get_libversion(Res) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
-get({connect, Bin}, version) ->
-    case connect_get_version(Bin) of
+get(#connect{res = Res}, version) ->
+    case connect_get_version(Res) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
-get({connect, Bin}, maxvcpus) ->
-    connect_get_maxvcpus(Bin, []);
-get({connect, Bin}, {maxvcpus, Type}) when is_list(Type) ->
-    connect_get_maxvcpus(Bin, Type);
+get(#connect{res = Res}, maxvcpus) ->
+    connect_get_maxvcpus(Res, []);
+get(#connect{res = Res}, {maxvcpus, Type}) when is_list(Type) ->
+    connect_get_maxvcpus(Res, Type);
 
 %% struct _virSecurityModel {
 %%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
 %%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
 %% }
-get({connect, Bin}, secmodel) ->
-    case connect_get_securitymodel(Bin) of
+get(#connect{res = Res}, secmodel) ->
+    case connect_get_securitymodel(Res) of
         {ok, <<
             Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
             Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
@@ -163,40 +158,40 @@ get({connect, Bin}, secmodel) ->
     end;
 
 
-get({connect, Bin}, type) ->
-    connect_get_type(Bin);
-get({connect, Bin}, uri) ->
-    connect_get_uri(Bin);
+get(#connect{res = Res}, type) ->
+    connect_get_type(Res);
+get(#connect{res = Res}, uri) ->
+    connect_get_uri(Res);
 
-get({connect, Bin}, {domain, {id, ID}}) when is_integer(ID) ->
-    domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_ID, ID);
-get({connect, Bin}, {domain, {name, Name}}) when is_list(Name) ->
-    domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_NAME, Name);
-get({connect, Bin}, {domain, {uuid, UUID}}) when is_list(UUID) ->
-    domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_UUID, UUID);
-get({connect, Bin}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
-    domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
+get(#connect{res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
+    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_ID, ID);
+get(#connect{res = Res}, {domain, {name, Name}}) when is_list(Name) ->
+    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_NAME, Name);
+get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
+    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_UUID, UUID);
+get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
+    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
 
-get({connect, Bin}, Type) when is_atom(Type) ->
-    ?MODULE:get({connect, Bin}, {Type, number, active});
+get(#connect{} = Res, Type) when is_atom(Type) ->
+    ?MODULE:get(Res, {Type, number, active});
 
-get({connect, Bin}, {Type, number, active}) ->
-    connect_get_numactive(Bin, resource(Type));
-get({connect, Bin}, {Type, number, inactive}) ->
-    connect_get_numinactive(Bin, resource(Type));
+get(#connect{res = Res}, {Type, number, active}) ->
+    connect_get_numactive(Res, resource(Type));
+get(#connect{res = Res}, {Type, number, inactive}) ->
+    connect_get_numinactive(Res, resource(Type));
 
-get({connect, Bin}, {Type, list, active}) ->
+get(#connect{res = Res}, {Type, list, active}) ->
     Resource = resource(Type),
-    case connect_get_numactive(Bin, Resource) of
+    case connect_get_numactive(Res, Resource) of
         {ok, 0} -> [];
-        {ok, Max} -> connect_get_listactive(Bin, Resource, Max);
+        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
         Err -> Err
     end;
-get({connect, Bin}, {Type, list, inactive}) ->
+get(#connect{res = Res}, {Type, list, inactive}) ->
     Resource = resource(Type),
-    case connect_get_numactive(Bin, Resource) of
+    case connect_get_numactive(Res, Resource) of
         {ok, 0} -> [];
-        {ok, Max} -> connect_get_listinactive(Bin, Resource, Max);
+        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
         Err -> Err
     end;
 
@@ -212,9 +207,9 @@ get({connect, Bin}, {Type, list, inactive}) ->
 %%     unsigned short  nrVirtCpu
 %%     unsigned long long  cpuTime
 %% }
-get({domain, Bin}, info) ->
+get(#domain{res = Res}, info) ->
     Long = erlang:system_info(wordsize),
-    case domain_get_info(Bin) of
+    case domain_get_info(Res) of
         {ok, <<
             State:8,
             MaxMem:Long/native-unsigned-integer-unit:8,
@@ -235,36 +230,32 @@ get({domain, Bin}, info) ->
     end.
 
 
-set({Ptr, Ref, Bin}, Type) when ( Ptr == connect orelse Ptr == domain ),
-is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
-    set({Ptr, Bin}, Type);
-set({domain, Dom}, autostart) ->
-    set({domain, Dom}, {autostart, true});
-set({domain, Dom}, {autostart, true}) ->
-    domain_set_autostart(Dom, 1);
-set({domain, Dom}, {autostart, false}) ->
-    domain_set_autostart(Dom, 0).
+set(Resource, autostart) ->
+    set(Resource, {autostart, true});
+set(#domain{res = Res}, {autostart, true}) ->
+    domain_set_autostart(Res, 1);
+set(#domain{res = Res}, {autostart, false}) ->
+    domain_set_autostart(Res, 0).
 
 %%
 %% Domain
 %%
-free({domain, Ref, Dom}) when is_reference(Ref) ->
-    domain_free(Dom).
+free(#domain{res = Res}) ->
+    domain_free(Res).
 
 create(Connect, {transient, Cfg}) ->
     create(Connect, {transient, Cfg, []});
-create({connect, Ref, Conn}, {transient, Cfg, Flags}) when is_reference(Ref),
-    is_list(Cfg), is_list(Flags) ->
+create(#connect{res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
     Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
-    domain_create(Conn, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
-create({connect, Ref, Conn}, {persistent, Cfg}) when is_reference(Ref), is_list(Cfg) ->
-    domain_create(Conn, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
+    domain_create(Res, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
+create(#connect{res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
+    domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
 
-save({domain, Ref, Bin}, File) when is_reference(Ref), is_list(File) ->
-    domain_save(Bin, File).
+save(#domain{res = Res}, File) when is_list(File) ->
+    domain_save(Res, File).
 
-restore({connect, Ref, Bin}, File) when is_reference(Ref), is_list(File) ->
-    domain_restore(Bin, File).
+restore(#connect{res = Res}, File) when is_list(File) ->
+    domain_restore(Res, File).
 
 
 %%-------------------------------------------------------------------------

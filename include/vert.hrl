@@ -29,6 +29,18 @@
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
 
+%% virConnectPtr resource
+-record(connect, {
+        ref,
+        res
+    }).
+
+%% virDomainPtr resource
+-record(domain, {
+        ref,
+        res
+    }).
+
 %% virNodeInfo
 -record(node_info, {
         model = <<>>,
