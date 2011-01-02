@@ -241,7 +241,17 @@ set(#domain{res = Res}, {autostart, false}) ->
 %% Domain
 %%
 free(#domain{res = Res}) ->
-    domain_free(Res).
+    resource_free(Res, resource(domains));
+free(#interface{res = Res}) ->
+    resource_free(Res, resource(interfaces));
+free(#network{res = Res}) ->
+    resource_free(Res, resource(networks));
+free(#storagepool{res = Res}) ->
+    resource_free(Res, resource(storagepools));
+free(#filter{res = Res}) ->
+    resource_free(Res, resource(filters));
+free(#secret{res = Res}) ->
+    resource_free(Res, resource(secrets)).
 
 create(Connect, {transient, Cfg}) ->
     create(Connect, {transient, Cfg, []});
@@ -310,8 +320,6 @@ domain_get_info(_) ->
 
 domain_lookup(_,_,_) ->
     erlang:error(not_implemented).
-domain_free(_) ->
-    erlang:error(not_implemented).
 domain_create(_,_,_,_) ->
     erlang:error(not_implemented).
 
@@ -321,6 +329,9 @@ domain_restore(_,_) ->
     erlang:error(not_implemented).
 
 domain_set_autostart(_,_) ->
+    erlang:error(not_implemented).
+
+resource_free(_,_) ->
     erlang:error(not_implemented).
 
 
@@ -335,12 +346,12 @@ version(Version) when is_integer(Version) ->
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
-resource(domains) -> ?VERT_RES_DOMAINS;
-resource(interfaces) -> ?VERT_RES_INTERFACES;
-resource(networks) -> ?VERT_RES_NETWORKS;
-resource(storagepools) -> ?VERT_RES_STORAGEPOOLS;
-resource(filters) -> ?VERT_RES_FILTERS;
-resource(secrets) -> ?VERT_RES_SECRETS.
+resource(domains) -> ?VERT_RES_DOMAIN;
+resource(interfaces) -> ?VERT_RES_INTERFACE;
+resource(networks) -> ?VERT_RES_NETWORK;
+resource(storagepools) -> ?VERT_RES_STORAGEPOOL;
+resource(filters) -> ?VERT_RES_FILTER;
+resource(secrets) -> ?VERT_RES_SECRET.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;

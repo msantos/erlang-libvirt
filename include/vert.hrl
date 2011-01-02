@@ -41,6 +41,36 @@
         res
     }).
 
+%% virInterfacePtr resource
+-record(interface, {
+        ref,
+        res
+    }).
+
+%% virNetworkPtr resource
+-record(network, {
+        ref,
+        res
+    }).
+
+%% virStoragePoolPtr resource
+-record(storagepool, {
+        ref,
+        res
+    }).
+
+%% virNWFilterPtr resource
+-record(filter, {
+        ref,
+        res
+    }).
+
+%% virSecretPtr resource
+-record(secret, {
+        ref,
+        res
+    }).
+
 %% virNodeInfo
 -record(node_info, {
         model = <<>>,
