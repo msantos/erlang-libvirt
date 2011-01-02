@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2010-2011, Michael Santos <michael.santos@gmail.com>
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -319,44 +319,44 @@ nif_virNodeGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_binary(env, &buf));
 }
 
-/* 0: virConnectPtr, 1: int */
+/* 0: virConnectPtr, 1: int maxnodes */
     static ERL_NIF_TERM
 nif_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int nodes = 0;
+    int maxnodes = 0;
     u_int64_t *mem = NULL;
     int res = -1;
     int i = 0;
 
-    ERL_NIF_TERM cells = {0};
-    ERL_NIF_TERM tail = {0};
+    ERL_NIF_TERM list = {0};
 
 
     if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
         return enif_make_badarg(env);
 
-    if (!enif_get_int(env, argv[1], &nodes) || nodes <= 0)
+    if (!enif_get_int(env, argv[1], &maxnodes) || maxnodes <= 0)
         return enif_make_badarg(env);
 
-    mem = calloc(nodes, sizeof(u_int64_t));
+    mem = calloc(maxnodes, sizeof(u_int64_t));
 
     if (mem == NULL)
         return atom_enomem;
 
-    res = virNodeGetCellsFreeMemory(*conn, mem, 0, nodes);
+    res = virNodeGetCellsFreeMemory(*conn, mem, 0, maxnodes);
 
     if (res == -1)
         return verterr(env);
 
-    for (i = 0; i < res; i++, tail = cells)
-        cells = enif_make_list_cell(env, enif_make_int(env, mem[i]), tail);
+    list = enif_make_list(env, 0);
+    for (i = 0; i < res; i++)
+        list = enif_make_list_cell(env, enif_make_int(env, mem[i]), list);
 
     free(mem);
 
     return enif_make_tuple(env, 2,
             atom_ok,
-            cells);
+            list);
 }
 
 /* 0: virConnectPtr */
@@ -622,7 +622,7 @@ nif_virDomainFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return res;
 }
 
-/* 0: virConnectPtr, 1: int type, 2: numdomains */
+/* 0: virConnectPtr, 1: int type, 2: maxdomains */
     static ERL_NIF_TERM
 nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -633,8 +633,7 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int i = 0;
     int res = -1;
 
-    ERL_NIF_TERM cells = {0};
-    ERL_NIF_TERM tail = {0};
+    ERL_NIF_TERM list = {0};
 
 
     if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
@@ -646,6 +645,7 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[2], &maxdomains) || maxdomains <= 0)
         return enif_make_badarg(env);
 
+    list = enif_make_list(env, 0);
 
     switch (type) {
         case VERT_DOMAIN_LIST_ACTIVE: {
@@ -661,10 +661,10 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             if (res == -1)
                 return verterr(env);
 
-            for (i = 0; i < res; i++, tail = cells)
-                cells = enif_make_list_cell(env,
+            for (i = 0; i < res; i++)
+                list = enif_make_list_cell(env,
                         enif_make_int(env, domains[i]),
-                        tail);
+                        list);
 
             free(domains);
             }
@@ -683,10 +683,10 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             if (res == -1)
                 return verterr(env);
 
-            for (i = 0; i < res; i++, tail = cells)
-                cells = enif_make_list_cell(env,
+            for (i = 0; i < res; i++)
+                list = enif_make_list_cell(env,
                         enif_make_string(env, domains[i], ERL_NIF_LATIN1),
-                        tail);
+                        list);
 
             free(domains);
             }
@@ -696,10 +696,9 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             return enif_make_badarg(env);
     }
 
-
     return enif_make_tuple(env, 2,
         atom_ok,
-        cells);
+        list);
 }
 
 /* 0: virConnectPtr, 1: int type 2: char *, 3: int flags */
@@ -708,7 +707,7 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
     int type = VERT_DOMAIN_CREATE_TRANSIENT;
-    char *cfg = NULL;
+    char cfg[8192]; /* XXX size ??? this is XML after all */
     int flags = 0;
 
     virDomainPtr *dom = NULL;
@@ -740,6 +739,13 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_DOMAIN_CREATE_PERSISTENT:
             *dom = virDomainDefineXML(*conn, cfg);
+
+            if (virDomainCreate(*dom) < 0) {
+                res = verterr(env);
+                (void)virDomainFree(*dom);
+                enif_release_resource(dom);
+                return res;
+            }
             break;
 
         default:
@@ -749,13 +755,6 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (*dom == NULL) {
         enif_release_resource(dom);
         return verterr(env);
-    }
-
-    if (virDomainCreate(*dom) < 0) {
-        res = verterr(env);
-        (void)virDomainFree(*dom);
-        enif_release_resource(dom);
-        return res;
     }
 
     res = enif_make_resource(env, dom);
