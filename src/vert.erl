@@ -173,21 +173,21 @@ get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
     domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
 
 get(#connect{} = Res, Type) when is_atom(Type) ->
-    ?MODULE:get(Res, {Type, number, active});
+    ?MODULE:get(Res, {Type, active});
 
-get(#connect{res = Res}, {Type, number, active}) ->
+get(#connect{res = Res}, {Type, num_active}) ->
     connect_get_numactive(Res, resource(Type));
-get(#connect{res = Res}, {Type, number, inactive}) ->
+get(#connect{res = Res}, {Type, num_inactive}) ->
     connect_get_numinactive(Res, resource(Type));
 
-get(#connect{res = Res}, {Type, list, active}) ->
+get(#connect{res = Res}, {Type, active}) ->
     Resource = resource(Type),
     case connect_get_numactive(Res, Resource) of
         {ok, 0} -> [];
         {ok, Max} -> connect_get_listactive(Res, Resource, Max);
         Err -> Err
     end;
-get(#connect{res = Res}, {Type, list, inactive}) ->
+get(#connect{res = Res}, {Type, inactive}) ->
     Resource = resource(Type),
     case connect_get_numactive(Res, Resource) of
         {ok, 0} -> [];
