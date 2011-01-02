@@ -162,12 +162,18 @@ get({connect, Bin}, secmodel) ->
             Err
     end;
 
-get({connect, Bin}, num_domains) ->
-    ?MODULE:get({connect, Bin}, {num_domains, active});
+get({connect, Bin}, Type) when Type == num_domains; Type == num_interfaces ->
+    ?MODULE:get({connect, Bin}, {Type, active});
+
 get({connect, Bin}, {num_domains, active}) ->
-    connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_ACTIVE);
+    connect_get_numactive(Bin, ?VERT_LIST_DOMAINS);
+get({connect, Bin}, {num_interfaces, active}) ->
+    connect_get_numactive(Bin, ?VERT_LIST_INTERFACES);
+
 get({connect, Bin}, {num_domains, inactive}) ->
-    connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_INACTIVE);
+    connect_get_numinactive(Bin, ?VERT_LIST_DOMAINS);
+get({connect, Bin}, {num_interfaces, inactive}) ->
+    connect_get_numinactive(Bin, ?VERT_LIST_INTERFACES);
 
 get({connect, Bin}, type) ->
     connect_get_type(Bin);
@@ -186,13 +192,13 @@ get({connect, Bin}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
 get({connect, Bin}, domains) ->
     ?MODULE:get({connect, Bin}, {domains, active});
 get({connect, Bin}, {domains, active}) ->
-    case connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_ACTIVE) of
+    case connect_get_numactive(Bin, ?VERT_LIST_DOMAINS) of
         {ok, 0} -> [];
         {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_ACTIVE, Max);
         Err -> Err
     end;
 get({connect, Bin}, {domains, inactive}) ->
-    case connect_get_numdomains(Bin, ?VERT_DOMAIN_LIST_INACTIVE) of
+    case connect_get_numactive(Bin, ?VERT_LIST_DOMAINS) of
         {ok, 0} -> [];
         {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_INACTIVE, Max);
         Err -> Err
@@ -298,7 +304,9 @@ connect_get_cellsfreememory(_,_) ->
     erlang:error(not_implemented).
 connect_get_maxvcpus(_,_) ->
     erlang:error(not_implemented).
-connect_get_numdomains(_,_) ->
+connect_get_numactive(_,_) ->
+    erlang:error(not_implemented).
+connect_get_numinactive(_,_) ->
     erlang:error(not_implemented).
 
 connect_close(_) ->

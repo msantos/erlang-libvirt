@@ -51,6 +51,11 @@ enum {
     VERT_DOMAIN_LIST_INACTIVE
 };
 
+enum {
+    VERT_LIST_DOMAINS = 0,
+    VERT_LIST_INTERFACES
+};
+
 /* nif_virDomainCreate */
 enum {
     VERT_DOMAIN_CREATE_TRANSIENT = 0,

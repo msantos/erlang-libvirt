@@ -496,10 +496,10 @@ nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virConnectPtr, 1: int type */
     static ERL_NIF_TERM
-nif_virConnectNumOfDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_virConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_DOMAIN_LIST_ACTIVE;
+    int type = VERT_LIST_DOMAINS;
     int res = -1;
 
 
@@ -510,11 +510,45 @@ nif_virConnectNumOfDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     switch (type) {
-        case VERT_DOMAIN_LIST_ACTIVE:
+        case VERT_LIST_DOMAINS:
             res = virConnectNumOfDomains(*conn);
             break;
-        case VERT_DOMAIN_LIST_INACTIVE:
+        case VERT_LIST_INTERFACES:
+            res = virConnectNumOfInterfaces(*conn);
+            break;
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (res == -1)
+        return verterr(env);
+
+    return enif_make_tuple(env, 2,
+            atom_ok,
+            enif_make_int(env, res));
+}
+
+/* 0: virConnectPtr, 1: int type */
+    static ERL_NIF_TERM
+nif_virConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virConnectPtr *conn = NULL;
+    int type = VERT_LIST_DOMAINS;
+    int res = -1;
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    switch (type) {
+        case VERT_LIST_DOMAINS:
             res = virConnectNumOfDefinedDomains(*conn);
+            break;
+        case VERT_LIST_INTERFACES:
+            res = virConnectNumOfDefinedInterfaces(*conn);
             break;
         default:
             return enif_make_badarg(env);
@@ -934,6 +968,7 @@ static ErlNifFunc nif_funcs[] = {
     /* connect */
     {"connect_open", 2, nif_virConnectOpen},
     {"connect_close", 1, nif_virConnectClose},
+
     {"connect_get_capabilities", 1, nif_virConnectGetCapabilities},
     {"connect_get_hostname", 1, nif_virConnectGetHostname},
     {"connect_get_libversion", 1, nif_virConnectGetLibVersion},
@@ -945,7 +980,8 @@ static ErlNifFunc nif_funcs[] = {
     {"connect_get_version", 1, nif_virConnectGetVersion},
     {"connect_get_uri", 1, nif_virConnectGetURI},
     {"connect_get_securitymodel", 1, nif_virNodeGetSecurityModel},
-    {"connect_get_numdomains", 2, nif_virConnectNumOfDomains},
+    {"connect_get_numactive", 2, nif_virConnectNumActive},
+    {"connect_get_numinactive", 2, nif_virConnectNumInactive},
 
     {"connect_is_encrypted", 1, nif_virConnectIsEncrypted},
     {"connect_is_secure", 1, nif_virConnectIsSecure},

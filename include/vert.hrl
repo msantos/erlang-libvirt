@@ -79,6 +79,9 @@
 -define(VERT_DOMAIN_LIST_ACTIVE, 0).
 -define(VERT_DOMAIN_LIST_INACTIVE, 1).
 
+-define(VERT_LIST_DOMAINS, 0).
+-define(VERT_LIST_INTERFACES, 1).
+
 %% domain_create
 
 % types
