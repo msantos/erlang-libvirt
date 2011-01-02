@@ -88,12 +88,12 @@
 -define(VERT_DOMAIN_LOOKUP_BY_RAWUUID, 3).
 
 %% domain_list/2
--define(VERT_RES_DOMAINS, 0).
--define(VERT_RES_INTERFACES, 1).
--define(VERT_RES_NETWORKS, 2).
--define(VERT_RES_STORAGEPOOLS, 3).
--define(VERT_RES_FILTERS, 4).
--define(VERT_RES_SECRETS, 5).
+-define(VERT_RES_DOMAIN, 0).
+-define(VERT_RES_INTERFACE, 1).
+-define(VERT_RES_NETWORK, 2).
+-define(VERT_RES_STORAGEPOOL, 3).
+-define(VERT_RES_FILTER, 4).
+-define(VERT_RES_SECRET, 5).
 
 %% domain_create
 
