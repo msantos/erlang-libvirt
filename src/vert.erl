@@ -162,18 +162,6 @@ get({connect, Bin}, secmodel) ->
             Err
     end;
 
-get({connect, Bin}, Type) when Type == num_domains; Type == num_interfaces ->
-    ?MODULE:get({connect, Bin}, {Type, active});
-
-get({connect, Bin}, {num_domains, active}) ->
-    connect_get_numactive(Bin, ?VERT_LIST_DOMAINS);
-get({connect, Bin}, {num_interfaces, active}) ->
-    connect_get_numactive(Bin, ?VERT_LIST_INTERFACES);
-
-get({connect, Bin}, {num_domains, inactive}) ->
-    connect_get_numinactive(Bin, ?VERT_LIST_DOMAINS);
-get({connect, Bin}, {num_interfaces, inactive}) ->
-    connect_get_numinactive(Bin, ?VERT_LIST_INTERFACES);
 
 get({connect, Bin}, type) ->
     connect_get_type(Bin);
@@ -189,20 +177,29 @@ get({connect, Bin}, {domain, {uuid, UUID}}) when is_list(UUID) ->
 get({connect, Bin}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
     domain_lookup(Bin, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
 
-get({connect, Bin}, domains) ->
-    ?MODULE:get({connect, Bin}, {domains, active});
-get({connect, Bin}, {domains, active}) ->
-    case connect_get_numactive(Bin, ?VERT_LIST_DOMAINS) of
+get({connect, Bin}, Type) when is_atom(Type) ->
+    ?MODULE:get({connect, Bin}, {Type, number, active});
+
+get({connect, Bin}, {Type, number, active}) ->
+    connect_get_numactive(Bin, resource(Type));
+get({connect, Bin}, {Type, number, inactive}) ->
+    connect_get_numinactive(Bin, resource(Type));
+
+get({connect, Bin}, {Type, list, active}) ->
+    Resource = resource(Type),
+    case connect_get_numactive(Bin, Resource) of
         {ok, 0} -> [];
-        {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_ACTIVE, Max);
+        {ok, Max} -> connect_get_listactive(Bin, Resource, Max);
         Err -> Err
     end;
-get({connect, Bin}, {domains, inactive}) ->
-    case connect_get_numactive(Bin, ?VERT_LIST_DOMAINS) of
+get({connect, Bin}, {Type, list, inactive}) ->
+    Resource = resource(Type),
+    case connect_get_numactive(Bin, Resource) of
         {ok, 0} -> [];
-        {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_INACTIVE, Max);
+        {ok, Max} -> connect_get_listinactive(Bin, Resource, Max);
         Err -> Err
     end;
+
 
 %%
 %% domain
@@ -309,14 +306,17 @@ connect_get_numactive(_,_) ->
 connect_get_numinactive(_,_) ->
     erlang:error(not_implemented).
 
+connect_get_listactive(_,_,_) ->
+    erlang:error(not_implemented).
+connect_get_listinactive(_,_,_) ->
+    erlang:error(not_implemented).
+
 connect_close(_) ->
     erlang:error(not_implemented).
 
 domain_get_info(_) ->
     erlang:error(not_implemented).
 
-domain_list(_,_,_) ->
-    erlang:error(not_implemented).
 domain_lookup(_,_,_) ->
     erlang:error(not_implemented).
 domain_free(_) ->
@@ -343,6 +343,13 @@ version(Version) when is_integer(Version) ->
     {Major, Minor, Release}.
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
+
+resource(domains) -> ?VERT_LIST_DOMAINS;
+resource(interfaces) -> ?VERT_LIST_INTERFACES;
+resource(networks) -> ?VERT_LIST_NETWORKS;
+resource(storagepools) -> ?VERT_LIST_STORAGEPOOLS;
+resource(filters) -> ?VERT_LIST_FILTERS;
+resource(secrets) -> ?VERT_LIST_SECRETS.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;

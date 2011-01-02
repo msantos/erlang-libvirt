@@ -496,7 +496,7 @@ nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virConnectPtr, 1: int type */
     static ERL_NIF_TERM
-nif_virConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
     int type = VERT_LIST_DOMAINS;
@@ -516,6 +516,22 @@ nif_virConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_LIST_INTERFACES:
             res = virConnectNumOfInterfaces(*conn);
             break;
+        case VERT_LIST_NETWORKS:
+            res = virConnectNumOfNetworks(*conn);
+            break;
+        case VERT_LIST_STORAGEPOOLS:
+            res = virConnectNumOfStoragePools(*conn);
+            break;
+        case VERT_LIST_SECRETS:
+            res = virConnectNumOfSecrets(*conn);
+            break;
+        case VERT_LIST_FILTERS:
+#ifdef SOME_NEWER_VERSION
+            res = virConnectNumOfNWFilters(*conn);
+#else
+            res = 0;
+#endif
+            break;
         default:
             return enif_make_badarg(env);
     }
@@ -530,7 +546,7 @@ nif_virConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virConnectPtr, 1: int type */
     static ERL_NIF_TERM
-nif_virConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
     int type = VERT_LIST_DOMAINS;
@@ -549,6 +565,12 @@ nif_virConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
         case VERT_LIST_INTERFACES:
             res = virConnectNumOfDefinedInterfaces(*conn);
+            break;
+        case VERT_LIST_NETWORKS:
+            res = virConnectNumOfDefinedNetworks(*conn);
+            break;
+        case VERT_LIST_STORAGEPOOLS:
+            res = virConnectNumOfDefinedStoragePools(*conn);
             break;
         default:
             return enif_make_badarg(env);
@@ -659,15 +681,16 @@ nif_virDomainFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virConnectPtr, 1: int type, 2: maxdomains */
     static ERL_NIF_TERM
-nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_DOMAIN_LIST_ACTIVE;
-    int maxdomains = 0;
+    int type = VERT_LIST_DOMAINS;
+    int max = 0;
 
     int i = 0;
     int res = -1;
 
+    char **names = NULL;
     ERL_NIF_TERM list = {0};
 
 
@@ -677,21 +700,28 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    if (!enif_get_int(env, argv[2], &maxdomains) || maxdomains <= 0)
+    if (!enif_get_int(env, argv[2], &max) || max <= 0)
         return enif_make_badarg(env);
+
+    if (type != VERT_LIST_DOMAINS) {
+        names = calloc(max, sizeof(char *));
+
+        if (names == NULL)
+            return atom_enomem;
+    }
 
     list = enif_make_list(env, 0);
 
     switch (type) {
-        case VERT_DOMAIN_LIST_ACTIVE: {
+        case VERT_LIST_DOMAINS: {
             int *domains = NULL;
 
-            domains = calloc(maxdomains, sizeof(int));
+            domains = calloc(max, sizeof(int));
 
             if (domains == NULL)
                 return atom_enomem;
 
-            res = virConnectListDomains(*conn, domains, maxdomains);
+            res = virConnectListDomains(*conn, domains, max);
 
             if (res == -1)
                 return verterr(env);
@@ -702,34 +732,118 @@ nif_virDomainList(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                         list);
 
             free(domains);
+
+            return enif_make_tuple(env, 2,
+                atom_ok,
+                list);
             }
             break;
 
-        case VERT_DOMAIN_LIST_INACTIVE: {
-            char **domains = NULL;
+        case VERT_LIST_INTERFACES:
+            res = virConnectListInterfaces(*conn, names, max);
+            break;
+            
+        case VERT_LIST_NETWORKS:
+            res = virConnectListNetworks(*conn, names, max);
+            break;
 
-            domains = calloc(maxdomains, sizeof(char *));
+        case VERT_LIST_FILTERS:
+#if SOME_NEWER_VERSION
+            res = virConnectListFilters(*conn, names, max);
+#else
+            res = 0;
+#endif
+            break;
 
-            if (domains == NULL)
-                return atom_enomem;
+        case VERT_LIST_SECRETS:
+            res = virConnectListSecrets(*conn, names, max);
+            break;
 
-            res = virConnectListDefinedDomains(*conn, domains, maxdomains);
-
-            if (res == -1)
-                return verterr(env);
-
-            for (i = 0; i < res; i++)
-                list = enif_make_list_cell(env,
-                        enif_make_string(env, domains[i], ERL_NIF_LATIN1),
-                        list);
-
-            free(domains);
-            }
+        case VERT_LIST_STORAGEPOOLS:
+            res = virConnectListStoragePools(*conn, names, max);
             break;
 
         default:
             return enif_make_badarg(env);
     }
+
+    if (res == -1)
+        return verterr(env);
+
+    for (i = 0; i < res; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    if (names)
+        free(names);
+
+    return enif_make_tuple(env, 2,
+        atom_ok,
+        list);
+}
+
+/* 0: virConnectPtr, 1: int type, 2: maxdomains */
+    static ERL_NIF_TERM
+nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virConnectPtr *conn = NULL;
+    int type = VERT_LIST_DOMAINS;
+    int max= 0;
+
+    int i = 0;
+    int res = -1;
+
+    char **names = NULL;
+    ERL_NIF_TERM list = {0};
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[2], &max) || max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+
+    if (names == NULL)
+        return atom_enomem;
+
+    list = enif_make_list(env, 0);
+
+    switch (type) {
+        case VERT_LIST_DOMAINS:
+            res = virConnectListDefinedDomains(*conn, names, max);
+            break;
+
+        case VERT_LIST_INTERFACES:
+            res = virConnectListDefinedInterfaces(*conn, names, max);
+            break;
+
+        case VERT_LIST_NETWORKS:
+            res = virConnectListDefinedNetworks(*conn, names, max);
+            break;
+            
+        case VERT_LIST_STORAGEPOOLS:
+            res = virConnectListDefinedNetworks(*conn, names, max);
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (res == -1)
+        return verterr(env);
+
+    for (i = 0; i < res; i++)
+        list = enif_make_list_cell(env,
+        enif_make_string(env, names[i], ERL_NIF_LATIN1),
+        list);
+
+    free(names);
 
     return enif_make_tuple(env, 2,
         atom_ok,
@@ -980,17 +1094,20 @@ static ErlNifFunc nif_funcs[] = {
     {"connect_get_version", 1, nif_virConnectGetVersion},
     {"connect_get_uri", 1, nif_virConnectGetURI},
     {"connect_get_securitymodel", 1, nif_virNodeGetSecurityModel},
-    {"connect_get_numactive", 2, nif_virConnectNumActive},
-    {"connect_get_numinactive", 2, nif_virConnectNumInactive},
+
+    {"connect_get_numactive", 2, nif_ConnectNumActive},
+    {"connect_get_numinactive", 2, nif_ConnectNumInactive},
+    {"connect_get_listactive", 3, nif_ConnectGetListActive},
+    {"connect_get_listinactive", 3, nif_ConnectGetListInactive},
 
     {"connect_is_encrypted", 1, nif_virConnectIsEncrypted},
     {"connect_is_secure", 1, nif_virConnectIsSecure},
+
 
     /* domain */
     {"domain_lookup", 3, nif_virDomainLookup},
     {"domain_free", 1, nif_virDomainFree},
     {"domain_get_info", 1, nif_virDomainGetInfo},
-    {"domain_list", 3, nif_virDomainList},
 
     {"domain_create", 4, nif_virDomainCreate},
     {"domain_save", 2, nif_virDomainSave},

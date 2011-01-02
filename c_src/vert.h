@@ -47,13 +47,12 @@ enum {
 
 /* nif_virDomainList */
 enum {
-    VERT_DOMAIN_LIST_ACTIVE = 0,
-    VERT_DOMAIN_LIST_INACTIVE
-};
-
-enum {
     VERT_LIST_DOMAINS = 0,
-    VERT_LIST_INTERFACES
+    VERT_LIST_INTERFACES,
+    VERT_LIST_NETWORKS,
+    VERT_LIST_STORAGEPOOLS,
+    VERT_LIST_FILTERS,
+    VERT_LIST_SECRETS,
 };
 
 /* nif_virDomainCreate */
