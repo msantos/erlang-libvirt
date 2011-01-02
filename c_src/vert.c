@@ -80,6 +80,9 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
             ERL_NIF_RT_CREATE, NULL)) == NULL)
         return -1;
 
+    if (virInitialize() != 0)
+        return -2;
+
     /* XXX Disable error messges to stderr
      * XXX Probably should send the errors to a mailbox
      * */
