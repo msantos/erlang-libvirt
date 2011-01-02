@@ -57,6 +57,7 @@ void domain_cleanup(ErlNifEnv *env, void *obj);
 
 static ErlNifResourceType *LIBVIRT_CONNECT_RESOURCE;
 static ErlNifResourceType *LIBVIRT_DOMAIN_RESOURCE;
+static ErlNifResourceType *LIBVIRT_INTERFACE_RESOURCE;
 
 
     static int
@@ -77,6 +78,11 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
 
     if ( (LIBVIRT_DOMAIN_RESOURCE = enif_open_resource_type(env, NULL,
             "libvirt_domain_resource", domain_cleanup,
+            ERL_NIF_RT_CREATE, NULL)) == NULL)
+        return -1;
+
+    if ( (LIBVIRT_INTERFACE_RESOURCE = enif_open_resource_type(env, NULL,
+            "libvirt_interface_resource", interface_cleanup,
             ERL_NIF_RT_CREATE, NULL)) == NULL)
         return -1;
 
@@ -502,7 +508,7 @@ nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_LIST_DOMAINS;
+    int type = VERT_RES_DOMAINS;
     int res = -1;
 
 
@@ -513,22 +519,22 @@ nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     switch (type) {
-        case VERT_LIST_DOMAINS:
+        case VERT_RES_DOMAINS:
             res = virConnectNumOfDomains(*conn);
             break;
-        case VERT_LIST_INTERFACES:
+        case VERT_RES_INTERFACES:
             res = virConnectNumOfInterfaces(*conn);
             break;
-        case VERT_LIST_NETWORKS:
+        case VERT_RES_NETWORKS:
             res = virConnectNumOfNetworks(*conn);
             break;
-        case VERT_LIST_STORAGEPOOLS:
+        case VERT_RES_STORAGEPOOLS:
             res = virConnectNumOfStoragePools(*conn);
             break;
-        case VERT_LIST_SECRETS:
+        case VERT_RES_SECRETS:
             res = virConnectNumOfSecrets(*conn);
             break;
-        case VERT_LIST_FILTERS:
+        case VERT_RES_FILTERS:
 #ifdef SOME_NEWER_VERSION
             res = virConnectNumOfNWFilters(*conn);
 #else
@@ -552,7 +558,7 @@ nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_LIST_DOMAINS;
+    int type = VERT_RES_DOMAINS;
     int res = -1;
 
 
@@ -563,16 +569,16 @@ nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     switch (type) {
-        case VERT_LIST_DOMAINS:
+        case VERT_RES_DOMAINS:
             res = virConnectNumOfDefinedDomains(*conn);
             break;
-        case VERT_LIST_INTERFACES:
+        case VERT_RES_INTERFACES:
             res = virConnectNumOfDefinedInterfaces(*conn);
             break;
-        case VERT_LIST_NETWORKS:
+        case VERT_RES_NETWORKS:
             res = virConnectNumOfDefinedNetworks(*conn);
             break;
-        case VERT_LIST_STORAGEPOOLS:
+        case VERT_RES_STORAGEPOOLS:
             res = virConnectNumOfDefinedStoragePools(*conn);
             break;
         default:
@@ -687,7 +693,7 @@ nif_virDomainFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_LIST_DOMAINS;
+    int type = VERT_RES_DOMAINS;
     int max = 0;
 
     int i = 0;
@@ -706,7 +712,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[2], &max) || max <= 0)
         return enif_make_badarg(env);
 
-    if (type != VERT_LIST_DOMAINS) {
+    if (type != VERT_RES_DOMAINS) {
         names = calloc(max, sizeof(char *));
 
         if (names == NULL)
@@ -716,7 +722,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     list = enif_make_list(env, 0);
 
     switch (type) {
-        case VERT_LIST_DOMAINS: {
+        case VERT_RES_DOMAINS: {
             int *domains = NULL;
 
             domains = calloc(max, sizeof(int));
@@ -742,15 +748,15 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_LIST_INTERFACES:
+        case VERT_RES_INTERFACES:
             res = virConnectListInterfaces(*conn, names, max);
             break;
             
-        case VERT_LIST_NETWORKS:
+        case VERT_RES_NETWORKS:
             res = virConnectListNetworks(*conn, names, max);
             break;
 
-        case VERT_LIST_FILTERS:
+        case VERT_RES_FILTERS:
 #if SOME_NEWER_VERSION
             res = virConnectListFilters(*conn, names, max);
 #else
@@ -758,11 +764,11 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 #endif
             break;
 
-        case VERT_LIST_SECRETS:
+        case VERT_RES_SECRETS:
             res = virConnectListSecrets(*conn, names, max);
             break;
 
-        case VERT_LIST_STORAGEPOOLS:
+        case VERT_RES_STORAGEPOOLS:
             res = virConnectListStoragePools(*conn, names, max);
             break;
 
@@ -791,7 +797,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
-    int type = VERT_LIST_DOMAINS;
+    int type = VERT_RES_DOMAINS;
     int max= 0;
 
     int i = 0;
@@ -818,19 +824,19 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     list = enif_make_list(env, 0);
 
     switch (type) {
-        case VERT_LIST_DOMAINS:
+        case VERT_RES_DOMAINS:
             res = virConnectListDefinedDomains(*conn, names, max);
             break;
 
-        case VERT_LIST_INTERFACES:
+        case VERT_RES_INTERFACES:
             res = virConnectListDefinedInterfaces(*conn, names, max);
             break;
 
-        case VERT_LIST_NETWORKS:
+        case VERT_RES_NETWORKS:
             res = virConnectListDefinedNetworks(*conn, names, max);
             break;
             
-        case VERT_LIST_STORAGEPOOLS:
+        case VERT_RES_STORAGEPOOLS:
             res = virConnectListDefinedNetworks(*conn, names, max);
             break;
 
@@ -1073,6 +1079,16 @@ domain_cleanup(ErlNifEnv *env, void *obj)
     (void)fprintf(stderr, "cleanup: domain=%p/%p\n", *p, p);
     if (*p)
         (void)virDomainFree(*p);
+}
+
+    void
+interface_cleanup(ErlNifEnv *env, void *obj)
+{
+    void **p = obj;
+
+    (void)fprintf(stderr, "cleanup: interface=%p/%p\n", *p, p);
+    if (*p)
+        (void)virInterfaceFree(*p);
 }
 
     void

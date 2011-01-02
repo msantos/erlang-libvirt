@@ -335,12 +335,12 @@ version(Version) when is_integer(Version) ->
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
-resource(domains) -> ?VERT_LIST_DOMAINS;
-resource(interfaces) -> ?VERT_LIST_INTERFACES;
-resource(networks) -> ?VERT_LIST_NETWORKS;
-resource(storagepools) -> ?VERT_LIST_STORAGEPOOLS;
-resource(filters) -> ?VERT_LIST_FILTERS;
-resource(secrets) -> ?VERT_LIST_SECRETS.
+resource(domains) -> ?VERT_RES_DOMAINS;
+resource(interfaces) -> ?VERT_RES_INTERFACES;
+resource(networks) -> ?VERT_RES_NETWORKS;
+resource(storagepools) -> ?VERT_RES_STORAGEPOOLS;
+resource(filters) -> ?VERT_RES_FILTERS;
+resource(secrets) -> ?VERT_RES_SECRETS.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
