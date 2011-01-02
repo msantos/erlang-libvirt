@@ -843,6 +843,29 @@ nif_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return atom_ok;
 }
 
+/* 0: virDomainPtr, 1: int flag */
+    static ERL_NIF_TERM
+nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virDomainPtr *dom = NULL;
+    int flags = 0;
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &flags))
+        return enif_make_badarg(env);
+
+    res = virDomainSetAutostart(*dom, flags);
+
+    if (res != 0)
+        return verterr(env);
+
+    return atom_ok;
+}
+
 
 /*
  * Utility functions
@@ -936,6 +959,8 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_create", 4, nif_virDomainCreate},
     {"domain_save", 2, nif_virDomainSave},
     {"domain_restore", 2, nif_virDomainRestore},
+
+    {"domain_set_autostart", 2, nif_virDomainSetAutostart},
 };
 
 ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)

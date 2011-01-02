@@ -35,6 +35,7 @@
         open/1,
         close/1,
         get/2,
+        set/2,
 
         free/1,
         create/2,
@@ -231,6 +232,16 @@ get({domain, Bin}, info) ->
     end.
 
 
+set({Ptr, Ref, Bin}, Type) when ( Ptr == connect orelse Ptr == domain ),
+is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
+    set({Ptr, Bin}, Type);
+set({domain, Dom}, autostart) ->
+    set({domain, Dom}, {autostart, true});
+set({domain, Dom}, {autostart, true}) ->
+    domain_set_autostart(Dom, 1);
+set({domain, Dom}, {autostart, false}) ->
+    domain_set_autostart(Dom, 0).
+
 %%
 %% Domain
 %%
@@ -308,6 +319,9 @@ domain_create(_,_,_,_) ->
 domain_save(_,_) ->
     erlang:error(not_implemented).
 domain_restore(_,_) ->
+    erlang:error(not_implemented).
+
+domain_set_autostart(_,_) ->
     erlang:error(not_implemented).
 
 
