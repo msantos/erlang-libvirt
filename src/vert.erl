@@ -68,8 +68,9 @@ close({connect, Ref, Bin}) when is_reference(Ref) ->
 close({connect, Bin}) ->
     connect_close(Bin).
 
-get({connect, Ref, Bin}, Type) when is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
-    ?MODULE:get({connect, Bin}, Type);
+get({Ptr, Ref, Bin}, Type) when ( Ptr == connect orelse Ptr == domain ),
+is_reference(Ref), ( is_atom(Type) orelse is_tuple(Type) ) ->
+    ?MODULE:get({Ptr, Bin}, Type);
 get({connect, Bin}, capabilities) ->
     connect_get_capabilities(Bin);
 get({connect, Bin}, cellsfreemem) ->
@@ -191,6 +192,39 @@ get({connect, Bin}, {domains, inactive}) ->
         {ok, 0} -> [];
         {ok, Max} -> domain_list(Bin, ?VERT_DOMAIN_LIST_INACTIVE, Max);
         Err -> Err
+    end;
+
+%%
+%% domain
+%%
+
+%% struct virDomainInfo{
+%%     unsigned char   state
+%%     unsigned long   maxMem
+%%     unsigned long   memory
+%%     unsigned short  nrVirtCpu
+%%     unsigned long long  cpuTime
+%% }
+get({domain, Bin}, info) ->
+    Long = erlang:system_info(wordsize),
+    case domain_get_info(Bin) of
+        {ok, <<
+            State:8,
+            MaxMem:Long/native-unsigned-integer-unit:8,
+            Memory:Long/native-unsigned-integer-unit:8,
+            NrVirtCpu:2/native-unsigned-integer-unit:8,
+            CpuTime:8/native-unsigned-integer-unit:8,
+            _WTF/binary
+            >>} ->
+            #domain_info{
+                state = state({domain, State}),
+                maxmem = MaxMem,
+                memory = Memory,
+                nrvirtcpu = NrVirtCpu,
+                cputime = CpuTime
+            };
+        Err ->
+            Err
     end.
 
 
@@ -251,6 +285,9 @@ connect_get_numdomains(_,_) ->
 connect_close(_) ->
     erlang:error(not_implemented).
 
+domain_get_info(_) ->
+    erlang:error(not_implemented).
+
 domain_list(_,_,_) ->
     erlang:error(not_implemented).
 domain_lookup(_,_,_) ->
@@ -269,6 +306,24 @@ version(Version) when is_integer(Version) ->
     Minor = Version rem 1000000 div 1000,
     Release = Version rem 1000000 rem 1000,
     {Major, Minor, Release}.
+
+
+state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
+state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
+state({domain, ?VIR_DOMAIN_BLOCKED}) -> blocked;
+state({domain, ?VIR_DOMAIN_PAUSED}) -> paused;
+state({domain, ?VIR_DOMAIN_SHUTDOWN}) -> shutdown;
+state({domain, ?VIR_DOMAIN_SHUTOFF}) -> shutoff;
+state({domain, ?VIR_DOMAIN_CRASHED}) -> crashed;
+
+state({domain, undefined}) -> ?VIR_DOMAIN_NOSTATE;
+state({domain, running}) -> ?VIR_DOMAIN_RUNNING;
+state({domain, blocked}) -> ?VIR_DOMAIN_BLOCKED;
+state({domain, paused}) -> ?VIR_DOMAIN_PAUSED;
+state({domain, shutdown}) -> ?VIR_DOMAIN_SHUTDOWN;
+state({domain, shutoff}) -> ?VIR_DOMAIN_SHUTOFF;
+state({domain, crashed}) -> ?VIR_DOMAIN_CRASHED.
+
 
 privdir(File) ->
     filename:join([

@@ -1,4 +1,4 @@
-%% Copyright (c) 2010, Michael Santos <michael.santos@gmail.com>
+%% Copyright (c) 2010-2011, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
 %% 
 %% Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,15 @@
         doi = <<>>
     }).
 
+%% virDomainGetInfo
+-record(domain_info, {
+        state = 0,
+        maxmem = 0,
+        memory = 0,
+        nrvirtcpu = 0,
+        cputime = 0
+    }).
+
 
 %%
 %% vert
@@ -70,7 +79,7 @@
 -define(VERT_DOMAIN_LIST_ACTIVE, 0).
 -define(VERT_DOMAIN_LIST_INACTIVE, 1).
 
-%% domain create
+%% domain_create
 
 % types
 -define(VERT_DOMAIN_CREATE_TRANSIENT, 0).
@@ -79,4 +88,13 @@
 % flags
 -define(VIR_DOMAIN_NONE, 0).            % Default behavior
 -define(VIR_DOMAIN_START_PAUSED, 1).    % Launch guest in paused state
+
+% domain_info/1 
+-define(VIR_DOMAIN_NOSTATE, 0).     % no state
+-define(VIR_DOMAIN_RUNNING, 1).     % the domain is running
+-define(VIR_DOMAIN_BLOCKED, 2).     % the domain is blocked on resource
+-define(VIR_DOMAIN_PAUSED, 3).      % the domain is paused by user
+-define(VIR_DOMAIN_SHUTDOWN, 4).    % the domain is being shut down
+-define(VIR_DOMAIN_SHUTOFF, 5).     % the domain is shut off
+-define(VIR_DOMAIN_CRASHED, 6).     % the domain is crashed
 

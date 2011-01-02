@@ -767,6 +767,35 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_ref(env), res));
 }
 
+/* 0: virDomainPtr */
+    static ERL_NIF_TERM
+nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virDomainPtr *dom = NULL;
+    virDomainInfo info = {0};
+    int res = -1;
+
+    ErlNifBinary buf = {0};
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+        return enif_make_badarg(env);
+
+    res = virDomainGetInfo(*dom, &info);
+
+    if (res != 0)
+        return verterr(env);
+
+    if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
+        return atom_enomem;
+
+    (void)memcpy(buf.data, &info, buf.size);
+
+    return enif_make_tuple(env, 2,
+            atom_ok,
+            enif_make_binary(env, &buf));
+}
+
 
 /*
  * Utility functions
@@ -854,6 +883,7 @@ static ErlNifFunc nif_funcs[] = {
     /* domain */
     {"domain_lookup", 3, nif_virDomainLookup},
     {"domain_free", 1, nif_virDomainFree},
+    {"domain_get_info", 1, nif_virDomainGetInfo},
     {"domain_list", 3, nif_virDomainList},
 
     {"domain_create", 4, nif_virDomainCreate},
