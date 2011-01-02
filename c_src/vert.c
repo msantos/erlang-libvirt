@@ -33,6 +33,7 @@
 #include <libvirt/virterror.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/param.h>
 #include "erl_nif.h"
 
 #include "vert.h"
@@ -796,6 +797,52 @@ nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_binary(env, &buf));
 }
 
+/* 0: virDomainPtr, 1: char* */
+    static ERL_NIF_TERM
+nif_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virDomainPtr *dom = NULL;
+    char file[MAXPATHLEN];
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+        return enif_make_badarg(env);
+
+    if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
+        return enif_make_badarg(env);
+
+    res = virDomainSave(*dom, file);
+
+    if (res != 0)
+        return verterr(env);
+
+    return atom_ok;
+}
+
+/* 0: virDomainPtr, 1: char* */
+    static ERL_NIF_TERM
+nif_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virConnectPtr *conn = NULL;
+    char file[MAXPATHLEN];
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+        return enif_make_badarg(env);
+
+    if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
+        return enif_make_badarg(env);
+
+    res = virDomainRestore(*conn, file);
+
+    if (res != 0)
+        return verterr(env);
+
+    return atom_ok;
+}
+
 
 /*
  * Utility functions
@@ -887,7 +934,8 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_list", 3, nif_virDomainList},
 
     {"domain_create", 4, nif_virDomainCreate},
-
+    {"domain_save", 2, nif_virDomainSave},
+    {"domain_restore", 2, nif_virDomainRestore},
 };
 
 ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)

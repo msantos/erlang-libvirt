@@ -37,7 +37,10 @@
         get/2,
 
         free/1,
-        create/2
+        create/2,
+
+        save/2,
+        restore/2
     ]).
 
 
@@ -243,7 +246,12 @@ create({connect, Ref, Conn}, {transient, Cfg, Flags}) when is_reference(Ref),
 create({connect, Ref, Conn}, {persistent, Cfg}) when is_reference(Ref), is_list(Cfg) ->
     domain_create(Conn, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
 
-flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
+save({domain, Ref, Bin}, File) when is_reference(Ref), is_list(File) ->
+    domain_save(Bin, File).
+
+restore({connect, Ref, Bin}, File) when is_reference(Ref), is_list(File) ->
+    domain_restore(Bin, File).
+
 
 %%-------------------------------------------------------------------------
 %%% NIF stubs
@@ -297,6 +305,11 @@ domain_free(_) ->
 domain_create(_,_,_,_) ->
     erlang:error(not_implemented).
 
+domain_save(_,_) ->
+    erlang:error(not_implemented).
+domain_restore(_,_) ->
+    erlang:error(not_implemented).
+
 
 %%-------------------------------------------------------------------------
 %%% Internal functions
@@ -307,6 +320,7 @@ version(Version) when is_integer(Version) ->
     Release = Version rem 1000000 rem 1000,
     {Major, Minor, Release}.
 
+flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
