@@ -106,6 +106,15 @@
 %% vert
 %%
 
+%% Resource types
+-define(VERT_RES_CONNECT, 0).
+-define(VERT_RES_DOMAIN, 1).
+-define(VERT_RES_INTERFACE, 2).
+-define(VERT_RES_NETWORK, 3).
+-define(VERT_RES_STORAGEPOOL, 4).
+-define(VERT_RES_FILTER, 5).
+-define(VERT_RES_SECRET, 6).
+
 %% connect_open/2
 -define(VERT_CONNECT_OPEN, 0).
 -define(VERT_CONNECT_OPEN_READONLY, 1).
@@ -116,14 +125,6 @@
 -define(VERT_DOMAIN_LOOKUP_BY_NAME, 1).
 -define(VERT_DOMAIN_LOOKUP_BY_UUID, 2).
 -define(VERT_DOMAIN_LOOKUP_BY_RAWUUID, 3).
-
-%% domain_list/2
--define(VERT_RES_DOMAIN, 0).
--define(VERT_RES_INTERFACE, 1).
--define(VERT_RES_NETWORK, 2).
--define(VERT_RES_STORAGEPOOL, 3).
--define(VERT_RES_FILTER, 4).
--define(VERT_RES_SECRET, 5).
 
 %% domain_create
 

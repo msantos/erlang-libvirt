@@ -47,7 +47,8 @@ enum {
 
 /* nif_virDomainList */
 enum {
-    VERT_RES_DOMAIN = 0,
+    VERT_RES_CONNECT = 0,
+    VERT_RES_DOMAIN,
     VERT_RES_INTERFACE,
     VERT_RES_NETWORK,
     VERT_RES_STORAGEPOOL,
