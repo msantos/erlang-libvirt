@@ -200,14 +200,14 @@ get({connect, Bin}, {domains, inactive}) ->
 free({domain, Ref, Dom}) when is_reference(Ref) ->
     domain_free(Dom).
 
-create(Domain, {transient, Cfg}) ->
-    create(Domain, {transient, Cfg, []});
-create({domain, Ref, Dom}, {transient, Cfg, Flags}) when is_reference(Ref),
+create(Connect, {transient, Cfg}) ->
+    create(Connect, {transient, Cfg, []});
+create({connect, Ref, Conn}, {transient, Cfg, Flags}) when is_reference(Ref),
     is_list(Cfg), is_list(Flags) ->
-    Bits = [ flags(N) || N <- Flags ],
-    domain_create(Dom, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
-create({domain, Ref, Dom}, {persistent, Cfg}) when is_reference(Ref), is_list(Cfg) ->
-    domain_create(Dom, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
+    Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
+    domain_create(Conn, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
+create({connect, Ref, Conn}, {persistent, Cfg}) when is_reference(Ref), is_list(Cfg) ->
+    domain_create(Conn, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
