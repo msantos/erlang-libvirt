@@ -635,11 +635,11 @@ nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virConnectPtr, 1: int type 2: int | char* */
     static ERL_NIF_TERM
-nif_virDomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *conn = NULL;
     virDomainPtr *dom = NULL;
-    int type = VERT_DOMAIN_LOOKUP_BY_ID;
+    int type = VERT_LOOKUP_BY_ID;
 
     ERL_NIF_TERM res = {0};
 
@@ -656,7 +656,7 @@ nif_virDomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return atom_enomem;
 
     switch (type) {
-        case VERT_DOMAIN_LOOKUP_BY_ID: {
+        case VERT_LOOKUP_BY_ID: {
                 int id = 0;
 
                 if (!enif_get_int(env, argv[2], &id))
@@ -665,7 +665,7 @@ nif_virDomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_DOMAIN_LOOKUP_BY_NAME: {
+        case VERT_LOOKUP_BY_NAME: {
                 char name[1024]; /* XXX max size ??? */
 
                 if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
@@ -675,7 +675,7 @@ nif_virDomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_DOMAIN_LOOKUP_BY_UUID: {
+        case VERT_LOOKUP_BY_UUID: {
                 char uuid[1024]; /* XXX max size ??? */
 
                 if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
@@ -1118,6 +1118,71 @@ nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
+/* Interfaces */
+
+/* 0: virConnectPtr, 1: int type 2: int | char* */
+    static ERL_NIF_TERM
+nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virConnectPtr *conn = NULL;
+    virInterfacePtr *ifp = NULL;
+    int type = VERT_LOOKUP_BY_NAME;
+
+    ERL_NIF_TERM res = {0};
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    ifp = enif_alloc_resource(LIBVIRT_INTERFACE_RESOURCE, sizeof(virInterfacePtr));
+
+    if (ifp == NULL)
+        return atom_enomem;
+
+    switch (type) {
+        case VERT_LOOKUP_BY_NAME: {
+                char name[1024]; /* XXX max interface length ??? */
+
+                if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                    return enif_make_badarg(env);
+
+                *ifp = virInterfaceLookupByName(*conn, name);
+            }
+            break;
+
+        case VERT_LOOKUP_BY_MAC: {
+                char mac[1024]; /* XXX max size ??? */
+
+                if (enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
+                    return enif_make_badarg(env);
+
+                *ifp = virInterfaceLookupByMACString(*conn, mac);
+            }
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (*ifp == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    res = enif_make_resource(env, ifp);
+    enif_release_resource(ifp);
+
+    return enif_make_tuple(env, 2,
+        atom_ok,
+        enif_make_tuple(env, 3,
+            atom_domain,
+            enif_make_ref(env), res));
+}
+
+
 /*
  * Utility functions
  */
@@ -1255,7 +1320,7 @@ static ErlNifFunc nif_funcs[] = {
 
 
     /* domain */
-    {"domain_lookup", 3, nif_virDomainLookup},
+    {"domain_lookup", 3, nif_DomainLookup},
     {"domain_get_info", 1, nif_virDomainGetInfo},
 
     {"domain_create", 4, nif_virDomainCreate},
@@ -1263,6 +1328,9 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_restore", 2, nif_virDomainRestore},
 
     {"domain_set_autostart", 2, nif_virDomainSetAutostart},
+
+    /* interfaces */
+    {"interface_lookup", 3, nif_InterfaceLookup},
 
     {"resource_free", 2, nif_virResourceFree},
 };

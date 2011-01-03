@@ -121,10 +121,11 @@
 -define(VERT_CONNECT_OPEN_AUTH, 2).
 
 %% domain_lookup/3
--define(VERT_DOMAIN_LOOKUP_BY_ID, 0).
--define(VERT_DOMAIN_LOOKUP_BY_NAME, 1).
--define(VERT_DOMAIN_LOOKUP_BY_UUID, 2).
--define(VERT_DOMAIN_LOOKUP_BY_RAWUUID, 3).
+-define(VERT_LOOKUP_BY_ID, 0).
+-define(VERT_LOOKUP_BY_NAME, 1).
+-define(VERT_LOOKUP_BY_UUID, 2).
+-define(VERT_LOOKUP_BY_RAWUUID, 3).
+-define(VERT_LOOKUP_BY_MAC, 4).
 
 %% domain_create
 

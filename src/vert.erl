@@ -164,13 +164,18 @@ get(#connect{res = Res}, uri) ->
     connect_get_uri(Res);
 
 get(#connect{res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
-    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_ID, ID);
+    domain_lookup(Res, ?VERT_LOOKUP_BY_ID, ID);
 get(#connect{res = Res}, {domain, {name, Name}}) when is_list(Name) ->
-    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_NAME, Name);
+    domain_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
 get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
-    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_UUID, UUID);
+    domain_lookup(Res, ?VERT_LOOKUP_BY_UUID, UUID);
 get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
-    domain_lookup(Res, ?VERT_DOMAIN_LOOKUP_BY_RAWUUID, UUID);
+    domain_lookup(Res, ?VERT_LOOKUP_BY_RAWUUID, UUID);
+
+get(#connect{res = Res}, {interface, {name, Name}}) when is_list(Name) ->
+    interface_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
+get(#connect{res = Res}, {interface, {mac, MAC}}) when is_list(MAC) ->
+    interface_lookup(Res, ?VERT_LOOKUP_BY_MAC, MAC);
 
 get(#connect{} = Res, Type) when is_atom(Type) ->
     ?MODULE:get(Res, {Type, active});
@@ -329,6 +334,9 @@ domain_restore(_,_) ->
     erlang:error(not_implemented).
 
 domain_set_autostart(_,_) ->
+    erlang:error(not_implemented).
+
+interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
 resource_free(_,_) ->
