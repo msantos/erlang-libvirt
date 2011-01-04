@@ -194,9 +194,9 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, conn);
     enif_release_resource(conn);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple(env, 3,
+        enif_make_tuple3(env,
             atom_connect,
             enif_make_ref(env), res));
 }
@@ -238,7 +238,7 @@ nif_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     capabilities = enif_make_string(env, res, ERL_NIF_LATIN1);
     free(res);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             capabilities);
 }
@@ -262,7 +262,7 @@ nif_virConnectGetHostname(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     hostname = enif_make_string(env, res, ERL_NIF_LATIN1);
     free(res);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             hostname);
 }
@@ -283,7 +283,7 @@ nif_virConnectGetLibVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_ulong(env, version));
 }
@@ -310,7 +310,7 @@ nif_virConnectGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_int(env, res));
 }
@@ -331,7 +331,7 @@ nif_virNodeGetFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_uint64(env, res));
 }
@@ -359,7 +359,7 @@ nif_virNodeGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     (void)memcpy(buf.data, &info, buf.size);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_binary(env, &buf));
 }
@@ -399,7 +399,7 @@ nif_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 
     free(mem);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             list);
 }
@@ -420,7 +420,7 @@ nif_virConnectGetType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == NULL)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_string(env, res, ERL_NIF_LATIN1));
 }
@@ -442,7 +442,7 @@ nif_virConnectGetVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_ulong(env, version));
 }
@@ -467,7 +467,7 @@ nif_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     uri = enif_make_string(env, res, ERL_NIF_LATIN1);
     free(res);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             uri);
 }
@@ -533,7 +533,7 @@ nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     (void)memcpy(buf.data, &sec, buf.size);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_binary(env, &buf));
 }
@@ -583,7 +583,7 @@ nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_int(env, res));
 }
@@ -623,7 +623,7 @@ nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (res == -1)
         return verterr(env);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_int(env, res));
 }
@@ -697,9 +697,9 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, dom);
     enif_release_resource(dom);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple(env, 3,
+        enif_make_tuple3(env,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -836,7 +836,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
             free(domains);
 
-            return enif_make_tuple(env, 2,
+            return enif_make_tuple2(env,
                 atom_ok,
                 list);
             }
@@ -881,7 +881,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (names)
         free(names);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
         list);
 }
@@ -948,7 +948,7 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     free(names);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
         list);
 }
@@ -1012,9 +1012,9 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, dom);
     enif_release_resource(dom);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple(env, 3,
+        enif_make_tuple3(env,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -1043,7 +1043,7 @@ nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     (void)memcpy(buf.data, &info, buf.size);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_binary(env, &buf));
 }
@@ -1175,9 +1175,9 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, ifp);
     enif_release_resource(ifp);
 
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple(env, 3,
+        enif_make_tuple3(env,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -1205,7 +1205,7 @@ verterr(ErlNifEnv *env)
     static ERL_NIF_TERM
 error_tuple(ErlNifEnv *env, char *err)
 {
-    return enif_make_tuple(env, 2,
+    return enif_make_tuple2(env,
             atom_error,
             enif_make_string(env, err, ERL_NIF_LATIN1));
 }  
