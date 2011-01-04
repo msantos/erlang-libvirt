@@ -42,6 +42,7 @@
 static ERL_NIF_TERM atom_ok;
 static ERL_NIF_TERM atom_error;
 static ERL_NIF_TERM atom_enomem;
+static ERL_NIF_TERM atom_resource;
 static ERL_NIF_TERM atom_connect;
 static ERL_NIF_TERM atom_domain;
 static ERL_NIF_TERM atom_true;
@@ -79,6 +80,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_ok = enif_make_atom(env, "ok");
     atom_error = enif_make_atom(env, "error");
     atom_enomem = enif_make_atom(env, "enomem");
+    atom_resource = enif_make_atom(env, "resource");
     atom_connect = enif_make_atom(env, "connect");
     atom_domain = enif_make_atom(env, "domain");
     atom_true = enif_make_atom(env, "true");
@@ -196,7 +198,8 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple3(env,
+        enif_make_tuple4(env,
+            atom_resource,
             atom_connect,
             enif_make_ref(env), res));
 }
@@ -699,7 +702,8 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple3(env,
+        enif_make_tuple4(env,
+            atom_resource,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -1072,7 +1076,8 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple3(env,
+        enif_make_tuple4(env,
+            atom_resource,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -1180,14 +1185,10 @@ nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virDomainPtr *dom = NULL;
-    int type = 0;
 
     int res = -1;
 
     if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
     res = virDomainShutdown(*dom);
@@ -1258,7 +1259,8 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_tuple3(env,
+        enif_make_tuple4(env,
+            atom_resource,
             atom_domain,
             enif_make_ref(env), res));
 }
@@ -1415,7 +1417,7 @@ static ErlNifFunc nif_funcs[] = {
     {"interface_lookup", 3, nif_InterfaceLookup},
 
     {"resource_free", 2, nif_ResourceFree},
-    {"resource_destroy", 1, nif_ResourceDestroy},
+    {"resource_destroy", 2, nif_ResourceDestroy},
 };
 
 ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)

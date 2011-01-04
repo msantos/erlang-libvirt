@@ -69,21 +69,21 @@ open({connect, Name, auth}) when is_list(Name) ->
     % connect_open_readonly(Name, ?VERT_CONNECT_OPEN_AUTH);
     erlang:error(not_implemented).
 
-close(#connect{res = Res}) ->
+close(#resource{type = connect, res = Res}) ->
     connect_close(Res).
 
-get(#connect{res = Res}, capabilities) ->
+get(#resource{type = connect, res = Res}, capabilities) ->
     connect_get_capabilities(Res);
-get(#connect{} = Res, cellsfreemem) ->
-    {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Res, info),
+get(#resource{type = connect, res = Res} = Conn, cellsfreemem) ->
+    {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Conn, info),
     connect_get_cellsfreememory(Res, Nodes);
-get(#connect{res = Res}, encrypted) ->
+get(#resource{type = connect, res = Res}, encrypted) ->
     connect_is_encrypted(Res);
-get(#connect{res = Res}, secure) ->
+get(#resource{type = connect, res = Res}, secure) ->
     connect_is_secure(Res);
-get(#connect{res = Res}, freemem) ->
+get(#resource{type = connect, res = Res}, freemem) ->
     connect_get_freememory(Res);
-get(#connect{res = Res}, hostname) ->
+get(#resource{type = connect, res = Res}, hostname) ->
     connect_get_hostname(Res);
 
 %% struct _virNodeInfo {
@@ -96,7 +96,7 @@ get(#connect{res = Res}, hostname) ->
 %%     unsigned int cores; /* number of core per socket */
 %%     unsigned int threads;/* number of threads per core */
 %% };
-get(#connect{res = Res}, info) ->
+get(#resource{type = connect, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
     case connect_get_info(Res) of
         {ok, <<
@@ -122,91 +122,6 @@ get(#connect{res = Res}, info) ->
         Error ->
             Error
     end;
-get(#connect{res = Res}, libversion) ->
-    case connect_get_libversion(Res) of
-        {ok, Version} ->
-            {ok, version(Version)};
-        Err ->
-            Err
-    end;
-get(#connect{res = Res}, version) ->
-    case connect_get_version(Res) of
-        {ok, Version} ->
-            {ok, version(Version)};
-        Err ->
-            Err
-    end;
-get(#connect{res = Res}, maxvcpus) ->
-    connect_get_maxvcpus(Res, []);
-get(#connect{res = Res}, {maxvcpus, Type}) when is_list(Type) ->
-    connect_get_maxvcpus(Res, Type);
-
-%% struct _virSecurityModel {
-%%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
-%%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
-%% }
-get(#connect{res = Res}, secmodel) ->
-    case connect_get_securitymodel(Res) of
-        {ok, <<
-            Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
-            Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
-            >>} ->
-            {ok, #security_model{
-                    model = Model,
-                    doi = Doi
-                }};
-        Err ->
-            Err
-    end;
-
-
-get(#connect{res = Res}, type) ->
-    connect_get_type(Res);
-get(#connect{res = Res}, uri) ->
-    connect_get_uri(Res);
-
-get(#connect{res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_ID, ID);
-get(#connect{res = Res}, {domain, {name, Name}}) when is_list(Name) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
-get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_UUID, UUID);
-get(#connect{res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_RAWUUID, UUID);
-
-get(#connect{res = Res}, {interface, {name, Name}}) when is_list(Name) ->
-    interface_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
-get(#connect{res = Res}, {interface, {mac, MAC}}) when is_list(MAC) ->
-    interface_lookup(Res, ?VERT_LOOKUP_BY_MAC, MAC);
-
-get(#connect{} = Res, Type) when is_atom(Type) ->
-    ?MODULE:get(Res, {Type, active});
-
-get(#connect{res = Res}, {Type, num_active}) ->
-    connect_get_numactive(Res, resource(Type));
-get(#connect{res = Res}, {Type, num_inactive}) ->
-    connect_get_numinactive(Res, resource(Type));
-
-get(#connect{res = Res}, {Type, active}) ->
-    Resource = resource(Type),
-    case connect_get_numactive(Res, Resource) of
-        {ok, 0} -> [];
-        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
-        Err -> Err
-    end;
-get(#connect{res = Res}, {Type, inactive}) ->
-    Resource = resource(Type),
-    case connect_get_numactive(Res, Resource) of
-        {ok, 0} -> [];
-        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
-        Err -> Err
-    end;
-
-
-%%
-%% domain
-%%
-
 %% struct virDomainInfo{
 %%     unsigned char   state
 %%     unsigned long   maxMem
@@ -214,7 +129,7 @@ get(#connect{res = Res}, {Type, inactive}) ->
 %%     unsigned short  nrVirtCpu
 %%     unsigned long long  cpuTime
 %% }
-get(#domain{res = Res}, info) ->
+get(#resource{type = domain, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
     case domain_get_info(Res) of
         {ok, <<
@@ -234,50 +149,120 @@ get(#domain{res = Res}, info) ->
             };
         Err ->
             Err
+    end;
+
+get(#resource{type = connect, res = Res}, libversion) ->
+    case connect_get_libversion(Res) of
+        {ok, Version} ->
+            {ok, version(Version)};
+        Err ->
+            Err
+    end;
+get(#resource{type = connect, res = Res}, version) ->
+    case connect_get_version(Res) of
+        {ok, Version} ->
+            {ok, version(Version)};
+        Err ->
+            Err
+    end;
+get(#resource{type = connect, res = Res}, maxvcpus) ->
+    connect_get_maxvcpus(Res, []);
+get(#resource{type = connect, res = Res}, {maxvcpus, Type}) when is_list(Type) ->
+    connect_get_maxvcpus(Res, Type);
+
+%% struct _virSecurityModel {
+%%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
+%%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
+%% }
+get(#resource{type = connect, res = Res}, secmodel) ->
+    case connect_get_securitymodel(Res) of
+        {ok, <<
+            Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
+            Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
+            >>} ->
+            {ok, #security_model{
+                    model = Model,
+                    doi = Doi
+                }};
+        Err ->
+            Err
+    end;
+
+
+get(#resource{type = connect, res = Res}, type) ->
+    connect_get_type(Res);
+get(#resource{type = connect, res = Res}, uri) ->
+    connect_get_uri(Res);
+
+get(#resource{type = connect, res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
+    domain_lookup(Res, ?VERT_LOOKUP_BY_ID, ID);
+get(#resource{type = connect, res = Res}, {domain, {name, Name}}) when is_list(Name) ->
+    domain_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
+get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
+    domain_lookup(Res, ?VERT_LOOKUP_BY_UUID, UUID);
+get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
+    domain_lookup(Res, ?VERT_LOOKUP_BY_RAWUUID, UUID);
+
+get(#resource{type = connect, res = Res}, {interface, {name, Name}}) when is_list(Name) ->
+    interface_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
+get(#resource{type = connect, res = Res}, {interface, {mac, MAC}}) when is_list(MAC) ->
+    interface_lookup(Res, ?VERT_LOOKUP_BY_MAC, MAC);
+
+get(#resource{} = Res, Type) when is_atom(Type) ->
+    ?MODULE:get(Res, {Type, active});
+
+get(#resource{type = connect, res = Res}, {Type, num_active}) ->
+    connect_get_numactive(Res, resource(Type));
+get(#resource{type = connect, res = Res}, {Type, num_inactive}) ->
+    connect_get_numinactive(Res, resource(Type));
+
+get(#resource{type = connect, res = Res}, {Type, active}) ->
+    Resource = resource(Type),
+    case connect_get_numactive(Res, Resource) of
+        {ok, 0} -> [];
+        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
+        Err -> Err
+    end;
+get(#resource{type = connect, res = Res}, {Type, inactive}) ->
+    Resource = resource(Type),
+    case connect_get_numactive(Res, Resource) of
+        {ok, 0} -> [];
+        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
+        Err -> Err
     end.
 
 
 set(Resource, autostart) ->
     set(Resource, {autostart, true});
-set(#domain{res = Res}, {autostart, true}) ->
+set(#resource{type = domain, res = Res}, {autostart, true}) ->
     domain_set_autostart(Res, 1);
-set(#domain{res = Res}, {autostart, false}) ->
+set(#resource{type = domain, res = Res}, {autostart, false}) ->
     domain_set_autostart(Res, 0).
 
 %%
 %% Domain
 %%
-free(#domain{res = Res}) ->
-    resource_free(Res, resource(domains));
-free(#interface{res = Res}) ->
-    resource_free(Res, resource(interfaces));
-free(#network{res = Res}) ->
-    resource_free(Res, resource(networks));
-free(#storagepool{res = Res}) ->
-    resource_free(Res, resource(storagepools));
-free(#filter{res = Res}) ->
-    resource_free(Res, resource(filters));
-free(#secret{res = Res}) ->
-    resource_free(Res, resource(secrets)).
+free(#resource{type = Type, res = Res}) ->
+    resource_free(Res, resource(Type)).
 
 create(Connect, {transient, Cfg}) ->
     create(Connect, {transient, Cfg, []});
-create(#connect{res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
+create(#resource{type = connect, res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
     Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
     domain_create(Res, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
-create(#connect{res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
+create(#resource{type = connect, res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
     domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
 
-destroy(#domain{res = Res}) ->
-    resource_destroy(Res).
+destroy(#resource{type = Type, res = Res}) ->
+    resource_destroy(Res, resource(Type)).
 
-save(#domain{res = Res}, File) when is_list(File) ->
+save(#resource{type = domain, res = Res}, File) when is_list(File) ->
     domain_save(Res, File).
 
-restore(#connect{res = Res}, File) when is_list(File) ->
+restore(#resource{type = connect, res = Res}, File) when is_list(File) ->
     domain_restore(Res, File).
 
-shutdown(#domain{res = Res}) ->
+shutdown(#resource{type = domain, res = Res}) ->
     domain_shutdown(Res).
 
 
@@ -351,7 +336,7 @@ interface_lookup(_,_,_) ->
 
 resource_free(_,_) ->
     erlang:error(not_implemented).
-resource_destroy(_) ->
+resource_destroy(_,_) ->
     erlang:error(not_implemented).
 
 
@@ -366,12 +351,12 @@ version(Version) when is_integer(Version) ->
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
-resource(domains) -> ?VERT_RES_DOMAIN;
-resource(interfaces) -> ?VERT_RES_INTERFACE;
-resource(networks) -> ?VERT_RES_NETWORK;
-resource(storagepools) -> ?VERT_RES_STORAGEPOOL;
-resource(filters) -> ?VERT_RES_FILTER;
-resource(secrets) -> ?VERT_RES_SECRET.
+resource(domain) -> ?VERT_RES_DOMAIN;
+resource(interface) -> ?VERT_RES_INTERFACE;
+resource(network) -> ?VERT_RES_NETWORK;
+resource(storagepool) -> ?VERT_RES_STORAGEPOOL;
+resource(filter) -> ?VERT_RES_FILTER;
+resource(secret) -> ?VERT_RES_SECRET.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;

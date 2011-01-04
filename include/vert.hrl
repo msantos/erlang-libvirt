@@ -30,7 +30,8 @@
 %% POSSIBILITY OF SUCH DAMAGE.
 
 %% virConnectPtr resource
--record(connect, {
+-record(resource, {
+        type,
         ref,
         res
     }).
