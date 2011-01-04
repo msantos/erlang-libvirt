@@ -706,7 +706,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* 0: virDomainPtr, 1: int type */
     static ERL_NIF_TERM
-nif_virResourceFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_ResourceFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     int type = VERT_RES_DOMAIN;
 
@@ -770,6 +770,64 @@ nif_virResourceFree(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             if (!enif_get_resource(env, argv[0], LIBVIRT_SECRET_RESOURCE, (void **)&p))
                 return enif_make_badarg(env);
             if (virSecretFree(*p) != 0)
+                res = verterr(env);
+            *p = NULL;
+            }
+            break;
+        default:
+            return enif_make_badarg(env);
+
+    }
+
+    return res;
+}
+
+/* 0: virDomainPtr, 1: int type */
+    static ERL_NIF_TERM
+nif_ResourceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    int type = VERT_RES_DOMAIN;
+
+    ERL_NIF_TERM res = atom_ok;
+
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    switch (type) {
+        case VERT_RES_DOMAIN: {
+            virDomainPtr *p = NULL;
+            if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&p))
+                return enif_make_badarg(env);
+            if (virDomainDestroy(*p) != 0)
+                res = verterr(env);
+            *p = NULL;
+            }
+            break;
+        case VERT_RES_INTERFACE: {
+            virInterfacePtr *p = NULL;
+            if (!enif_get_resource(env, argv[0], LIBVIRT_INTERFACE_RESOURCE, (void **)&p))
+                return enif_make_badarg(env);
+            if (virInterfaceDestroy(*p, 0) != 0)
+                res = verterr(env);
+            *p = NULL;
+            }
+            break;
+        case VERT_RES_NETWORK: {
+            virNetworkPtr *p = NULL;
+            if (!enif_get_resource(env, argv[0], LIBVIRT_NETWORK_RESOURCE, (void **)&p))
+                return enif_make_badarg(env);
+            if (virNetworkDestroy(*p) != 0)
+                res = verterr(env);
+            *p = NULL;
+            }
+            break;
+
+        case VERT_RES_STORAGEPOOL: {
+            virStoragePoolPtr *p = NULL;
+            if (!enif_get_resource(env, argv[0], LIBVIRT_STORAGEPOOL_RESOURCE, (void **)&p))
+                return enif_make_badarg(env);
+            if (virStoragePoolDestroy(*p) != 0)
                 res = verterr(env);
             *p = NULL;
             }
@@ -1117,6 +1175,29 @@ nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return atom_ok;
 }
 
+/* 0: virDomainPtr */
+    static ERL_NIF_TERM
+nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virDomainPtr *dom = NULL;
+    int type = 0;
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    res = virDomainShutdown(*dom);
+
+    if (res != 0)
+        return verterr(env);
+
+    return atom_ok;
+}
+
 
 /* Interfaces */
 
@@ -1326,13 +1407,15 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_create", 4, nif_virDomainCreate},
     {"domain_save", 2, nif_virDomainSave},
     {"domain_restore", 2, nif_virDomainRestore},
+    {"domain_shutdown", 1, nif_virDomainShutdown},
 
     {"domain_set_autostart", 2, nif_virDomainSetAutostart},
 
     /* interfaces */
     {"interface_lookup", 3, nif_InterfaceLookup},
 
-    {"resource_free", 2, nif_virResourceFree},
+    {"resource_free", 2, nif_ResourceFree},
+    {"resource_destroy", 1, nif_ResourceDestroy},
 };
 
 ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)

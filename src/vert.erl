@@ -39,9 +39,11 @@
 
         free/1,
         create/2,
+        destroy/1,
 
         save/2,
-        restore/2
+        restore/2,
+        shutdown/1
     ]).
 
 
@@ -266,11 +268,17 @@ create(#connect{res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(
 create(#connect{res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
     domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
 
+destroy(#domain{res = Res}) ->
+    resource_destroy(Res).
+
 save(#domain{res = Res}, File) when is_list(File) ->
     domain_save(Res, File).
 
 restore(#connect{res = Res}, File) when is_list(File) ->
     domain_restore(Res, File).
+
+shutdown(#domain{res = Res}) ->
+    domain_shutdown(Res).
 
 
 %%-------------------------------------------------------------------------
@@ -332,6 +340,8 @@ domain_save(_,_) ->
     erlang:error(not_implemented).
 domain_restore(_,_) ->
     erlang:error(not_implemented).
+domain_shutdown(_) ->
+    erlang:error(not_implemented).
 
 domain_set_autostart(_,_) ->
     erlang:error(not_implemented).
@@ -340,6 +350,8 @@ interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
 resource_free(_,_) ->
+    erlang:error(not_implemented).
+resource_destroy(_) ->
     erlang:error(not_implemented).
 
 
