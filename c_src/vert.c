@@ -165,7 +165,7 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     conn = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
     if (conn == NULL)
-        return atom_error;
+        return atom_enomem;
 
     switch (type) {
         case VERT_CONNECT_OPEN:
