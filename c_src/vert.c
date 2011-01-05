@@ -147,7 +147,7 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     char name[1024]; /* XXX what should be the size of this? */
     int type = VERT_CONNECT_OPEN;
 
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     ERL_NIF_TERM res = {0};
 
 
@@ -164,18 +164,18 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    conn = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
+    cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
-    if (conn == NULL)
+    if (cp == NULL)
         return atom_enomem;
 
     switch (type) {
         case VERT_CONNECT_OPEN:
-            *conn = virConnectOpen( (name[0] == '\0' ? NULL : name));
+            *cp = virConnectOpen( (name[0] == '\0' ? NULL : name));
             break;
 
         case VERT_CONNECT_OPEN_READONLY:
-            *conn = virConnectOpenReadOnly( (name[0] == '\0' ? NULL : name));
+            *cp = virConnectOpenReadOnly( (name[0] == '\0' ? NULL : name));
             break;
 
         case VERT_CONNECT_OPEN_AUTH:
@@ -185,16 +185,16 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             return enif_make_badarg(env);
     }
 
-    if (*conn == NULL) {
-        enif_release_resource(conn);
+    if (*cp == NULL) {
+        enif_release_resource(cp);
         return verterr(env);
     }
 
     /* XXX disable logging to stderr */
-    virConnSetErrorFunc(*conn, NULL, NULL);
+    virConnSetErrorFunc(*cp, NULL, NULL);
 
-    res = enif_make_resource(env, conn);
-    enif_release_resource(conn);
+    res = enif_make_resource(env, cp);
+    enif_release_resource(cp);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -208,16 +208,17 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectClose(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     ERL_NIF_TERM res = atom_ok;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    if (virConnectClose(*conn) != 0)
+    if (virConnectClose(*cp) != 0)
         res = verterr(env);
 
-    conn = NULL;
+    cp = NULL;
 
     return res;
 }
@@ -226,14 +227,15 @@ nif_virConnectClose(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     char *res = NULL;
     ERL_NIF_TERM capabilities = {0};
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetCapabilities(*conn);
+    res = virConnectGetCapabilities(*cp);
 
     if (res == NULL)
         return verterr(env);
@@ -250,14 +252,15 @@ nif_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     static ERL_NIF_TERM
 nif_virConnectGetHostname(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     char *res = NULL;
     ERL_NIF_TERM hostname = {0};
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetHostname(*conn);
+    res = virConnectGetHostname(*cp);
 
     if (res == NULL)
         return verterr(env);
@@ -274,14 +277,16 @@ nif_virConnectGetHostname(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectGetLibVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     int res = -1;
     unsigned long version = -1;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetLibVersion(*conn, &version);
+    res = virConnectGetLibVersion(*cp, &version);
 
     if (res == -1)
         return verterr(env);
@@ -295,20 +300,21 @@ nif_virConnectGetLibVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     int res = -1;
     char type[1024];
 
 
     (void)memset(type, '\0', sizeof(type));
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (enif_get_string(env, argv[1], type, sizeof(type), ERL_NIF_LATIN1) < 0)
         return enif_make_badarg(env);
 
-    res = virConnectGetMaxVcpus(*conn, (type[0] == '\0' ? NULL : type));
+    res = virConnectGetMaxVcpus(*cp, (type[0] == '\0' ? NULL : type));
 
     if (res == -1)
         return verterr(env);
@@ -322,14 +328,15 @@ nif_virConnectGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virNodeGetFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     u_int64_t res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virNodeGetFreeMemory(*conn);
+    res = virNodeGetFreeMemory(*cp);
 
     if (res == -1)
         return verterr(env);
@@ -343,16 +350,17 @@ nif_virNodeGetFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virNodeGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     virNodeInfo info;
     ErlNifBinary buf = {0};
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virNodeGetInfo(*conn, &info);
+    res = virNodeGetInfo(*cp, &info);
 
     if (res == -1)
         return verterr(env);
@@ -367,12 +375,13 @@ nif_virNodeGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_binary(env, &buf));
 }
 
-/* 0: virConnectPtr, 1: int maxnodes */
+/* 0: virConnectPtr, 1: int max */
     static ERL_NIF_TERM
 nif_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
-    int maxnodes = 0;
+    virConnectPtr *cp = NULL;
+    int max = 0;
+
     u_int64_t *mem = NULL;
     int res = -1;
     int i = 0;
@@ -380,18 +389,18 @@ nif_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     ERL_NIF_TERM list = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    if (!enif_get_int(env, argv[1], &maxnodes) || maxnodes <= 0)
+    if (!enif_get_int(env, argv[1], &max) || max <= 0)
         return enif_make_badarg(env);
 
-    mem = calloc(maxnodes, sizeof(u_int64_t));
+    mem = calloc(max, sizeof(u_int64_t));
 
     if (mem == NULL)
         return atom_enomem;
 
-    res = virNodeGetCellsFreeMemory(*conn, mem, 0, maxnodes);
+    res = virNodeGetCellsFreeMemory(*cp, mem, 0, max);
 
     if (res == -1)
         return verterr(env);
@@ -411,14 +420,15 @@ nif_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     static ERL_NIF_TERM
 nif_virConnectGetType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     const char *res = NULL;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetType(*conn);
+    res = virConnectGetType(*cp);
 
     if (res == NULL)
         return verterr(env);
@@ -432,15 +442,16 @@ nif_virConnectGetType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectGetVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     int res = -1;
     unsigned long version = 0;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetVersion(*conn, &version);
+    res = virConnectGetVersion(*cp, &version);
 
     if (res == -1)
         return verterr(env);
@@ -454,15 +465,16 @@ nif_virConnectGetVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     char *res = NULL;
     ERL_NIF_TERM uri = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectGetURI(*conn);
+    res = virConnectGetURI(*cp);
 
     if (res == NULL)
         return verterr(env);
@@ -479,14 +491,15 @@ nif_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectIsEncrypted(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectIsEncrypted(*conn);
+    res = virConnectIsEncrypted(*cp);
 
     if (res == -1)
         return verterr(env);
@@ -498,14 +511,15 @@ nif_virConnectIsEncrypted(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virConnectIsSecure(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virConnectIsSecure(*conn);
+    res = virConnectIsSecure(*cp);
 
     if (res == -1)
         return verterr(env);
@@ -517,16 +531,17 @@ nif_virConnectIsSecure(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
+
     virSecurityModel sec;
     ErlNifBinary buf = {0};
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
-    res = virNodeGetSecurityModel(*conn, &sec);
+    res = virNodeGetSecurityModel(*cp, &sec);
 
     if (res == -1)
         return verterr(env);
@@ -545,12 +560,13 @@ nif_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_RES_DOMAIN;
+
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -558,23 +574,23 @@ nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_RES_DOMAIN:
-            res = virConnectNumOfDomains(*conn);
+            res = virConnectNumOfDomains(*cp);
             break;
         case VERT_RES_INTERFACE:
-            res = virConnectNumOfInterfaces(*conn);
+            res = virConnectNumOfInterfaces(*cp);
             break;
         case VERT_RES_NETWORK:
-            res = virConnectNumOfNetworks(*conn);
+            res = virConnectNumOfNetworks(*cp);
             break;
         case VERT_RES_STORAGEPOOL:
-            res = virConnectNumOfStoragePools(*conn);
+            res = virConnectNumOfStoragePools(*cp);
             break;
         case VERT_RES_SECRET:
-            res = virConnectNumOfSecrets(*conn);
+            res = virConnectNumOfSecrets(*cp);
             break;
         case VERT_RES_FILTER:
 #ifdef THIS_VERSION_SUPPORTS_FILTER
-            res = virConnectNumOfNWFilters(*conn);
+            res = virConnectNumOfNWFilters(*cp);
 #else
             res = 0;
 #endif
@@ -595,12 +611,13 @@ nif_ConnectNumActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_RES_DOMAIN;
+
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -608,16 +625,16 @@ nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_RES_DOMAIN:
-            res = virConnectNumOfDefinedDomains(*conn);
+            res = virConnectNumOfDefinedDomains(*cp);
             break;
         case VERT_RES_INTERFACE:
-            res = virConnectNumOfDefinedInterfaces(*conn);
+            res = virConnectNumOfDefinedInterfaces(*cp);
             break;
         case VERT_RES_NETWORK:
-            res = virConnectNumOfDefinedNetworks(*conn);
+            res = virConnectNumOfDefinedNetworks(*cp);
             break;
         case VERT_RES_STORAGEPOOL:
-            res = virConnectNumOfDefinedStoragePools(*conn);
+            res = virConnectNumOfDefinedStoragePools(*cp);
             break;
         default:
             return enif_make_badarg(env);
@@ -640,22 +657,22 @@ nif_ConnectNumInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
-    virDomainPtr *dom = NULL;
+    virConnectPtr *cp = NULL;
+    virDomainPtr *dp = NULL;
     int type = VERT_LOOKUP_BY_ID;
 
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    dom = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
+    dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
 
-    if (dom == NULL)
+    if (dp == NULL)
         return atom_enomem;
 
     switch (type) {
@@ -664,7 +681,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
                 if (!enif_get_int(env, argv[2], &id))
                     return enif_make_badarg(env);
-                *dom = virDomainLookupByID(*conn, id);
+                *dp = virDomainLookupByID(*cp, id);
             }
             break;
 
@@ -674,7 +691,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                 if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
-                *dom = virDomainLookupByName(*conn, name);
+                *dp = virDomainLookupByName(*cp, name);
             }
             break;
 
@@ -684,7 +701,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                 if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
-                *dom = virDomainLookupByUUID(*conn, (const unsigned char *)uuid);
+                *dp = virDomainLookupByUUID(*cp, (const unsigned char *)uuid);
             }
             break;
 
@@ -692,13 +709,13 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             return enif_make_badarg(env);
     }
 
-    if (*dom == NULL) {
-        enif_release_resource(dom);
+    if (*dp == NULL) {
+        enif_release_resource(dp);
         return verterr(env);
     }
 
-    res = enif_make_resource(env, dom);
-    enif_release_resource(dom);
+    res = enif_make_resource(env, dp);
+    enif_release_resource(dp);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -848,7 +865,7 @@ nif_ResourceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_RES_DOMAIN;
     int max = 0;
 
@@ -859,7 +876,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -886,7 +903,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             if (domains == NULL)
                 return atom_enomem;
 
-            res = virConnectListDomains(*conn, domains, max);
+            res = virConnectListDomains(*cp, domains, max);
 
             if (res == -1)
                 return verterr(env);
@@ -905,27 +922,27 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_RES_INTERFACE:
-            res = virConnectListInterfaces(*conn, names, max);
+            res = virConnectListInterfaces(*cp, names, max);
             break;
             
         case VERT_RES_NETWORK:
-            res = virConnectListNetworks(*conn, names, max);
+            res = virConnectListNetworks(*cp, names, max);
             break;
 
         case VERT_RES_FILTER:
 #if THIS_VERSION_SUPPORTS_FILTER
-            res = virConnectListNWFilters(*conn, names, max);
+            res = virConnectListNWFilters(*cp, names, max);
 #else
             res = 0;
 #endif
             break;
 
         case VERT_RES_SECRET:
-            res = virConnectListSecrets(*conn, names, max);
+            res = virConnectListSecrets(*cp, names, max);
             break;
 
         case VERT_RES_STORAGEPOOL:
-            res = virConnectListStoragePools(*conn, names, max);
+            res = virConnectListStoragePools(*cp, names, max);
             break;
 
         default:
@@ -952,7 +969,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_RES_DOMAIN;
     int max= 0;
 
@@ -963,7 +980,7 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -981,19 +998,19 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_RES_DOMAIN:
-            res = virConnectListDefinedDomains(*conn, names, max);
+            res = virConnectListDefinedDomains(*cp, names, max);
             break;
 
         case VERT_RES_INTERFACE:
-            res = virConnectListDefinedInterfaces(*conn, names, max);
+            res = virConnectListDefinedInterfaces(*cp, names, max);
             break;
 
         case VERT_RES_NETWORK:
-            res = virConnectListDefinedNetworks(*conn, names, max);
+            res = virConnectListDefinedNetworks(*cp, names, max);
             break;
             
         case VERT_RES_STORAGEPOOL:
-            res = virConnectListDefinedNetworks(*conn, names, max);
+            res = virConnectListDefinedNetworks(*cp, names, max);
             break;
 
         default:
@@ -1019,16 +1036,16 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_DOMAIN_CREATE_TRANSIENT;
     char cfg[8192]; /* XXX size ??? this is XML after all */
     int flags = 0;
 
-    virDomainPtr *dom = NULL;
+    virDomainPtr *dp = NULL;
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -1041,23 +1058,23 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[3], &flags))
         return enif_make_badarg(env);
 
-    dom = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
+    dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
 
-    if (dom == NULL)
+    if (dp == NULL)
         return atom_enomem;
 
     switch (type) {
         case VERT_DOMAIN_CREATE_TRANSIENT:
-            *dom = virDomainCreateXML(*conn, cfg, flags);
+            *dp = virDomainCreateXML(*cp, cfg, flags);
             break;
 
         case VERT_DOMAIN_CREATE_PERSISTENT:
-            *dom = virDomainDefineXML(*conn, cfg);
+            *dp = virDomainDefineXML(*cp, cfg);
 
-            if (virDomainCreate(*dom) < 0) {
+            if (virDomainCreate(*dp) < 0) {
                 res = verterr(env);
-                (void)virDomainFree(*dom);
-                enif_release_resource(dom);
+                (void)virDomainFree(*dp);
+                enif_release_resource(dp);
                 return res;
             }
             break;
@@ -1066,13 +1083,13 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             return enif_make_badarg(env);
     }
 
-    if (*dom == NULL) {
-        enif_release_resource(dom);
+    if (*dp == NULL) {
+        enif_release_resource(dp);
         return verterr(env);
     }
 
-    res = enif_make_resource(env, dom);
-    enif_release_resource(dom);
+    res = enif_make_resource(env, dp);
+    enif_release_resource(dp);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -1086,17 +1103,18 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virDomainPtr *dom = NULL;
+    virDomainPtr *dp = NULL;
+
     virDomainInfo info = {0};
     int res = -1;
 
     ErlNifBinary buf = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dp))
         return enif_make_badarg(env);
 
-    res = virDomainGetInfo(*dom, &info);
+    res = virDomainGetInfo(*dp, &info);
 
     if (res != 0)
         return verterr(env);
@@ -1115,18 +1133,18 @@ nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virDomainPtr *dom = NULL;
+    virDomainPtr *dp = NULL;
     char file[MAXPATHLEN];
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dp))
         return enif_make_badarg(env);
 
     if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
         return enif_make_badarg(env);
 
-    res = virDomainSave(*dom, file);
+    res = virDomainSave(*dp, file);
 
     if (res != 0)
         return verterr(env);
@@ -1138,18 +1156,18 @@ nif_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
+    virConnectPtr *cp = NULL;
     char file[MAXPATHLEN];
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
         return enif_make_badarg(env);
 
-    res = virDomainRestore(*conn, file);
+    res = virDomainRestore(*cp, file);
 
     if (res != 0)
         return verterr(env);
@@ -1161,18 +1179,18 @@ nif_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virDomainPtr *dom = NULL;
+    virDomainPtr *dp = NULL;
     int flags = 0;
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &flags))
         return enif_make_badarg(env);
 
-    res = virDomainSetAutostart(*dom, flags);
+    res = virDomainSetAutostart(*dp, flags);
 
     if (res != 0)
         return verterr(env);
@@ -1184,14 +1202,14 @@ nif_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virDomainPtr *dom = NULL;
+    virDomainPtr *dp = NULL;
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dom))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dp))
         return enif_make_badarg(env);
 
-    res = virDomainShutdown(*dom);
+    res = virDomainShutdown(*dp);
 
     if (res != 0)
         return verterr(env);
@@ -1206,14 +1224,14 @@ nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     static ERL_NIF_TERM
 nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    virConnectPtr *conn = NULL;
-    virInterfacePtr *ifp = NULL;
+    virConnectPtr *cp = NULL;
     int type = VERT_LOOKUP_BY_NAME;
 
+    virInterfacePtr *ifp = NULL;
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&conn))
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
     if (!enif_get_int(env, argv[1], &type))
@@ -1231,7 +1249,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                 if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
-                *ifp = virInterfaceLookupByName(*conn, name);
+                *ifp = virInterfaceLookupByName(*cp, name);
             }
             break;
 
@@ -1241,7 +1259,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                 if (enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
-                *ifp = virInterfaceLookupByMACString(*conn, mac);
+                *ifp = virInterfaceLookupByMACString(*cp, mac);
             }
             break;
 
