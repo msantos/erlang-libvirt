@@ -127,6 +127,7 @@
 -define(VERT_LOOKUP_BY_UUID, 2).
 -define(VERT_LOOKUP_BY_RAWUUID, 3).
 -define(VERT_LOOKUP_BY_MAC, 4).
+-define(VERT_LOOKUP_BY_DESC, 5).
 
 %% domain_create
 

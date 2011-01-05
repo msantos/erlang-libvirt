@@ -1265,6 +1265,49 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_ref(env), res));
 }
 
+/* 0: virConnectPtr, 1: int type */
+    static ERL_NIF_TERM
+nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virInterfacePtr *ifp = NULL;
+    int type = VERT_LOOKUP_BY_NAME;
+
+    const char *res = NULL;
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_INTERFACE_RESOURCE, (void **)&ifp))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    switch (type) {
+        case VERT_LOOKUP_BY_NAME:
+            res = virInterfaceGetName(*ifp);
+            break;
+
+        case VERT_LOOKUP_BY_MAC:
+            res = virInterfaceGetMACString(*ifp);
+            break;
+
+        case VERT_LOOKUP_BY_DESC:
+            res = virInterfaceGetXMLDesc(*ifp, 0);
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (res == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, res, ERL_NIF_LATIN1));
+}
+
 
 /*
  * Utility functions
@@ -1415,6 +1458,7 @@ static ErlNifFunc nif_funcs[] = {
 
     /* interfaces */
     {"interface_lookup", 3, nif_InterfaceLookup},
+    {"interface_get", 2, nif_InterfaceGet},
 
     {"resource_free", 2, nif_ResourceFree},
     {"resource_destroy", 2, nif_ResourceDestroy},

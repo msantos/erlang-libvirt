@@ -43,7 +43,8 @@ enum {
     VERT_LOOKUP_BY_NAME,
     VERT_LOOKUP_BY_UUID,
     VERT_LOOKUP_BY_RAWUUID,
-    VERT_LOOKUP_BY_MAC
+    VERT_LOOKUP_BY_MAC,
+    VERT_LOOKUP_BY_DESC
 };
 
 /* nif_virDomainList */

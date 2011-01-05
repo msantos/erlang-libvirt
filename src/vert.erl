@@ -229,7 +229,14 @@ get(#resource{type = connect, res = Res}, {Type, inactive}) ->
         {ok, 0} -> [];
         {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
         Err -> Err
-    end.
+    end;
+
+get(#resource{type = interface, res = Res}, name) ->
+    interface_get(Res, ?VERT_LOOKUP_BY_NAME);
+get(#resource{type = interface, res = Res}, mac) ->
+    interface_get(Res, ?VERT_LOOKUP_BY_MAC);
+get(#resource{type = interface, res = Res}, desc) ->
+    interface_get(Res, ?VERT_LOOKUP_BY_DESC).
 
 
 set(Resource, autostart) ->
@@ -331,6 +338,8 @@ domain_shutdown(_) ->
 domain_set_autostart(_,_) ->
     erlang:error(not_implemented).
 
+interface_get(_,_) ->
+    erlang:error(not_implemented).
 interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
