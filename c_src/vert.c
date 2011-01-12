@@ -50,7 +50,7 @@ static ERL_NIF_TERM atom_false;
 
 static ERL_NIF_TERM error_tuple(ErlNifEnv *env, char *err);
 
-void error(void *userData, virErrorPtr error);
+void null_logger(void *userData, virErrorPtr error);
 static ERL_NIF_TERM verterr(ErlNifEnv *env);
 
 void connection_cleanup(ErlNifEnv *env, void *obj);
@@ -129,8 +129,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     /* XXX Disable error messges to stderr
      * XXX Probably should send the errors to a mailbox
      * */
-//    virSetErrorFunc(NULL, error);
-    virSetErrorFunc(NULL, NULL);
+    virSetErrorFunc(NULL, null_logger);
 
     return 0;
 }
@@ -1363,7 +1362,6 @@ connection_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: connection=%p/%p\n", *p, p);
     if (*p)
         (void)virConnectClose(*p);
 }
@@ -1373,7 +1371,6 @@ domain_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: domain=%p/%p\n", *p, p);
     if (*p)
         (void)virDomainFree(*p);
 }
@@ -1383,7 +1380,6 @@ interface_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: interface=%p/%p\n", *p, p);
     if (*p)
         (void)virInterfaceFree(*p);
 }
@@ -1393,7 +1389,6 @@ network_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: network=%p/%p\n", *p, p);
     if (*p)
         (void)virNetworkFree(*p);
 }
@@ -1403,7 +1398,6 @@ storagepool_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: storagepool=%p/%p\n", *p, p);
     if (*p)
         (void)virStoragePoolFree(*p);
 }
@@ -1414,7 +1408,6 @@ filter_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: filter=%p/%p\n", *p, p);
     if (*p)
         (void)virNWFilterFree(*p);
 }
@@ -1425,14 +1418,13 @@ secret_cleanup(ErlNifEnv *env, void *obj)
 {
     void **p = obj;
 
-    (void)fprintf(stderr, "cleanup: secret=%p/%p\n", *p, p);
     if (*p)
         (void)virSecretFree(*p);
 }
 
 
     void
-error (void *userData, virErrorPtr error)
+null_logger(void *userData, virErrorPtr error)
 {
 }
 
