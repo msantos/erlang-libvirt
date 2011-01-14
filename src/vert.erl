@@ -65,8 +65,8 @@ open({connect, Name}) when is_list(Name) ->
     connect_open(Name, ?VERT_CONNECT_OPEN);
 open({connect, Name, read}) when is_list(Name) ->
     connect_open(Name, ?VERT_CONNECT_OPEN_READONLY);
-open({connect, Name, auth}) when is_list(Name) ->
-    % connect_open_readonly(Name, ?VERT_CONNECT_OPEN_AUTH);
+open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
+%    connect_open(Name, ?VERT_CONNECT_OPEN_AUTH).
     erlang:error(not_implemented).
 
 close(#resource{type = connect, res = Res}) ->
@@ -131,7 +131,7 @@ get(#resource{type = connect, res = Res}, info) ->
 %% }
 get(#resource{type = domain, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
-    case domain_get_info(Res) of
+    case domain_get(Res, attr(info)) of
         {ok, <<
             State:8,
             MaxMem:Long/native-unsigned-integer-unit:8,
@@ -195,20 +195,20 @@ get(#resource{type = connect, res = Res}, uri) ->
     connect_get_uri(Res);
 
 get(#resource{type = connect, res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_ID, ID);
+    domain_lookup(Res, ?VERT_ATTR_ID, ID);
 get(#resource{type = connect, res = Res}, {domain, {name, Name}}) when is_list(Name) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
+    domain_lookup(Res, ?VERT_ATTR_NAME, Name);
 get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_UUID, UUID);
+    domain_lookup(Res, ?VERT_ATTR_UUID, UUID);
 get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
-    domain_lookup(Res, ?VERT_LOOKUP_BY_RAWUUID, UUID);
+    domain_lookup(Res, ?VERT_ATTR_RAWUUID, UUID);
 
 get(#resource{type = connect, res = Res}, {interface, {name, Name}}) when is_list(Name) ->
-    interface_lookup(Res, ?VERT_LOOKUP_BY_NAME, Name);
+    interface_lookup(Res, ?VERT_ATTR_NAME, Name);
 get(#resource{type = connect, res = Res}, {interface, {mac, MAC}}) when is_list(MAC) ->
-    interface_lookup(Res, ?VERT_LOOKUP_BY_MAC, MAC);
+    interface_lookup(Res, ?VERT_ATTR_MAC, MAC);
 
-get(#resource{} = Res, Type) when is_atom(Type) ->
+get(#resource{type = connect} = Res, Type) when is_atom(Type) ->
     ?MODULE:get(Res, {Type, active});
 
 get(#resource{type = connect, res = Res}, {Type, num_active}) ->
@@ -231,12 +231,13 @@ get(#resource{type = connect, res = Res}, {Type, inactive}) ->
         Err -> Err
     end;
 
-get(#resource{type = interface, res = Res}, name) ->
-    interface_get(Res, ?VERT_LOOKUP_BY_NAME);
-get(#resource{type = interface, res = Res}, mac) ->
-    interface_get(Res, ?VERT_LOOKUP_BY_MAC);
-get(#resource{type = interface, res = Res}, desc) ->
-    interface_get(Res, ?VERT_LOOKUP_BY_DESC).
+get(#resource{type = domain, res = Res}, {Type, Arg}) when is_atom(Type) ->
+    domain_get(Res, Type, Arg);
+get(#resource{type = domain, res = Res}, Type) ->
+    domain_get(Res, attr(Type));
+
+get(#resource{type = interface, res = Res}, Type) ->
+    interface_get(Res, attr(Type)).
 
 
 set(Resource, autostart) ->
@@ -320,7 +321,9 @@ connect_get_listinactive(_,_,_) ->
 connect_close(_) ->
     erlang:error(not_implemented).
 
-domain_get_info(_) ->
+domain_get(_,_) ->
+    erlang:error(not_implemented).
+domain_get(_,_,_) ->
     erlang:error(not_implemented).
 
 domain_lookup(_,_,_) ->
@@ -366,6 +369,26 @@ resource(network) -> ?VERT_RES_NETWORK;
 resource(storagepool) -> ?VERT_RES_STORAGEPOOL;
 resource(filter) -> ?VERT_RES_FILTER;
 resource(secret) -> ?VERT_RES_SECRET.
+
+attr(id) -> ?VERT_ATTR_ID;
+attr(name) -> ?VERT_ATTR_NAME;
+attr(uuid) -> ?VERT_ATTR_UUID;
+attr(rawuuid) -> ?VERT_ATTR_RAWUUID;
+attr(mac) -> ?VERT_ATTR_MAC;
+attr(desc) -> ?VERT_ATTR_DESC;
+attr(info) -> ?VERT_ATTR_INFO;
+attr(autostart) -> ?VERT_ATTR_AUTOSTART;
+attr(blockinfo) -> ?VERT_ATTR_BLOCKINFO;
+attr(connect) -> ?VERT_ATTR_CONNECT;
+attr(jobinfo) -> ?VERT_ATTR_JOBINFO;
+attr(maxmemory) -> ?VERT_ATTR_MAXMEMORY;
+attr(maxvcpus) -> ?VERT_ATTR_MAXVCPUS;
+attr(memoryparameters) -> ?VERT_ATTR_MEMORYPARAMETERS;
+attr(ostype) -> ?VERT_ATTR_OSTYPE;
+attr(scheduleparatmers) -> ?VERT_ATTR_SCHEDULERPARAMETERS;
+attr(schedulertype) -> ?VERT_ATTR_SCHEDULERTYPE;
+attr(securitylabel) -> ?VERT_ATTR_SECURITYLABEL;
+attr(vcpus) -> ?VERT_ATTR_VCPUS.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;

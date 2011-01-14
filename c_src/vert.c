@@ -658,7 +658,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *cp = NULL;
     virDomainPtr *dp = NULL;
-    int type = VERT_LOOKUP_BY_ID;
+    int type = VERT_ATTR_ID;
 
     ERL_NIF_TERM res = {0};
 
@@ -675,7 +675,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return atom_enomem;
 
     switch (type) {
-        case VERT_LOOKUP_BY_ID: {
+        case VERT_ATTR_ID: {
                 int id = 0;
 
                 if (!enif_get_int(env, argv[2], &id))
@@ -684,7 +684,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_LOOKUP_BY_NAME: {
+        case VERT_ATTR_NAME: {
                 char name[1024]; /* XXX max size ??? */
 
                 if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
@@ -694,7 +694,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_LOOKUP_BY_UUID: {
+        case VERT_ATTR_UUID: {
                 char uuid[1024]; /* XXX max size ??? */
 
                 if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
@@ -1098,34 +1098,334 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_ref(env), res));
 }
 
-/* 0: virDomainPtr */
+/* 0: virDomainPtr, 1: type */
     static ERL_NIF_TERM
-nif_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virDomainPtr *dp = NULL;
+    int type = 0;
 
-    virDomainInfo info = {0};
-    int res = -1;
-
-    ErlNifBinary buf = {0};
+    ERL_NIF_TERM term = {0};
 
 
     if (!enif_get_resource(env, argv[0], LIBVIRT_DOMAIN_RESOURCE, (void **)&dp))
         return enif_make_badarg(env);
 
-    res = virDomainGetInfo(*dp, &info);
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
 
-    if (res != 0)
-        return verterr(env);
+    switch (type) {
+        case VERT_ATTR_AUTOSTART: {
+            int autostart = 0;
 
-    if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
-        return atom_enomem;
+            if (virDomainGetAutostart(*dp, &autostart) < 0)
+                return verterr(env);
 
-    (void)memcpy(buf.data, &info, buf.size);
+            term = (autostart ? atom_true : atom_false);
+            }
+            break;
+
+#ifdef HAVE_VIRDOMAINGETBLOCKINFO
+        case VERT_ATTR_BLOCKINFO: {
+            char path[MAXPATHLEN];
+            virDomainInfo info = {0};
+            ErlNifBinary buf = {0};
+
+            if (!enif_get_string(env, argv[2], path, sizeof(path), ERL_NIF_LATIN1))
+                return enif_make_badarg(env);
+
+            if (virDomainGetBlockInfo(*dp, path, &info, 0) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &info, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                    enif_make_binary(env, &buf));
+            }
+            break;
+#endif
+
+        case VERT_ATTR_CONNECT: {
+            virConnectPtr *cp = NULL;
+            ERL_NIF_TERM res = {0};
+
+            cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
+
+            if (cp == NULL)
+                return atom_enomem;
+
+            *cp = virDomainGetConnect(*dp);
+
+            if (*cp == NULL)
+                return verterr(env);
+
+            res = enif_make_resource(env, cp);
+            enif_release_resource(cp);
+
+            term = enif_make_tuple2(env,
+                atom_ok,
+                enif_make_tuple4(env,
+                    atom_resource,
+                    atom_connect,
+                    enif_make_ref(env), res));
+            }
+            break;
+
+        case VERT_ATTR_ID: {
+            unsigned int id = 0;
+
+            id = virDomainGetID(*dp);
+
+            if (id < 0)
+                return verterr(env);
+
+            term = enif_make_uint(env, id);
+            }
+            break;
+
+        case VERT_ATTR_INFO: {
+            virDomainInfo info = {0};
+            ErlNifBinary buf = {0};
+            
+            if (virDomainGetInfo(*dp, &info) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &info, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                    enif_make_binary(env, &buf));
+            }
+            break;
+
+#ifdef HAVE_VIRDOMAINGETJOBINFO
+        case VERT_ATTR_JOBINFO: {
+            virDomainJobInfo info = {0};
+
+            if (virDomainGetJobInfo(*dp, &info) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &info, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                    enif_make_binary(env, &buf));
+            }
+            break;
+#endif
+
+        case VERT_ATTR_MAXMEMORY: {
+            unsigned long mem = 0;
+
+            mem = virDomainGetMaxMemory(*dp);    // XXX can also be NULL for domain0
+            if (mem == 0)
+                return verterr(env);
+
+            term = enif_make_ulong(env, mem);
+            }
+            break;
+
+        case VERT_ATTR_MAXVCPUS: {
+            int max = -1;
+
+            max = virDomainGetMaxVcpus(*dp);
+
+            if (max < 0)
+                return verterr(env);
+
+            term = enif_make_int(env, max);
+            }
+            break;
+
+#ifdef HAVE_VIRDOMAINGETMEMORYPARAMETERS
+        case VERT_ATTR_MEMORYPARAMETERS: {
+            int n = 0;
+            ErlNifBinary buf = {0};
+
+            if ( (virDomainGetMemoryParameters(*dp, NULL, &n, 0) < 0) || n == 0)
+                return verterr(env);
+            
+            if (!enif_alloc_binary(sizeof(virMemoryParameter)*n, &buf))
+                return atom_enomem;
+
+            if (virDomainGetMemoryParameters(*dp, buf.data, &n, 0) < 0)
+                return verterr(env);
+
+            term = enif_make_tuple2(env,
+                atom_ok,
+                enif_make_tuple4(env,
+                    enif_make_atom(env, "parameter"),
+                    erl_make_binary(env, &buf),
+                    erl_make_int(env, n)
+                    ));
+            }
+            break;
+#endif
+
+        case VERT_ATTR_NAME: {
+            const char *name = NULL;
+
+            name = virDomainGetName(*dp);
+
+            if (*dp == NULL)
+                return verterr(env);
+
+            term = enif_make_string(env, name, ERL_NIF_LATIN1);
+            }
+            break;
+
+        case VERT_ATTR_OSTYPE: {
+            char *type = NULL;  /* should be freed */
+
+            type = virDomainGetOSType(*dp);
+
+            if (type == NULL)
+                return verterr(env);
+
+            term = enif_make_string(env, type, ERL_NIF_LATIN1);
+            free(type);
+            }
+            break;
+            
+        case VERT_ATTR_SCHEDULERPARAMETERS: {
+            virSchedParameter params;
+            int n = 0;
+            ErlNifBinary buf = {0};
+
+            if (virDomainGetSchedulerParameters(*dp, &params, &n) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(virSchedParameter), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &params, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                    enif_make_binary(env, &buf));
+            }
+            break;
+
+        case VERT_ATTR_SCHEDULERTYPE: {
+            char *type = NULL;
+            int n = 0;
+            ErlNifBinary buf = {0};
+
+            type = virDomainGetSchedulerType(*dp, &n);
+
+            if (type == NULL)
+                return verterr(env);
+
+            if (!enif_alloc_binary(strlen(type)+1, &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, type, buf.size);
+            buf.data[buf.size-1] = '\0';
+
+            term = enif_make_tuple2(env,
+                atom_ok,
+                enif_make_tuple3(env,
+                    enif_make_atom(env, "parameter"),
+                    enif_make_binary(env, &buf),
+                    enif_make_int(env, n)
+                    ));
+
+            free(type);
+            }
+            break;
+
+        case VERT_ATTR_SECURITYLABEL: {
+            virSecurityLabel label;
+            ErlNifBinary buf = {0};
+
+            if (virDomainGetSecurityLabel(*dp, &label) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(virSecurityLabel), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &label, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                enif_make_binary(env, &buf));
+            }
+            break;
+
+        case VERT_ATTR_RAWUUID: {
+            unsigned char uuid[VIR_UUID_BUFLEN];
+            ErlNifBinary buf = {0};
+
+            if (virDomainGetUUID(*dp, uuid) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(VIR_UUID_BUFLEN), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, &uuid, buf.size);
+
+            term = enif_make_tuple2(env, atom_ok,
+                enif_make_binary(env, &buf));
+            }
+            break;
+
+        case VERT_ATTR_UUID: {
+            char uuid[VIR_UUID_STRING_BUFLEN];
+
+            if (virDomainGetUUIDString(*dp, uuid) < 0)
+                return verterr(env);
+
+            term = enif_make_tuple2(env, atom_ok,
+                enif_make_string(env, uuid, ERL_NIF_LATIN1));
+            }
+            break;
+
+/*
+        case VERT_ATTR_VCPUS: {
+            virVcpuInfo info = {0};
+            int max = 0;
+
+            if (virDomainGetVcpus(*dp, &info, maxinfo, cpumaps, int maplen) < 0)
+                return verterr(env);
+
+            }
+            break;
+
+        case VERT_ATTR_VCPUSFLAGS: {
+            }
+            break;
+*/
+
+        case VERT_ATTR_DESC: {
+            char *desc = NULL;
+            int flags = 0;
+
+            if (!enif_get_int(env, argv[1], &type))
+                return enif_make_badarg(env);
+
+            desc = virDomainGetXMLDesc(*dp, flags);
+
+            if (desc == NULL)
+                return verterr(env);
+
+            term = enif_make_tuple2(env, atom_ok,
+                enif_make_string(env, desc, ERL_NIF_LATIN1));
+
+            free(desc);
+            }
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
 
     return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_binary(env, &buf));
+            atom_ok, term);
 }
 
 /* 0: virDomainPtr, 1: char* */
@@ -1224,7 +1524,7 @@ nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virConnectPtr *cp = NULL;
-    int type = VERT_LOOKUP_BY_NAME;
+    int type = VERT_ATTR_NAME;
 
     virInterfacePtr *ifp = NULL;
     ERL_NIF_TERM res = {0};
@@ -1242,7 +1542,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return atom_enomem;
 
     switch (type) {
-        case VERT_LOOKUP_BY_NAME: {
+        case VERT_ATTR_NAME: {
                 char name[1024]; /* XXX max interface length ??? */
 
                 if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
@@ -1252,7 +1552,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             }
             break;
 
-        case VERT_LOOKUP_BY_MAC: {
+        case VERT_ATTR_MAC: {
                 char mac[1024]; /* XXX max size ??? */
 
                 if (enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
@@ -1287,7 +1587,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     virInterfacePtr *ifp = NULL;
-    int type = VERT_LOOKUP_BY_NAME;
+    int type = VERT_ATTR_NAME;
 
     const char *res = NULL;
 
@@ -1299,15 +1599,15 @@ nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     switch (type) {
-        case VERT_LOOKUP_BY_NAME:
+        case VERT_ATTR_NAME:
             res = virInterfaceGetName(*ifp);
             break;
 
-        case VERT_LOOKUP_BY_MAC:
+        case VERT_ATTR_MAC:
             res = virInterfaceGetMACString(*ifp);
             break;
 
-        case VERT_LOOKUP_BY_DESC:
+        case VERT_ATTR_DESC:
             res = virInterfaceGetXMLDesc(*ifp, 0);
             break;
 
@@ -1457,7 +1757,9 @@ static ErlNifFunc nif_funcs[] = {
 
     /* domain */
     {"domain_lookup", 3, nif_DomainLookup},
-    {"domain_get_info", 1, nif_virDomainGetInfo},
+
+    {"domain_get", 2, nif_DomainGet},
+    {"domain_get", 3, nif_DomainGet},
 
     {"domain_create", 4, nif_virDomainCreate},
     {"domain_save", 2, nif_virDomainSave},

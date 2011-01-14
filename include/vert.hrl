@@ -122,12 +122,26 @@
 -define(VERT_CONNECT_OPEN_AUTH, 2).
 
 %% domain_lookup/3
--define(VERT_LOOKUP_BY_ID, 0).
--define(VERT_LOOKUP_BY_NAME, 1).
--define(VERT_LOOKUP_BY_UUID, 2).
--define(VERT_LOOKUP_BY_RAWUUID, 3).
--define(VERT_LOOKUP_BY_MAC, 4).
--define(VERT_LOOKUP_BY_DESC, 5).
+-define(VERT_ATTR_ID, 0).
+-define(VERT_ATTR_NAME, 1).
+-define(VERT_ATTR_UUID, 2).
+-define(VERT_ATTR_RAWUUID, 3).
+-define(VERT_ATTR_MAC, 4).
+-define(VERT_ATTR_DESC, 5).
+-define(VERT_ATTR_INFO, 6).
+-define(VERT_ATTR_AUTOSTART, 7).
+-define(VERT_ATTR_BLOCKINFO, 8).
+-define(VERT_ATTR_CONNECT, 9).
+-define(VERT_ATTR_JOBINFO, 10).
+-define(VERT_ATTR_MAXMEMORY, 11).
+-define(VERT_ATTR_MAXVCPUS, 12).
+-define(VERT_ATTR_MEMORYPARAMETERS, 13).
+-define(VERT_ATTR_OSTYPE, 14).
+-define(VERT_ATTR_SCHEDULERPARAMETERS, 15).
+-define(VERT_ATTR_SCHEDULERTYPE, 16).
+-define(VERT_ATTR_SECURITYLABEL, 17).
+-define(VERT_ATTR_VCPUS, 18).
+-define(VERT_ATTR_VCPUSFLAGS, 19).
 
 %% domain_create
 
