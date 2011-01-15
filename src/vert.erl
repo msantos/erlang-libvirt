@@ -43,7 +43,9 @@
 
         save/2,
         restore/2,
-        shutdown/1
+        shutdown/1,
+
+        resource/2
     ]).
 
 
@@ -72,6 +74,92 @@ open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
 close(#resource{type = connect, res = Res}) ->
     connect_close(Res).
 
+create(Connect, {transient, Cfg}) ->
+    create(Connect, {transient, Cfg, []});
+create(#resource{type = connect, res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
+    Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
+    domain_create(Res, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
+create(#resource{type = connect, res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
+    domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
+
+
+%%
+%% Resources
+%%
+free(Resource) ->
+    resource(Resource, free).
+
+destroy(Resource) ->
+    resource(Resource, destroy).
+
+save(Resource, File) ->
+    resource(Resource, {save, File}).
+
+restore(Resource, File) ->
+    resource(Resource, {restore, File}).
+
+shutdown(Resource) ->
+    resource(Resource, shutdown).
+
+
+%%-------------------------------------------------------------------------
+%%% Resources
+%%-------------------------------------------------------------------------
+
+%%
+%% connect
+%%
+resource(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_atom(Attr) ->
+    domain_lookup(Res, attr(Attr), Arg);
+
+resource(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
+    interface_lookup(Res, attr(Attr), Arg);
+
+resource(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
+    connect_get_numactive(Res, res(Type));
+resource(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
+    connect_get_numinactive(Res, res(Type));
+
+resource(#resource{type = connect, res = Res}, {Type, active}) ->
+    Resource = res(Type),
+    case connect_get_numactive(Res, Resource) of
+        {ok, 0} -> [];
+        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
+        Err -> Err
+    end;
+resource(#resource{type = connect, res = Res}, {Type, inactive}) ->
+    Resource = res(Type),
+    case connect_get_numactive(Res, Resource) of
+        {ok, 0} -> [];
+        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
+        Err -> Err
+    end;
+
+%%
+%% Domain
+%%
+resource(#resource{type = domain, res = Res}, {save, File}) when is_list(File) ->
+    domain_save(Res, File);
+
+resource(#resource{type = connect, res = Res}, {resource, File}) when is_list(File) ->
+    domain_restore(Res, File);
+
+resource(#resource{type = domain, res = Res}, shutdown) ->
+    domain_shutdown(Res);
+
+%%
+%% Resource
+%%
+resource(#resource{type = Type, res = Res}, free) ->
+    resource_free(Res, res(Type));
+
+resource(#resource{type = Type, res = Res}, destroy) ->
+    resource_destroy(Res, res(Type)).
+
+
+%%-------------------------------------------------------------------------
+%%% Resource attributes
+%%-------------------------------------------------------------------------
 get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
     {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Conn, info),
     connect_get(Res, attr(cellsfreememory), Nodes);
@@ -179,32 +267,6 @@ get(#resource{type = connect, res = Res}, securitymodel) ->
             Err
     end;
 
-get(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_atom(Attr) ->
-    domain_lookup(Res, attr(Attr), Arg);
-
-get(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
-    interface_lookup(Res, attr(Attr), Arg);
-
-get(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
-    connect_get_numactive(Res, resource(Type));
-get(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
-    connect_get_numinactive(Res, resource(Type));
-
-get(#resource{type = connect, res = Res}, {Type, active}) ->
-    Resource = resource(Type),
-    case connect_get_numactive(Res, Resource) of
-        {ok, 0} -> [];
-        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
-        Err -> Err
-    end;
-get(#resource{type = connect, res = Res}, {Type, inactive}) ->
-    Resource = resource(Type),
-    case connect_get_numactive(Res, Resource) of
-        {ok, 0} -> [];
-        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
-        Err -> Err
-    end;
-
 get(#resource{type = connect, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
     connect_get(Res, Attr, Arg);
 get(#resource{type = connect, res = Res}, Attr) ->
@@ -225,32 +287,6 @@ set(#resource{type = domain, res = Res}, {autostart, true}) ->
     domain_set_autostart(Res, 1);
 set(#resource{type = domain, res = Res}, {autostart, false}) ->
     domain_set_autostart(Res, 0).
-
-%%
-%% Domain
-%%
-free(#resource{type = Type, res = Res}) ->
-    resource_free(Res, resource(Type)).
-
-create(Connect, {transient, Cfg}) ->
-    create(Connect, {transient, Cfg, []});
-create(#resource{type = connect, res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
-    Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
-    domain_create(Res, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
-create(#resource{type = connect, res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
-    domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
-
-destroy(#resource{type = Type, res = Res}) ->
-    resource_destroy(Res, resource(Type)).
-
-save(#resource{type = domain, res = Res}, File) when is_list(File) ->
-    domain_save(Res, File).
-
-restore(#resource{type = connect, res = Res}, File) when is_list(File) ->
-    domain_restore(Res, File).
-
-shutdown(#resource{type = domain, res = Res}) ->
-    domain_shutdown(Res).
 
 
 %%-------------------------------------------------------------------------
@@ -319,12 +355,12 @@ version(Version) when is_integer(Version) ->
 
 flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
-resource(domain) -> ?VERT_RES_DOMAIN;
-resource(interface) -> ?VERT_RES_INTERFACE;
-resource(network) -> ?VERT_RES_NETWORK;
-resource(storagepool) -> ?VERT_RES_STORAGEPOOL;
-resource(filter) -> ?VERT_RES_FILTER;
-resource(secret) -> ?VERT_RES_SECRET.
+res(domain) -> ?VERT_RES_DOMAIN;
+res(interface) -> ?VERT_RES_INTERFACE;
+res(network) -> ?VERT_RES_NETWORK;
+res(storagepool) -> ?VERT_RES_STORAGEPOOL;
+res(filter) -> ?VERT_RES_FILTER;
+res(secret) -> ?VERT_RES_SECRET.
 
 attr(id) -> ?VERT_ATTR_ID;
 attr(name) -> ?VERT_ATTR_NAME;
