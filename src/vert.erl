@@ -72,19 +72,9 @@ open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
 close(#resource{type = connect, res = Res}) ->
     connect_close(Res).
 
-get(#resource{type = connect, res = Res}, capabilities) ->
-    connect_get_capabilities(Res);
-get(#resource{type = connect, res = Res} = Conn, cellsfreemem) ->
+get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
     {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Conn, info),
-    connect_get_cellsfreememory(Res, Nodes);
-get(#resource{type = connect, res = Res}, encrypted) ->
-    connect_is_encrypted(Res);
-get(#resource{type = connect, res = Res}, secure) ->
-    connect_is_secure(Res);
-get(#resource{type = connect, res = Res}, freemem) ->
-    connect_get_freememory(Res);
-get(#resource{type = connect, res = Res}, hostname) ->
-    connect_get_hostname(Res);
+    connect_get(Res, attr(cellsfreememory), Nodes);
 
 %% struct _virNodeInfo {
 %%     char model[32];     /* string indicating the CPU model */
@@ -98,7 +88,7 @@ get(#resource{type = connect, res = Res}, hostname) ->
 %% };
 get(#resource{type = connect, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
-    case connect_get_info(Res) of
+    case connect_get(Res, attr(info)) of
         {ok, <<
             Model:32/native-bytes,
             Memory:Long/native-unsigned-integer-unit:8,
@@ -152,30 +142,31 @@ get(#resource{type = domain, res = Res}, info) ->
     end;
 
 get(#resource{type = connect, res = Res}, libversion) ->
-    case connect_get_libversion(Res) of
+    case connect_get(Res, attr(libversion)) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
 get(#resource{type = connect, res = Res}, version) ->
-    case connect_get_version(Res) of
+    case connect_get(Res, attr(version)) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
+
 get(#resource{type = connect, res = Res}, maxvcpus) ->
-    connect_get_maxvcpus(Res, []);
+    connect_get(Res, attr(maxvcpus), []);
 get(#resource{type = connect, res = Res}, {maxvcpus, Type}) when is_list(Type) ->
-    connect_get_maxvcpus(Res, Type);
+    connect_get(Res, attr(maxvcpus), Type);
 
 %% struct _virSecurityModel {
 %%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
 %%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
 %% }
-get(#resource{type = connect, res = Res}, secmodel) ->
-    case connect_get_securitymodel(Res) of
+get(#resource{type = connect, res = Res}, securitymodel) ->
+    case connect_get(Res, attr(securitymodel)) of
         {ok, <<
             Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
             Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
@@ -188,32 +179,15 @@ get(#resource{type = connect, res = Res}, secmodel) ->
             Err
     end;
 
+get(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_atom(Attr) ->
+    domain_lookup(Res, attr(Attr), Arg);
 
-get(#resource{type = connect, res = Res}, type) ->
-    connect_get_type(Res);
-get(#resource{type = connect, res = Res}, uri) ->
-    connect_get_uri(Res);
+get(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
+    interface_lookup(Res, attr(Attr), Arg);
 
-get(#resource{type = connect, res = Res}, {domain, {id, ID}}) when is_integer(ID) ->
-    domain_lookup(Res, ?VERT_ATTR_ID, ID);
-get(#resource{type = connect, res = Res}, {domain, {name, Name}}) when is_list(Name) ->
-    domain_lookup(Res, ?VERT_ATTR_NAME, Name);
-get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_list(UUID) ->
-    domain_lookup(Res, ?VERT_ATTR_UUID, UUID);
-get(#resource{type = connect, res = Res}, {domain, {uuid, UUID}}) when is_binary(UUID) ->
-    domain_lookup(Res, ?VERT_ATTR_RAWUUID, UUID);
-
-get(#resource{type = connect, res = Res}, {interface, {name, Name}}) when is_list(Name) ->
-    interface_lookup(Res, ?VERT_ATTR_NAME, Name);
-get(#resource{type = connect, res = Res}, {interface, {mac, MAC}}) when is_list(MAC) ->
-    interface_lookup(Res, ?VERT_ATTR_MAC, MAC);
-
-get(#resource{type = connect} = Res, Type) when is_atom(Type) ->
-    ?MODULE:get(Res, {Type, active});
-
-get(#resource{type = connect, res = Res}, {Type, num_active}) ->
+get(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
     connect_get_numactive(Res, resource(Type));
-get(#resource{type = connect, res = Res}, {Type, num_inactive}) ->
+get(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
     connect_get_numinactive(Res, resource(Type));
 
 get(#resource{type = connect, res = Res}, {Type, active}) ->
@@ -231,13 +205,18 @@ get(#resource{type = connect, res = Res}, {Type, inactive}) ->
         Err -> Err
     end;
 
-get(#resource{type = domain, res = Res}, {Type, Arg}) when is_atom(Type) ->
-    domain_get(Res, Type, Arg);
-get(#resource{type = domain, res = Res}, Type) ->
-    domain_get(Res, attr(Type));
+get(#resource{type = connect, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
+    connect_get(Res, Attr, Arg);
+get(#resource{type = connect, res = Res}, Attr) ->
+    connect_get(Res, attr(Attr));
 
-get(#resource{type = interface, res = Res}, Type) ->
-    interface_get(Res, attr(Type)).
+get(#resource{type = domain, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
+    domain_get(Res, Attr, Arg);
+get(#resource{type = domain, res = Res}, Attr) ->
+    domain_get(Res, attr(Attr));
+
+get(#resource{type = interface, res = Res}, Attr) ->
+    interface_get(Res, attr(Attr)).
 
 
 set(Resource, autostart) ->
@@ -280,34 +259,11 @@ shutdown(#resource{type = domain, res = Res}) ->
 connect_open(_,_) ->
     erlang:error(not_implemented).
 
-connect_get_capabilities(_) ->
+connect_get(_,_) ->
     erlang:error(not_implemented).
-connect_get_freememory(_) ->
-    erlang:error(not_implemented).
-connect_get_hostname(_) ->
-    erlang:error(not_implemented).
-connect_get_info(_) ->
-    erlang:error(not_implemented).
-connect_get_securitymodel(_) ->
-    erlang:error(not_implemented).
-connect_get_type(_) ->
-    erlang:error(not_implemented).
-connect_get_uri(_) ->
-    erlang:error(not_implemented).
-connect_get_libversion(_) ->
-    erlang:error(not_implemented).
-connect_get_version(_) ->
+connect_get(_,_,_) ->
     erlang:error(not_implemented).
 
-connect_is_encrypted(_) ->
-    erlang:error(not_implemented).
-connect_is_secure(_) ->
-    erlang:error(not_implemented).
-
-connect_get_cellsfreememory(_,_) ->
-    erlang:error(not_implemented).
-connect_get_maxvcpus(_,_) ->
-    erlang:error(not_implemented).
 connect_get_numactive(_,_) ->
     erlang:error(not_implemented).
 connect_get_numinactive(_,_) ->
@@ -388,7 +344,18 @@ attr(ostype) -> ?VERT_ATTR_OSTYPE;
 attr(scheduleparatmers) -> ?VERT_ATTR_SCHEDULERPARAMETERS;
 attr(schedulertype) -> ?VERT_ATTR_SCHEDULERTYPE;
 attr(securitylabel) -> ?VERT_ATTR_SECURITYLABEL;
-attr(vcpus) -> ?VERT_ATTR_VCPUS.
+attr(vcpus) -> ?VERT_ATTR_VCPUS;
+attr(capabilities) -> ?VERT_ATTR_CAPABILITIES;
+attr(hostname) -> ?VERT_ATTR_HOSTNAME;
+attr(libversion) -> ?VERT_ATTR_LIBVERSION;
+attr(freememory) -> ?VERT_ATTR_FREEMEMORY;
+attr(cellsfreememory) -> ?VERT_ATTR_CELLSFREEMEMORY;
+attr(type) -> ?VERT_ATTR_TYPE;
+attr(version) -> ?VERT_ATTR_VERSION;
+attr(uri) -> ?VERT_ATTR_URI;
+attr(encrypted) -> ?VERT_ATTR_ENCRYPTED;
+attr(secure) -> ?VERT_ATTR_SECURE;
+attr(securitymodel) -> ?VERT_ATTR_SECURITYMODEL.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
