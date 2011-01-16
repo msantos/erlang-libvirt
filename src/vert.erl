@@ -115,6 +115,9 @@ resource(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_at
 resource(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
     interface_lookup(Res, attr(Attr), Arg);
 
+resource(#resource{type = connect, res = Res}, {network, {Attr, Arg}}) when is_list(Attr) ->
+    network_lookup(Res, attr(Attr), Arg);
+
 resource(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
     connect_get_numactive(Res, res(Type));
 resource(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
@@ -317,18 +320,20 @@ connect_get_listinactive(_,_,_) ->
 connect_close(_) ->
     erlang:error(not_implemented).
 
+domain_lookup(_,_,_) ->
+    erlang:error(not_implemented).
 domain_get(_,_) ->
     erlang:error(not_implemented).
 domain_get(_,_,_) ->
     erlang:error(not_implemented).
 
+network_lookup(_,_,_) ->
+    erlang:error(not_implemented).
 network_get(_,_) ->
     erlang:error(not_implemented).
 network_get(_,_,_) ->
     erlang:error(not_implemented).
 
-domain_lookup(_,_,_) ->
-    erlang:error(not_implemented).
 domain_create(_,_,_,_) ->
     erlang:error(not_implemented).
 

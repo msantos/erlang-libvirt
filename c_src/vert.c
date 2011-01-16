@@ -1423,6 +1423,81 @@ nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 /* Network */
 
+/* 0: virConnectPtr, 1: int type 2: int | char* */
+    static ERL_NIF_TERM
+nif_NetworkLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virConnectPtr *cp = NULL;
+    int type = VERT_ATTR_NAME;
+
+    virNetworkPtr *np = NULL;
+    ERL_NIF_TERM res = {0};
+
+
+    if (argc != 3)
+        return enif_make_badarg(env);
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    np = enif_alloc_resource(LIBVIRT_NETWORK_RESOURCE, sizeof(virNetworkPtr));
+
+    ISNULL(np);
+
+    switch (type) {
+        case VERT_ATTR_NAME: {
+                char name[1024]; /* XXX max interface length ??? */
+
+                if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                    return enif_make_badarg(env);
+
+                *np = virNetworkLookupByName(*cp, name);
+            }
+            break;
+
+        case VERT_ATTR_RAWUUID: {
+                ErlNifBinary buf = {0};
+
+                if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
+                    return enif_make_badarg(env);
+
+                *np = virNetworkLookupByUUID(*cp, buf.data);
+            }
+            break;
+
+        case VERT_ATTR_UUID: {
+                ErlNifBinary buf = {0};
+
+                if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
+                    return enif_make_badarg(env);
+
+                *np = virNetworkLookupByUUIDString(*cp, (const char *)buf.data);
+            }
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (*np == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    res = enif_make_resource(env, np);
+    enif_release_resource(np);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_tuple4(env,
+            atom_resource,
+            atom_domain,
+            enif_make_ref(env), res));
+}
+
 /* 0: virDomainPtr, 1: type */
     static ERL_NIF_TERM
 nif_NetworkGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -1683,6 +1758,7 @@ static ErlNifFunc nif_funcs[] = {
 
     /* network */
     {"network_get", 2, nif_NetworkGet},
+    {"network_lookup", 2, nif_NetworkLookup},
 
     {"resource_free", 2, nif_ResourceFree},
     {"resource_destroy", 2, nif_ResourceDestroy},
