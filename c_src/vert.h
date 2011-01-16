@@ -30,6 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define VERTERR(x) do { \
+    if ((x)) return verterr(env); \
+} while (0)
+
+
 /* nif_virDomainLookup */
 enum {
     VERT_CONNECT_OPEN = 0,

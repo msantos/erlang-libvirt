@@ -278,8 +278,12 @@ get(#resource{type = domain, res = Res}, Attr) ->
     domain_get(Res, attr(Attr));
 
 get(#resource{type = interface, res = Res}, Attr) ->
-    interface_get(Res, attr(Attr)).
+    interface_get(Res, attr(Attr));
 
+get(#resource{type = network, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
+    network_get(Res, Attr, Arg);
+get(#resource{type = network, res = Res}, Attr) ->
+    network_get(Res, attr(Attr)).
 
 set(Resource, autostart) ->
     set(Resource, {autostart, true});
@@ -316,6 +320,11 @@ connect_close(_) ->
 domain_get(_,_) ->
     erlang:error(not_implemented).
 domain_get(_,_,_) ->
+    erlang:error(not_implemented).
+
+network_get(_,_) ->
+    erlang:error(not_implemented).
+network_get(_,_,_) ->
     erlang:error(not_implemented).
 
 domain_lookup(_,_,_) ->
