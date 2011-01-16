@@ -34,6 +34,10 @@
     if ((x)) return verterr(env); \
 } while (0)
 
+#define NOMEM(x) do { \
+    if ((x) == NULL) return atom_enomem; \
+} while (0)
+
 
 /* nif_virDomainLookup */
 enum {

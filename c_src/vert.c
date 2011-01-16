@@ -165,8 +165,7 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
-    if (cp == NULL)
-        return atom_enomem;
+    NOMEM(cp);
 
     switch (type) {
         case VERT_CONNECT_OPEN:
@@ -328,9 +327,7 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             int i = 0;
 
             mem = calloc(max, sizeof(u_int64_t));
-
-            if (mem == NULL)
-                return atom_enomem;
+            NOMEM(mem);
 
             if (!enif_get_int(env, argv[2], &max) || max <= 0)
                 return enif_make_badarg(env);
@@ -548,9 +545,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
-
-    if (dp == NULL)
-        return atom_enomem;
+    NOMEM(dp);
 
     switch (type) {
         case VERT_ATTR_ID: {
@@ -753,9 +748,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     if (type != VERT_RES_DOMAIN) {
         names = calloc(max, sizeof(char *));
-
-        if (names == NULL)
-            return atom_enomem;
+        NOMEM(names);
     }
 
     list = enif_make_list(env, 0);
@@ -766,8 +759,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
             domains = calloc(max, sizeof(int));
 
-            if (domains == NULL)
-                return atom_enomem;
+            NOMEM(domains);
 
             res = virConnectListDomains(*cp, domains, max);
 
@@ -855,8 +847,7 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     names = calloc(max, sizeof(char *));
 
-    if (names == NULL)
-        return atom_enomem;
+    NOMEM(names);
 
     list = enif_make_list(env, 0);
 
@@ -923,8 +914,7 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
 
-    if (dp == NULL)
-        return atom_enomem;
+    NOMEM(dp);
 
     switch (type) {
         case VERT_DOMAIN_CREATE_TRANSIENT:
@@ -1016,8 +1006,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
             cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
-            if (cp == NULL)
-                return atom_enomem;
+            NOMEM(cp);
 
             *cp = virDomainGetConnect(*dp);
 
@@ -1378,8 +1367,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ifp = enif_alloc_resource(LIBVIRT_INTERFACE_RESOURCE, sizeof(virInterfacePtr));
 
-    if (ifp == NULL)
-        return atom_enomem;
+    NOMEM(ifp);
 
     switch (type) {
         case VERT_ATTR_NAME: {
