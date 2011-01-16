@@ -49,6 +49,7 @@ static ERL_NIF_TERM atom_true;
 static ERL_NIF_TERM atom_false;
 
 static ERL_NIF_TERM error_tuple(ErlNifEnv *env, char *err);
+static ERL_NIF_TERM bincopy(ErlNifEnv *env, void *src, size_t len);
 
 void null_logger(void *userData, virErrorPtr error);
 static ERL_NIF_TERM verterr(ErlNifEnv *env);
@@ -165,7 +166,7 @@ nif_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
-    NOMEM(cp);
+    ISNULL(cp);
 
     switch (type) {
         case VERT_CONNECT_OPEN:
@@ -305,18 +306,14 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_INFO: {
             virNodeInfo info;
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virNodeGetInfo(*cp, &info) < 0);
-
-            if (!enif_alloc_binary(sizeof(virNodeInfo), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &info, buf.size);
+            buf = bincopy(env, &info, sizeof(virNodeInfo));
+            NOMEM(buf);
 
             term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_binary(env, &buf));
+                atom_ok, buf);
             }
             break;
 
@@ -327,7 +324,7 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             int i = 0;
 
             mem = calloc(max, sizeof(u_int64_t));
-            NOMEM(mem);
+            ISNULL(mem);
 
             if (!enif_get_int(env, argv[2], &max) || max <= 0)
                 return enif_make_badarg(env);
@@ -409,18 +406,14 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_SECURITYMODEL: {
             virSecurityModel model;
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virNodeGetSecurityModel(*cp, &model) < 0);
-
-            if (!enif_alloc_binary(sizeof(virSecurityModel), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &model, buf.size);
+            buf = bincopy(env, &model, sizeof(virSecurityModel));
+            NOMEM(buf);
 
             term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_binary(env, &buf));
+                atom_ok, buf);
             }
             break;
 
@@ -545,7 +538,7 @@ nif_DomainLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
-    NOMEM(dp);
+    ISNULL(dp);
 
     switch (type) {
         case VERT_ATTR_ID: {
@@ -748,7 +741,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     if (type != VERT_RES_DOMAIN) {
         names = calloc(max, sizeof(char *));
-        NOMEM(names);
+        ISNULL(names);
     }
 
     list = enif_make_list(env, 0);
@@ -759,7 +752,7 @@ nif_ConnectGetListActive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
             domains = calloc(max, sizeof(int));
 
-            NOMEM(domains);
+            ISNULL(domains);
 
             res = virConnectListDomains(*cp, domains, max);
 
@@ -847,7 +840,7 @@ nif_ConnectGetListInactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     names = calloc(max, sizeof(char *));
 
-    NOMEM(names);
+    ISNULL(names);
 
     list = enif_make_list(env, 0);
 
@@ -914,7 +907,7 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp = enif_alloc_resource(LIBVIRT_DOMAIN_RESOURCE, sizeof(virDomainPtr));
 
-    NOMEM(dp);
+    ISNULL(dp);
 
     switch (type) {
         case VERT_DOMAIN_CREATE_TRANSIENT:
@@ -981,21 +974,16 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_BLOCKINFO: {
             char path[MAXPATHLEN];
             virDomainInfo info = {0};
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             if (argc != 3 || !enif_get_string(env, argv[2], path, sizeof(path), ERL_NIF_LATIN1))
                 return enif_make_badarg(env);
 
-            if (virDomainGetBlockInfo(*dp, path, &info, 0) < 0)
-                return verterr(env);
+            VERTERR(virDomainGetBlockInfo(*dp, path, &info, 0) < 0);
+            buf = bincopy(env, &info, sizeof(virDomainInfo));
+            NOMEM(buf);
 
-            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &info, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 #endif
@@ -1006,7 +994,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
             cp = enif_alloc_resource(LIBVIRT_CONNECT_RESOURCE, sizeof(virConnectPtr));
 
-            NOMEM(cp);
+            ISNULL(cp);
 
             *cp = virDomainGetConnect(*dp);
 
@@ -1037,33 +1025,27 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_INFO: {
             virDomainInfo info = {0};
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
             
             VERTERR(virDomainGetInfo(*dp, &info) < 0);
 
-            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
-                return atom_enomem;
+            buf = bincopy(env, &info, sizeof(virDomainInfo));
+            NOMEM(buf);
 
-            (void)memcpy(buf.data, &info, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 
 #ifdef HAVE_VIRDOMAINGETJOBINFO
         case VERT_ATTR_JOBINFO: {
             virDomainJobInfo info = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virDomainGetJobInfo(*dp, &info) < 0);
+            buf = bincopy(env, &info, sizeof(virDomainInfo));
+            NOMEM(buf);
 
-            if (!enif_alloc_binary(sizeof(virDomainInfo), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &info, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 #endif
@@ -1138,40 +1120,33 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_SCHEDULERPARAMETERS: {
             virSchedParameter params;
             int n = 0;
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virDomainGetSchedulerParameters(*dp, &params, &n) < 0);
 
-            if (!enif_alloc_binary(sizeof(virSchedParameter), &buf))
-                return atom_enomem;
+            buf = bincopy(env, &params, sizeof(virSchedParameter));
+            NOMEM(buf);
 
-            (void)memcpy(buf.data, &params, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 
         case VERT_ATTR_SCHEDULERTYPE: {
             char *type = NULL;
             int n = 0;
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             type = virDomainGetSchedulerType(*dp, &n);
 
             VERTERR(type == NULL);
-
-            if (!enif_alloc_binary(strlen(type)+1, &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, type, buf.size);
-            buf.data[buf.size-1] = '\0';
+            buf = bincopy(env, type, strlen(type)+1);
+            NOMEM(buf);
 
             term = enif_make_tuple2(env,
                 atom_ok,
                 enif_make_tuple3(env,
                     enif_make_atom(env, "parameter"),
-                    enif_make_binary(env, &buf),
+                    buf,
                     enif_make_int(env, n)
                     ));
 
@@ -1181,33 +1156,25 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_SECURITYLABEL: {
             virSecurityLabel label;
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virDomainGetSecurityLabel(*dp, &label) < 0);
+            buf = bincopy(env, &label, sizeof(virSecurityLabel));
+            NOMEM(buf);
 
-            if (!enif_alloc_binary(sizeof(virSecurityLabel), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &label, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 
         case VERT_ATTR_RAWUUID: {
             unsigned char uuid[VIR_UUID_BUFLEN];
-            ErlNifBinary buf = {0};
+            ERL_NIF_TERM buf = {0};
 
             VERTERR(virDomainGetUUID(*dp, uuid) < 0);
+            buf = bincopy(env, &uuid, sizeof(VIR_UUID_BUFLEN));
+            NOMEM(buf);
 
-            if (!enif_alloc_binary(sizeof(VIR_UUID_BUFLEN), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, &uuid, buf.size);
-
-            term = enif_make_tuple2(env, atom_ok,
-                enif_make_binary(env, &buf));
+            term = enif_make_tuple2(env, atom_ok, buf);
             }
             break;
 
@@ -1367,7 +1334,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ifp = enif_alloc_resource(LIBVIRT_INTERFACE_RESOURCE, sizeof(virInterfacePtr));
 
-    NOMEM(ifp);
+    ISNULL(ifp);
 
     switch (type) {
         case VERT_ATTR_NAME: {
@@ -1507,16 +1474,10 @@ nif_NetworkGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_RAWUUID: {
             unsigned char uuid[VIR_UUID_BUFLEN];
-            ErlNifBinary buf = {0};
 
             VERTERR(virNetworkGetUUID(*np, uuid) < 0);
-
-            if (!enif_alloc_binary(sizeof(uuid), &buf))
-                return atom_enomem;
-
-            (void)memcpy(buf.data, uuid, buf.size);
-
-            term = enif_make_binary(env, &buf);
+            term = bincopy(env, uuid, sizeof(uuid));
+            NOMEM(term);
             }
             break;
 
@@ -1600,6 +1561,19 @@ error_tuple(ErlNifEnv *env, char *err)
             atom_error,
             enif_make_string(env, err, ERL_NIF_LATIN1));
 }  
+
+    static ERL_NIF_TERM
+bincopy(ErlNifEnv *env, void *src, size_t len)
+{
+    ErlNifBinary buf = {0};
+
+    if (!enif_alloc_binary(len, &buf))
+        return atom_enomem;
+
+    (void)memcpy(buf.data, src, buf.size);
+
+    return enif_make_binary(env, &buf);
+}
 
 
 /*
