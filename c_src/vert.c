@@ -1024,7 +1024,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             virDomainInfo info = {0};
             ErlNifBinary buf = {0};
 
-            if (!enif_get_string(env, argv[2], path, sizeof(path), ERL_NIF_LATIN1))
+            if (argc != 3 || !enif_get_string(env, argv[2], path, sizeof(path), ERL_NIF_LATIN1))
                 return enif_make_badarg(env);
 
             if (virDomainGetBlockInfo(*dp, path, &info, 0) < 0)
@@ -1298,7 +1298,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             char *desc = NULL;
             int flags = 0;
 
-            if (!enif_get_int(env, argv[1], &type))
+            if (argc != 3 || !enif_get_int(env, argv[1], &type))
                 return enif_make_badarg(env);
 
             desc = virDomainGetXMLDesc(*dp, flags);
@@ -1437,7 +1437,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_NAME: {
                 char name[1024]; /* XXX max interface length ??? */
 
-                if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                if (argc != 3 || enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
                 *ifp = virInterfaceLookupByName(*cp, name);
@@ -1447,7 +1447,7 @@ nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_MAC: {
                 char mac[1024]; /* XXX max size ??? */
 
-                if (enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
+                if (argc != 3 || enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
                     return enif_make_badarg(env);
 
                 *ifp = virInterfaceLookupByMACString(*cp, mac);
@@ -1515,6 +1515,134 @@ nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_tuple2(env,
         atom_ok,
         enif_make_string(env, res, ERL_NIF_LATIN1));
+}
+
+
+/* Network */
+
+/* 0: virDomainPtr, 1: type */
+    static ERL_NIF_TERM
+nif_NetworkGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    virNetworkPtr *np = NULL;
+    int type = 0;
+
+    ERL_NIF_TERM term = {0};
+
+
+    if (!enif_get_resource(env, argv[0], LIBVIRT_NETWORK_RESOURCE, (void **)&np))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    switch (type) {
+        case VERT_ATTR_AUTOSTART: {
+            int autostart = 0;
+
+            if (virNetworkGetAutostart(*np, &autostart) < 0)
+                return verterr(env);
+
+            term = (autostart ? atom_true : atom_false);
+            }
+            break;
+
+        case VERT_ATTR_BRIDGENAME: {
+            char *name = NULL;
+
+            name = virNetworkGetBridgeName(*np);
+
+            if (name == NULL)
+                return verterr(env);
+
+            term = enif_make_string(env, name, ERL_NIF_LATIN1);
+            free(name);
+            }
+            break;
+
+        case VERT_ATTR_NAME: {
+            const char *name = NULL;
+
+            name = virNetworkGetName(*np);
+
+            if (name == NULL)
+                return verterr(env);
+
+            term = enif_make_string(env, name, ERL_NIF_LATIN1);
+            }
+            break;
+
+        case VERT_ATTR_RAWUUID: {
+            unsigned char uuid[VIR_UUID_BUFLEN];
+            ErlNifBinary buf = {0};
+
+            if (virNetworkGetUUID(*np, uuid) < 0)
+                return verterr(env);
+
+            if (!enif_alloc_binary(sizeof(uuid), &buf))
+                return atom_enomem;
+
+            (void)memcpy(buf.data, uuid, buf.size);
+
+            term = enif_make_binary(env, &buf);
+            }
+            break;
+
+        case VERT_ATTR_UUID: {
+            char uuid[VIR_UUID_STRING_BUFLEN];
+
+            if (virNetworkGetUUIDString(*np, uuid) < 0)
+                return verterr(env);
+
+            term = enif_make_string(env, uuid, ERL_NIF_LATIN1);
+            }
+            break;
+
+        case VERT_ATTR_DESC: {
+            char *desc = NULL;
+            int flags = 0;
+
+            if (argc != 3 || !enif_get_int(env, argv[2], &flags))
+                return enif_make_badarg(env);
+
+            desc = virNetworkGetXMLDesc(*np, flags);
+
+            if (desc == NULL)
+                return verterr(env);
+
+            term = enif_make_string(env, desc, ERL_NIF_LATIN1);
+            }
+            break;
+
+        case VERT_ATTR_ACTIVE: {
+            int res = -1;
+
+            res = virNetworkIsPersistent(*np);
+
+            if (res < 0)
+                return verterr(env);
+
+            term = (res == 1 ? atom_true : atom_false);
+            }
+            break;
+
+        case VERT_ATTR_PERSISTENT: {
+            int res = -1;
+
+            res = virNetworkIsPersistent(*np);
+
+            if (res < 0)
+                return verterr(env);
+
+            term = (res == 1 ? atom_true : atom_false);
+            }
+            break;
+
+        default:
+            return enif_make_badarg(env);
+    }
+
+    return term;
 }
 
 
@@ -1647,9 +1775,12 @@ static ErlNifFunc nif_funcs[] = {
 
     {"domain_set_autostart", 2, nif_virDomainSetAutostart},
 
-    /* interfaces */
+    /* interface */
     {"interface_lookup", 3, nif_InterfaceLookup},
     {"interface_get", 2, nif_InterfaceGet},
+
+    /* network */
+    {"network_get", 2, nif_NetworkGet},
 
     {"resource_free", 2, nif_ResourceFree},
     {"resource_destroy", 2, nif_ResourceDestroy},

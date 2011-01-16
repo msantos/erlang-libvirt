@@ -153,6 +153,9 @@
 -define(VERT_ATTR_ENCRYPTED, 28).
 -define(VERT_ATTR_SECURE, 29).
 -define(VERT_ATTR_SECURITYMODEL, 30).
+-define(VERT_ATTR_BRIDGENAME, 31).
+-define(VERT_ATTR_ACTIVE, 32).
+-define(VERT_ATTR_PERSISTENT, 33).
 
 %% domain_create
 

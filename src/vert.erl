@@ -391,7 +391,10 @@ attr(version) -> ?VERT_ATTR_VERSION;
 attr(uri) -> ?VERT_ATTR_URI;
 attr(encrypted) -> ?VERT_ATTR_ENCRYPTED;
 attr(secure) -> ?VERT_ATTR_SECURE;
-attr(securitymodel) -> ?VERT_ATTR_SECURITYMODEL.
+attr(securitymodel) -> ?VERT_ATTR_SECURITYMODEL;
+attr(bridgename) -> ?VERT_ATTR_BRIDGENAME;
+attr(active) -> ?VERT_ATTR_ACTIVE;
+attr(persistent) -> ?VERT_ATTR_PERSISTENT.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
