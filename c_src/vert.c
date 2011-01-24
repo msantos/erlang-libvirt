@@ -233,6 +233,9 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_resource(env, argv[0], LIBVIRT_CONNECT_RESOURCE, (void **)&cp))
         return enif_make_badarg(env);
 
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
     switch (type) {
         case VERT_ATTR_CAPABILITIES: {
             char *cap = NULL;
@@ -273,15 +276,15 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_MAXVCPUS: {
-            char type[1024];
+            char name[1024];
             int max = -1;
 
-            (void)memset(type, '\0', sizeof(type));
+            (void)memset(name, '\0', sizeof(name));
 
-            if (enif_get_string(env, argv[2], type, sizeof(type), ERL_NIF_LATIN1) < 0)
+            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 0)
                 return enif_make_badarg(env);
 
-            max = virConnectGetMaxVcpus(*cp, (type[0] == '\0' ? NULL : type));
+            max = virConnectGetMaxVcpus(*cp, (name[0] == '\0' ? NULL : name));
 
             VERTERR(max < 0);
 
@@ -344,15 +347,15 @@ nif_ConnectGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_TYPE: {
-            const char *type = NULL;
+            const char *name = NULL;
 
-            type = virConnectGetType(*cp);
+            name = virConnectGetType(*cp);
 
-            VERTERR(type == NULL);
+            VERTERR(name == NULL);
 
             term = enif_make_tuple2(env,
                 atom_ok,
-                enif_make_string(env, type, ERL_NIF_LATIN1));
+                enif_make_string(env, name, ERL_NIF_LATIN1));
             }
             break;
 
@@ -1106,14 +1109,14 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_OSTYPE: {
-            char *type = NULL;  /* should be freed */
+            char *name = NULL;  /* should be freed */
 
-            type = virDomainGetOSType(*dp);
+            name = virDomainGetOSType(*dp);
 
-            VERTERR(type == NULL);
+            VERTERR(name == NULL);
 
-            term = enif_make_string(env, type, ERL_NIF_LATIN1);
-            free(type);
+            term = enif_make_string(env, name, ERL_NIF_LATIN1);
+            free(name);
             }
             break;
             
@@ -1132,14 +1135,14 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_SCHEDULERTYPE: {
-            char *type = NULL;
+            char *name = NULL;
             int n = 0;
             ERL_NIF_TERM buf = {0};
 
-            type = virDomainGetSchedulerType(*dp, &n);
+            name = virDomainGetSchedulerType(*dp, &n);
 
-            VERTERR(type == NULL);
-            buf = bincopy(env, type, strlen(type)+1);
+            VERTERR(name == NULL);
+            buf = bincopy(env, name, strlen(name)+1);
             NOMEM(buf);
 
             term = enif_make_tuple2(env,
@@ -1150,7 +1153,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                     enif_make_int(env, n)
                     ));
 
-            free(type);
+            free(name);
             }
             break;
 
@@ -1207,7 +1210,7 @@ nif_DomainGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             char *desc = NULL;
             int flags = 0;
 
-            if (argc != 3 || !enif_get_int(env, argv[1], &type))
+            if (argc != 3 || !enif_get_int(env, argv[2], &flags))
                 return enif_make_badarg(env);
 
             desc = virDomainGetXMLDesc(*dp, flags);
