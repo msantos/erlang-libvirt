@@ -1758,7 +1758,7 @@ static ErlNifFunc nif_funcs[] = {
 
     /* network */
     {"network_get", 2, nif_NetworkGet},
-    {"network_lookup", 2, nif_NetworkLookup},
+    {"network_lookup", 3, nif_NetworkLookup},
 
     {"resource_free", 2, nif_ResourceFree},
     {"resource_destroy", 2, nif_ResourceDestroy},
