@@ -93,7 +93,6 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_get", 2, vert_domain_get},
     {"domain_get", 3, vert_domain_get},
 
-    {"domain_create", 4, vert_domain_create},
     {"domain_save", 2, vert_domain_save},
     {"domain_restore", 2, vert_domain_restore},
     {"domain_shutdown", 1, vert_domain_shutdown},
@@ -109,6 +108,8 @@ static ErlNifFunc nif_funcs[] = {
     {"network_lookup", 3, vert_network_lookup},
 
     /* all resource types */
+    {"resource_define", 3, vert_resource_define},
+    {"resource_create", 2, vert_resource_create},
     {"resource_destroy", 1, vert_resource_destroy},
 };
 

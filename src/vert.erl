@@ -37,8 +37,8 @@
         get/2,
         set/2,
 
-        free/1,
-        create/2,
+        define/2,
+        create/1, create/2,
         destroy/1,
 
         save/2,
@@ -74,21 +74,20 @@ open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
 close(#resource{type = connect, res = Res}) ->
     connect_close(Res).
 
-create(Connect, {transient, Cfg}) ->
-    create(Connect, {transient, Cfg, []});
-create(#resource{type = connect, res = Res}, {transient, Cfg, Flags}) when is_list(Cfg), is_list(Flags) ->
-    Bits = lists:foldl(fun(N, X) -> flags(N) bor X end, 0, Flags),
-    domain_create(Res, ?VERT_DOMAIN_CREATE_TRANSIENT, Cfg, Bits);
-create(#resource{type = connect, res = Res}, {persistent, Cfg}) when is_list(Cfg) ->
-    domain_create(Res, ?VERT_DOMAIN_CREATE_PERSISTENT, Cfg, 0).
+define(Resource, {Type, Cfg}) when is_atom(Type), is_binary(Cfg) ->
+    resource_define(Resource, res(Type), binary_to_list(Cfg));
+define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type), is_list(Cfg) ->
+    resource_define(Res, res(Type), Cfg).
+
+create(Resource) ->
+    create(Resource, 0).
+create(#resource{res = Res}, Flags) when is_integer(Flags) ->
+    resource_create(Res, Flags).
 
 
 %%
 %% Resources
 %%
-free(Resource) ->
-    resource(Resource, free).
-
 destroy(Resource) ->
     resource(Resource, destroy).
 
@@ -331,9 +330,6 @@ network_get(_,_) ->
 network_get(_,_,_) ->
     erlang:error(not_implemented).
 
-domain_create(_,_,_,_) ->
-    erlang:error(not_implemented).
-
 domain_save(_,_) ->
     erlang:error(not_implemented).
 domain_restore(_,_) ->
@@ -349,6 +345,10 @@ interface_get(_,_) ->
 interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
+resource_define(_,_,_) ->
+    erlang:error(not_implemented).
+resource_create(_,_) ->
+    erlang:error(not_implemented).
 resource_destroy(_) ->
     erlang:error(not_implemented).
 
@@ -361,8 +361,6 @@ version(Version) when is_integer(Version) ->
     Minor = Version rem 1000000 div 1000,
     Release = Version rem 1000000 rem 1000,
     {Major, Minor, Release}.
-
-flags(paused) -> ?VIR_DOMAIN_START_PAUSED.
 
 res(domain) -> ?VERT_RES_DOMAIN;
 res(interface) -> ?VERT_RES_INTERFACE;

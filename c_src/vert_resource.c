@@ -34,6 +34,117 @@
 #include "vert_resource.h"
 
 
+/* 0: VERT_RESOURCE, 1: int type, 2: char * */
+    ERL_NIF_TERM
+vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int type = 0;
+    char cfg[8192]; /* XXX size ??? this is XML after all */
+
+    VERT_RESOURCE *rp = NULL;
+    ERL_NIF_TERM res = {0};
+
+
+    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &type))
+        return enif_make_badarg(env);
+
+    /* XXX use binary */
+    if (enif_get_string(env, argv[2], cfg, sizeof(cfg), ERL_NIF_LATIN1) < 0)
+        return enif_make_badarg(env);
+
+    RESTYPE(vp, VERT_RES_CONNECT);
+    RESALLOC(rp, VERT_RES_DOMAIN);
+
+    switch (type) {
+        case VERT_RES_DOMAIN:
+            rp->res = virDomainDefineXML(vp->res, cfg);
+            break;
+        case VERT_RES_INTERFACE:
+            rp->res = virInterfaceDefineXML(vp->res, cfg, 0);
+            break;
+        case VERT_RES_NETWORK:
+            rp->res = virNetworkDefineXML(vp->res, cfg);
+            break;
+        case VERT_RES_STORAGEPOOL:
+            rp->res = virStoragePoolDefineXML(vp->res, cfg, 0);
+            break;
+#ifdef HAVE_NWFILTER
+        case VERT_RES_FILTER:
+            rp->res = virNWFilterDefineXML(vp->res, cfg);
+            break;
+#endif
+        case VERT_RES_SECRET:
+            rp->res = virSecretDefineXML(vp->res, cfg, 0);
+            break;
+        default:
+            return enif_make_badarg(env);
+    }
+
+    if (rp->res == NULL) {
+        enif_release_resource(rp);
+        return verterr(env);
+    }
+
+    res = enif_make_resource(env, rp);
+    enif_release_resource(rp);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_tuple4(env,
+            atom_resource,
+            atom_domain,
+            enif_make_ref(env), res));
+}
+
+
+/* 0: VERT_RESOURCE, 1: VERT_RESOURCE, 2: uint32 flags */
+    ERL_NIF_TERM
+vert_resource_create(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *rp = NULL;
+    int flags = 0;
+
+
+    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&rp))
+        return enif_make_badarg(env);
+
+    if (!enif_get_int(env, argv[1], &flags))
+        return enif_make_badarg(env);
+
+    switch (rp->type) {
+        case VERT_RES_DOMAIN:
+            /*
+            VERTERR(virDomainCreateWithFlags(dp->res, flags) == -1);
+            */
+            VERTERR(virDomainCreate(rp->res) == -1);
+            break;
+        case VERT_RES_INTERFACE:
+            VERTERR(virInterfaceCreate(rp->res, 0) == -1);
+            break;
+        case VERT_RES_NETWORK:
+            VERTERR(virNetworkCreate(rp->res) == -1);
+            break;
+        case VERT_RES_STORAGEPOOL:
+            VERTERR(virStoragePoolCreate(rp->res, 0) == -1);
+            break;
+#if 0
+        case VERT_RES_FILTER:
+            break;
+        case VERT_RES_SECRET:
+            break;
+#endif
+        default:
+            return enif_make_badarg(env);
+    }
+
+    return atom_ok;
+}
+
+
 /* 0: VERT_RESOURCE */
     ERL_NIF_TERM
 vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

@@ -137,10 +137,3 @@ enum {
 };
 
 
-/* nif_virDomainCreate */
-enum {
-    VERT_DOMAIN_CREATE_TRANSIENT = 0,
-    VERT_DOMAIN_CREATE_PERSISTENT
-};
-
-

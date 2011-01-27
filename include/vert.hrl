@@ -157,12 +157,6 @@
 -define(VERT_ATTR_ACTIVE, 32).
 -define(VERT_ATTR_PERSISTENT, 33).
 
-%% domain_create
-
-% types
--define(VERT_DOMAIN_CREATE_TRANSIENT, 0).
--define(VERT_DOMAIN_CREATE_PERSISTENT, 1).
-
 % flags
 -define(VIR_DOMAIN_NONE, 0).            % Default behavior
 -define(VIR_DOMAIN_START_PAUSED, 1).    % Launch guest in paused state
