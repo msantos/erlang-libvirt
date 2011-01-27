@@ -29,8 +29,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-ERL_NIF_TERM verterr(ErlNifEnv *env);
-ERL_NIF_TERM error_tuple(ErlNifEnv *env, char *err);
-ERL_NIF_TERM bincopy(ErlNifEnv *env, void *src, size_t len);
-void null_logger(void *userData, virErrorPtr error);
-void vert_cleanup(ErlNifEnv *env, void *obj);
+ERL_NIF_TERM vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+

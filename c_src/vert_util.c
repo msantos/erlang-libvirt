@@ -52,8 +52,8 @@ verterr(ErlNifEnv *env)
 error_tuple(ErlNifEnv *env, char *err)
 {
     return enif_make_tuple2(env,
-            atom_error,
-            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_undefined));
+            enif_make_atom(env, "error"),
+            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : enif_make_atom(env, "undefined")));
 }  
 
 
@@ -63,7 +63,7 @@ bincopy(ErlNifEnv *env, void *src, size_t len)
     ErlNifBinary buf = {0};
 
     if (!enif_alloc_binary(len, &buf))
-        return atom_enomem;
+        return enif_make_atom(env, "enomem");
 
     (void)memcpy(buf.data, src, buf.size);
 
@@ -74,6 +74,47 @@ bincopy(ErlNifEnv *env, void *src, size_t len)
     void
 null_logger(void *userData, virErrorPtr error)
 {
+}
+
+
+    void
+vert_cleanup(ErlNifEnv *env, void *obj)
+{
+    VERT_RESOURCE *vp = obj;
+
+
+    if (vp->res == NULL)
+        return;
+
+    switch (vp->type) {
+        case VERT_RES_CONNECT:
+            (void)virConnectClose(vp->res);
+            break;
+        case VERT_RES_DOMAIN:
+            (void)virDomainFree(vp->res);
+            break;
+        case VERT_RES_INTERFACE:
+            (void)virInterfaceFree(vp->res);
+            break;
+        case VERT_RES_NETWORK:
+            (void)virNetworkFree(vp->res);
+            break;
+        case VERT_RES_STORAGEPOOL:
+            (void)virStoragePoolFree(vp->res);
+            break;
+#if THIS_VERSION_SUPPORTS_FILTER
+        case VERT_RES_FILTER:
+            (void)virNWFilterFree(vp->res);
+            break;
+#endif
+        case VERT_RES_SECRET:
+            (void)virSecretFree(vp->res);
+            break;
+        default:
+            break;
+    }
+
+    vp->res = NULL;
 }
 
 

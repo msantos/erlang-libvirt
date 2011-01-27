@@ -37,22 +37,38 @@
 #include "erl_nif.h"
 
 
-static ERL_NIF_TERM atom_error;
-static ERL_NIF_TERM atom_undefined;
-static ERL_NIF_TERM atom_enomem;
-
 #define VERTERR(x) do { \
     if ((x)) return verterr(env); \
 } while (0)
 
 #define ISNULL(x) do { \
-    if ((x) == NULL) return atom_enomem; \
+    if ((x) == NULL) return enif_make_atom(env, "enomem"); \
 } while (0)
 
 #define NOMEM(x) do { \
-    if ((x) == atom_enomem) return atom_enomem; \
+    ERL_NIF_TERM enomem = enif_make_atom(env, "enomem"); \
+    if ((x) == enomem) return enomem; \
 } while (0)
 
+
+/* NIF resource */
+static ErlNifResourceType *NIF_VERT_RESOURCE;
+
+typedef struct _vert_resource {
+    int type;
+    void *res;
+} VERT_RESOURCE;
+
+#define RESALLOC(x,y) do { \
+    x = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
+    ISNULL(x); \
+    (x)->type = y; \
+    (x)->res = NULL; \
+} while (0)
+
+#define RESTYPE(x,y) do { \
+    if ((x)->type != (y)) return enif_make_badarg(env); \
+} while (0)
 
 
 /* nif_virDomainLookup */
@@ -115,4 +131,5 @@ enum {
     VERT_DOMAIN_CREATE_TRANSIENT = 0,
     VERT_DOMAIN_CREATE_PERSISTENT
 };
+
 
