@@ -36,47 +36,6 @@
 
 /* 0: VERT_RESOURCE */
     ERL_NIF_TERM
-vert_resource_free(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-
-
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    switch (vp->type) {
-        case VERT_RES_DOMAIN:
-            VERTERR(virDomainFree(vp->res) != 0);
-            break;
-        case VERT_RES_INTERFACE:
-            VERTERR(virInterfaceFree(vp->res) != 0);
-            break;
-        case VERT_RES_NETWORK:
-            VERTERR(virNetworkFree(vp->res) != 0);
-            break;
-        case VERT_RES_STORAGEPOOL:
-            VERTERR(virStoragePoolFree(vp->res) != 0);
-            break;
-        case VERT_RES_FILTER:
-#if THIS_VERSION_SUPPORTS_FILTER
-            VERTERR(virNWFilterFree(vp->res) != 0);
-#endif
-            break;
-        case VERT_RES_SECRET:
-            VERTERR(virSecretFree(vp->res) != 0);
-            break;
-        default:
-            return enif_make_badarg(env);
-
-    }
-
-    vp->res = NULL;
-
-    return atom_ok;
-}
-
-/* 0: VERT_RESOURCE */
-    ERL_NIF_TERM
 vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
@@ -88,15 +47,19 @@ vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     switch (vp->type) {
         case VERT_RES_DOMAIN:
             VERTERR(virDomainDestroy(vp->res) != 0);
+            VERTERR(virDomainFree(vp->res) != 0);
             break;
         case VERT_RES_INTERFACE:
             VERTERR(virInterfaceDestroy(vp->res, 0) != 0);
+            VERTERR(virInterfaceFree(vp->res) != 0);
             break;
         case VERT_RES_NETWORK:
             VERTERR(virNetworkDestroy(vp->res) != 0);
+            VERTERR(virNetworkFree(vp->res) != 0);
             break;
         case VERT_RES_STORAGEPOOL:
             VERTERR(virStoragePoolDestroy(vp->res) != 0);
+            VERTERR(virStoragePoolFree(vp->res) != 0);
             break;
         default:
             return enif_make_badarg(env);

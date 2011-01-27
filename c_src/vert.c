@@ -109,7 +109,6 @@ static ErlNifFunc nif_funcs[] = {
     {"network_lookup", 3, vert_network_lookup},
 
     /* all resource types */
-    {"resource_free", 1, vert_resource_free},
     {"resource_destroy", 1, vert_resource_destroy},
 };
 
