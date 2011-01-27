@@ -153,11 +153,11 @@ resource(#resource{type = domain, res = Res}, shutdown) ->
 %%
 %% Resource
 %%
-resource(#resource{type = Type, res = Res}, free) ->
-    resource_free(Res, res(Type));
+resource(#resource{res = Res}, free) ->
+    resource_free(Res);
 
-resource(#resource{type = Type, res = Res}, destroy) ->
-    resource_destroy(Res, res(Type)).
+resource(#resource{res = Res}, destroy) ->
+    resource_destroy(Res).
 
 
 %%-------------------------------------------------------------------------
@@ -352,9 +352,9 @@ interface_get(_,_) ->
 interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
-resource_free(_,_) ->
+resource_free(_) ->
     erlang:error(not_implemented).
-resource_destroy(_,_) ->
+resource_destroy(_) ->
     erlang:error(not_implemented).
 
 
