@@ -69,6 +69,17 @@ typedef struct _vert_resource {
     void *res;
 } VERT_RESOURCE;
 
+/* resource types */
+enum {
+    VERT_RES_CONNECT = 0,
+    VERT_RES_DOMAIN,
+    VERT_RES_INTERFACE,
+    VERT_RES_NETWORK,
+    VERT_RES_STORAGEPOOL,
+    VERT_RES_FILTER,
+    VERT_RES_SECRET,
+};
+
 #define RESALLOC(x,y) do { \
     x = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
     ISNULL(x); \
@@ -125,16 +136,6 @@ enum {
     VERT_ATTR_PERSISTENT,
 };
 
-/* nif_virDomainList */
-enum {
-    VERT_RES_CONNECT = 0,
-    VERT_RES_DOMAIN,
-    VERT_RES_INTERFACE,
-    VERT_RES_NETWORK,
-    VERT_RES_STORAGEPOOL,
-    VERT_RES_FILTER,
-    VERT_RES_SECRET,
-};
 
 /* nif_virDomainCreate */
 enum {

@@ -95,7 +95,7 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             enif_make_ref(env), res));
 }
 
-/* 0: virConnectPtr */
+/* 0: VERT_RESOURCE */
     ERL_NIF_TERM
 vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -114,7 +114,7 @@ vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return res;
 }
 
-/* 0: virConnectPtr, 1: type */
+/* 0: VERT_RESOURCE, 1: int type */
     ERL_NIF_TERM
 vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -565,7 +565,7 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
             
         case VERT_RES_STORAGEPOOL:
-            res = virConnectListDefinedNetworks(vp->res, names, max);
+            res = virConnectListDefinedStoragePools(vp->res, names, max);
             break;
 
         default:
