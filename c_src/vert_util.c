@@ -52,8 +52,8 @@ verterr(ErlNifEnv *env)
 error_tuple(ErlNifEnv *env, char *err)
 {
     return enif_make_tuple2(env,
-            enif_make_atom(env, "error"),
-            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : enif_make_atom(env, "undefined")));
+            atom_error,
+            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_undefined));
 }  
 
 
@@ -63,7 +63,7 @@ bincopy(ErlNifEnv *env, void *src, size_t len)
     ErlNifBinary buf = {0};
 
     if (!enif_alloc_binary(len, &buf))
-        return enif_make_atom(env, "enomem");
+        return atom_enomem;
 
     (void)memcpy(buf.data, src, buf.size);
 

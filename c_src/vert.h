@@ -37,22 +37,32 @@
 #include "erl_nif.h"
 
 
+ERL_NIF_TERM atom_error;
+ERL_NIF_TERM atom_undefined;
+ERL_NIF_TERM atom_enomem;
+ERL_NIF_TERM atom_ok;
+ERL_NIF_TERM atom_resource;
+ERL_NIF_TERM atom_connect;
+ERL_NIF_TERM atom_domain;
+ERL_NIF_TERM atom_true;
+ERL_NIF_TERM atom_false;
+
+
 #define VERTERR(x) do { \
     if ((x)) return verterr(env); \
 } while (0)
 
 #define ISNULL(x) do { \
-    if ((x) == NULL) return enif_make_atom(env, "enomem"); \
+    if ((x) == NULL) return atom_enomem; \
 } while (0)
 
 #define NOMEM(x) do { \
-    ERL_NIF_TERM enomem = enif_make_atom(env, "enomem"); \
-    if ((x) == enomem) return enomem; \
+    if ((x) == atom_enomem) return atom_enomem; \
 } while (0)
 
 
 /* NIF resource */
-static ErlNifResourceType *NIF_VERT_RESOURCE;
+ErlNifResourceType *NIF_VERT_RESOURCE;
 
 typedef struct _vert_resource {
     int type;
