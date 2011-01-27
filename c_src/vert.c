@@ -31,6 +31,7 @@
  */
 #include "vert.h"
 #include "vert_util.h"
+#include "vert_interface.h"
 #include "vert_network.h"
 
 
@@ -828,7 +829,6 @@ nif_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     }
 
     if (dp->res == NULL) {
-        ERL_NIF_TERM foo = {0};
         enif_release_resource(dp);
         return verterr(env);
     }
@@ -1217,115 +1217,6 @@ nif_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
-/* Interfaces */
-
-/* 0: VERT_RESOURCE, 1: int type 2: int | char* */
-    static ERL_NIF_TERM
-nif_InterfaceLookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    int type = VERT_ATTR_NAME;
-
-    VERT_RESOURCE *ifp = NULL;
-    ERL_NIF_TERM res = {0};
-
-
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
-
-    RESTYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(ifp, VERT_RES_INTERFACE);
-
-    switch (type) {
-        case VERT_ATTR_NAME: {
-                char name[1024]; /* XXX max interface length ??? */
-
-                if (argc != 3 || enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
-
-                ifp->res = virInterfaceLookupByName(vp->res, name);
-            }
-            break;
-
-        case VERT_ATTR_MAC: {
-                char mac[1024]; /* XXX max size ??? */
-
-                if (argc != 3 || enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
-
-                ifp->res = virInterfaceLookupByMACString(vp->res, mac);
-            }
-            break;
-
-        default:
-            return enif_make_badarg(env);
-    }
-
-    if (ifp->res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    res = enif_make_resource(env, ifp);
-    enif_release_resource(ifp);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_tuple4(env,
-            atom_resource,
-            atom_domain,
-            enif_make_ref(env), res));
-}
-
-/* 0: VERT_RESOURCE, 1: int type */
-    static ERL_NIF_TERM
-nif_InterfaceGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *ifp = NULL;
-    int type = VERT_ATTR_NAME;
-
-    const char *res = NULL;
-
-
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&ifp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
-
-    RESTYPE(ifp, VERT_RES_INTERFACE);
-
-    switch (type) {
-        case VERT_ATTR_NAME:
-            res = virInterfaceGetName(ifp->res);
-            break;
-
-        case VERT_ATTR_MAC:
-            res = virInterfaceGetMACString(ifp->res);
-            break;
-
-        case VERT_ATTR_DESC:
-            res = virInterfaceGetXMLDesc(ifp->res, 0);
-            break;
-
-        default:
-            return enif_make_badarg(env);
-    }
-
-    if (res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_string(env, res, ERL_NIF_LATIN1));
-}
-
-
 static ErlNifFunc nif_funcs[] = {
     /* connect */
     {"connect_open", 2, nif_virConnectOpen},
@@ -1353,8 +1244,8 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_set_autostart", 2, nif_virDomainSetAutostart},
 
     /* interface */
-    {"interface_lookup", 3, nif_InterfaceLookup},
-    {"interface_get", 2, nif_InterfaceGet},
+    {"interface_lookup", 3, vert_interface_lookup},
+    {"interface_get", 2, vert_interface_get},
 
     /* network */
     {"network_get", 2, vert_network_get},
