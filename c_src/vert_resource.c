@@ -101,6 +101,48 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
+/* 0: VERT_RESOURCE */
+    ERL_NIF_TERM
+vert_resource_undefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *rp = NULL;
+
+
+    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&rp))
+        return enif_make_badarg(env);
+
+    switch (rp->type) {
+        case VERT_RES_DOMAIN:
+            VERTERR(virDomainUndefine(rp->res) == -1); /* Domain is still running */
+            break;
+        case VERT_RES_INTERFACE:
+            VERTERR(virInterfaceUndefine(rp->res) == -1);
+            VERTERR(virInterfaceFree(rp->res) == -1);
+            break;
+        case VERT_RES_NETWORK:
+            VERTERR(virNetworkUndefine(rp->res) == -1); /* Network is still running */
+            break;
+        case VERT_RES_STORAGEPOOL:
+            VERTERR(virStoragePoolUndefine(rp->res) == -1); /* XXX need to free */
+            break;
+#ifdef HAVE_FILTER
+        case VERT_RES_FILTER:
+            VERTERR(virNWFilterUndefine(rp->res) == -1);
+            VERTERR(virNWFilterFree(rp->res) == -1);
+            break;
+#endif
+        case VERT_RES_SECRET:
+            VERTERR(virSecretUndefine(rp->res) == -1);
+            VERTERR(virSecretFree(rp->res) == -1);
+            break;
+        default:
+            return enif_make_badarg(env);
+    }
+
+    return atom_ok;
+}
+
+
 /* 0: VERT_RESOURCE, 1: VERT_RESOURCE, 2: uint32 flags */
     ERL_NIF_TERM
 vert_resource_create(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

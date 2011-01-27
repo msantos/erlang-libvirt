@@ -109,6 +109,7 @@ static ErlNifFunc nif_funcs[] = {
 
     /* all resource types */
     {"resource_define", 3, vert_resource_define},
+    {"resource_undefine", 1, vert_resource_undefine},
     {"resource_create", 2, vert_resource_create},
     {"resource_destroy", 1, vert_resource_destroy},
 };

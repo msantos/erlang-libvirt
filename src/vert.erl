@@ -38,6 +38,7 @@
         set/2,
 
         define/2,
+        undefine/1,
         create/1, create/2,
         destroy/1,
 
@@ -78,6 +79,9 @@ define(Resource, {Type, Cfg}) when is_atom(Type), is_binary(Cfg) ->
     resource_define(Resource, res(Type), binary_to_list(Cfg));
 define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type), is_list(Cfg) ->
     resource_define(Res, res(Type), Cfg).
+
+undefine(#resource{res = Res}) ->
+    resource_undefine(Res).
 
 create(Resource) ->
     create(Resource, 0).
@@ -346,6 +350,8 @@ interface_lookup(_,_,_) ->
     erlang:error(not_implemented).
 
 resource_define(_,_,_) ->
+    erlang:error(not_implemented).
+resource_undefine(_) ->
     erlang:error(not_implemented).
 resource_create(_,_) ->
     erlang:error(not_implemented).
