@@ -29,6 +29,17 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#include <libvirt/libvirt.h>
+#include <libvirt/virterror.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/param.h>
+#include "erl_nif.h"
+
+
+static ERL_NIF_TERM atom_error;
+static ERL_NIF_TERM atom_undefined;
+static ERL_NIF_TERM atom_enomem;
 
 #define VERTERR(x) do { \
     if ((x)) return verterr(env); \
@@ -41,6 +52,7 @@
 #define NOMEM(x) do { \
     if ((x) == atom_enomem) return atom_enomem; \
 } while (0)
+
 
 
 /* nif_virDomainLookup */

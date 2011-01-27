@@ -29,31 +29,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <libvirt/libvirt.h>
-#include <libvirt/virterror.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/param.h>
-#include "erl_nif.h"
-
 #include "vert.h"
+#include "vert_util.h"
 
 
 static ERL_NIF_TERM atom_ok;
-static ERL_NIF_TERM atom_error;
-static ERL_NIF_TERM atom_undefined;
-static ERL_NIF_TERM atom_enomem;
 static ERL_NIF_TERM atom_resource;
 static ERL_NIF_TERM atom_connect;
 static ERL_NIF_TERM atom_domain;
 static ERL_NIF_TERM atom_true;
 static ERL_NIF_TERM atom_false;
-
-static ERL_NIF_TERM error_tuple(ErlNifEnv *env, char *err);
-static ERL_NIF_TERM bincopy(ErlNifEnv *env, void *src, size_t len);
-
-void null_logger(void *userData, virErrorPtr error);
-static ERL_NIF_TERM verterr(ErlNifEnv *env);
 
 void vert_cleanup(ErlNifEnv *env, void *obj);
 
@@ -1546,47 +1531,6 @@ nif_NetworkGet(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 
 /*
- * Utility functions
- */
-
-    static ERL_NIF_TERM
-verterr(ErlNifEnv *env)
-{
-    ERL_NIF_TERM res = {0};
-    virErrorPtr err = {0};
-
-
-    err = virSaveLastError();
-    res = error_tuple(env, err->message);
-    virFreeError(err);
-
-    return res;
-}
-
-
-    static ERL_NIF_TERM
-error_tuple(ErlNifEnv *env, char *err)
-{
-    return enif_make_tuple2(env,
-            atom_error,
-            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_undefined));
-}  
-
-    static ERL_NIF_TERM
-bincopy(ErlNifEnv *env, void *src, size_t len)
-{
-    ErlNifBinary buf = {0};
-
-    if (!enif_alloc_binary(len, &buf))
-        return atom_enomem;
-
-    (void)memcpy(buf.data, src, buf.size);
-
-    return enif_make_binary(env, &buf);
-}
-
-
-/*
  * Callbacks
  */
     void
@@ -1627,12 +1571,6 @@ vert_cleanup(ErlNifEnv *env, void *obj)
     }
 
     vp->res = NULL;
-}
-
-
-    void
-null_logger(void *userData, virErrorPtr error)
-{
 }
 
 
