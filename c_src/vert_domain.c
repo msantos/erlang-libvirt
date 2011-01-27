@@ -53,6 +53,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     RESTYPE(vp, VERT_RES_CONNECT);
     RESALLOC(dp, VERT_RES_DOMAIN);
+    dp->conn = vp->res;
 
     switch (type) {
         case VERT_ATTR_ID: {
@@ -152,15 +153,13 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 #endif
 
         case VERT_ATTR_CONNECT: {
-            VERT_RESOURCE *vp = NULL;
+            VERT_RESOURCE *cp = NULL;
             ERL_NIF_TERM res = {0};
 
-            RESALLOC(vp, VERT_RES_CONNECT);
-            vp->res = virDomainGetConnect(dp->res);
-            VERTERR(vp->res == NULL);
-
-            res = enif_make_resource(env, vp);
-            enif_release_resource(vp);
+            RESALLOC(cp, VERT_RES_CONNECT);
+            cp->res = dp->conn;
+            res = enif_make_resource(env, cp);
+            enif_release_resource(cp);
 
             term = enif_make_tuple2(env,
                 atom_ok,

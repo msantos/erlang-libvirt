@@ -57,7 +57,8 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     RESTYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(rp, VERT_RES_DOMAIN);
+    RESALLOC(rp, type);
+    rp->conn = vp->res;
 
     switch (type) {
         case VERT_RES_DOMAIN:

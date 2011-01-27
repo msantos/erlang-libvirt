@@ -56,6 +56,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     RESTYPE(vp, VERT_RES_CONNECT);
     RESALLOC(np, VERT_RES_NETWORK);
+    np->conn = vp->res;
 
     switch (type) {
         case VERT_ATTR_NAME: {

@@ -53,6 +53,7 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     RESTYPE(vp, VERT_RES_CONNECT);
     RESALLOC(ifp, VERT_RES_INTERFACE);
+    ifp->conn = vp->res;
 
     switch (type) {
         case VERT_ATTR_NAME: {

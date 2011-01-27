@@ -67,6 +67,7 @@ ErlNifResourceType *NIF_VERT_RESOURCE;
 typedef struct _vert_resource {
     int type;
     void *res;
+    virConnectPtr conn;
 } VERT_RESOURCE;
 
 /* resource types */
