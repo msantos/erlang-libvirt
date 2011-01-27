@@ -127,6 +127,24 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             res = virInterfaceGetXMLDesc(ifp->res, 0);
             break;
 
+        case VERT_ATTR_CONNECT: {
+            VERT_RESOURCE *cp = NULL;
+            ERL_NIF_TERM res = {0};
+
+            RESALLOC(cp, VERT_RES_CONNECT);
+            cp->res = ifp->conn;
+            res = enif_make_resource(env, cp);
+            enif_release_resource(cp);
+
+            res = enif_make_tuple2(env,
+                atom_ok,
+                enif_make_tuple4(env,
+                atom_resource,
+                atom_connect,
+                enif_make_ref(env), res));
+        }
+        break;
+
         default:
             return enif_make_badarg(env);
     }
