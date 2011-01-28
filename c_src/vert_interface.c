@@ -52,8 +52,7 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     RESTYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(ifp, VERT_RES_INTERFACE);
-    ifp->conn = vp->res;
+    RESALLOC(ifp, VERT_RES_INTERFACE, vp->res);
 
     switch (type) {
         case VERT_ATTR_NAME: {
@@ -131,7 +130,7 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             VERT_RESOURCE *cp = NULL;
             ERL_NIF_TERM res = {0};
 
-            RESALLOC(cp, VERT_RES_CONNECT);
+            RESALLOC(cp, VERT_RES_CONNECT, NULL);
             cp->res = ifp->conn;
             res = enif_make_resource(env, cp);
             enif_release_resource(cp);

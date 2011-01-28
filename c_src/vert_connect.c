@@ -58,7 +58,7 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESALLOC(vp, VERT_RES_CONNECT);
+    RESALLOC(vp, VERT_RES_CONNECT, NULL);
 
     switch (type) {
         case VERT_CONNECT_OPEN:

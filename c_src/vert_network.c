@@ -55,8 +55,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     RESTYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(np, VERT_RES_NETWORK);
-    np->conn = vp->res;
+    RESALLOC(np, VERT_RES_NETWORK, vp->res);
 
     switch (type) {
         case VERT_ATTR_NAME: {
@@ -219,7 +218,7 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             VERT_RESOURCE *cp = NULL;
             ERL_NIF_TERM res = {0};
 
-            RESALLOC(cp, VERT_RES_CONNECT);
+            RESALLOC(cp, VERT_RES_CONNECT, NULL);
             cp->res = np->conn;
             res = enif_make_resource(env, cp);
             enif_release_resource(cp);

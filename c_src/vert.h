@@ -81,11 +81,12 @@ enum {
     VERT_RES_SECRET,
 };
 
-#define RESALLOC(x,y) do { \
+#define RESALLOC(x,y,z) do { \
     x = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
     ISNULL(x); \
     (x)->type = y; \
     (x)->res = NULL; \
+    (x)->conn = (z); \
 } while (0)
 
 #define RESTYPE(x,y) do { \
