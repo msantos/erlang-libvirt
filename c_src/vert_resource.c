@@ -40,7 +40,7 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
     int type = 0;
-    char cfg[8192]; /* XXX size ??? this is XML after all */
+    ErlNifBinary cfg;
 
     VERT_RESOURCE *rp = NULL;
     ERL_NIF_TERM res = {0};
@@ -52,33 +52,38 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    /* XXX use binary */
-    if (enif_get_string(env, argv[2], cfg, sizeof(cfg), ERL_NIF_LATIN1) < 0)
+    if (!enif_inspect_iolist_as_binary(env, argv[2], &cfg))
         return enif_make_badarg(env);
+
+    /* NULL terminate the string */
+    if (!enif_realloc_binary(&cfg, cfg.size+1))
+        return atom_enomem;
+
+    cfg.data[cfg.size-1] = '\0';
 
     RESTYPE(vp, VERT_RES_CONNECT);
     RESALLOC(rp, type, vp->res);
 
     switch (type) {
         case VERT_RES_DOMAIN:
-            rp->res = virDomainDefineXML(vp->res, cfg);
+            rp->res = virDomainDefineXML(vp->res, (char *)cfg.data);
             break;
         case VERT_RES_INTERFACE:
-            rp->res = virInterfaceDefineXML(vp->res, cfg, 0);
+            rp->res = virInterfaceDefineXML(vp->res, (char *)cfg.data, 0);
             break;
         case VERT_RES_NETWORK:
-            rp->res = virNetworkDefineXML(vp->res, cfg);
+            rp->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
             break;
         case VERT_RES_STORAGEPOOL:
-            rp->res = virStoragePoolDefineXML(vp->res, cfg, 0);
+            rp->res = virStoragePoolDefineXML(vp->res, (char *)cfg.data, 0);
             break;
 #ifdef HAVE_NWFILTER
         case VERT_RES_FILTER:
-            rp->res = virNWFilterDefineXML(vp->res, cfg);
+            rp->res = virNWFilterDefineXML(vp->res, (char *)cfg.data);
             break;
 #endif
         case VERT_RES_SECRET:
-            rp->res = virSecretDefineXML(vp->res, cfg, 0);
+            rp->res = virSecretDefineXML(vp->res, (char *)cfg.data, 0);
             break;
         default:
             return enif_make_badarg(env);

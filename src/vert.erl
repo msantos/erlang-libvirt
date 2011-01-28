@@ -75,9 +75,8 @@ open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
 close(#resource{type = connect, res = Res}) ->
     connect_close(Res).
 
-define(Resource, {Type, Cfg}) when is_atom(Type), is_binary(Cfg) ->
-    resource_define(Resource, res(Type), binary_to_list(Cfg));
-define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type), is_list(Cfg) ->
+define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type),
+    ( is_list(Cfg) orelse is_binary(Cfg) ) ->
     resource_define(Res, res(Type), Cfg).
 
 undefine(#resource{res = Res}) ->
