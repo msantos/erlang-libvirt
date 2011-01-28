@@ -29,5 +29,20 @@ Erlang bindings to the libvirt virtualization API.
 
 ## EXAMPLES
 
+    start(Path) ->
+        {ok, Connect} = vert:open({connect, ""}),
+        {ok, XML} = file:read_file(Path),
+        {ok, Domain} = vert:define(Connect, {domain, XML}),
+        ok = vert:create(Domain),
+
+        Active = vert:resource(Connect, {domain, active}),
+        io:format("Active Domains: ~p~n", [Active]),
+
+        {ok, Connect, Domain}.
+
+    halt(Connect, Domain) ->
+        ok = vert:destroy(Domain),
+        ok = vert:close(Connect).
+
 ## TODO
 
