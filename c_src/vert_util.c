@@ -53,7 +53,7 @@ error_tuple(ErlNifEnv *env, char *err)
 {
     return enif_make_tuple2(env,
             atom_error,
-            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_undefined));
+            (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_unsupported));
 }  
 
 

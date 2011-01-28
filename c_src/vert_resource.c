@@ -86,7 +86,8 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             rp->res = virSecretDefineXML(vp->res, (char *)cfg.data, 0);
             break;
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     if (rp->res == NULL) {
@@ -141,7 +142,8 @@ vert_resource_undefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             VERTERR(virSecretFree(rp->res) == -1);
             break;
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     return atom_ok;
@@ -185,7 +187,8 @@ vert_resource_create(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 #endif
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     return atom_ok;
@@ -220,7 +223,8 @@ vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             VERTERR(virStoragePoolFree(vp->res) != 0);
             break;
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     vp->res = NULL;

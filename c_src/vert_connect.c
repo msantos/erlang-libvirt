@@ -70,8 +70,9 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_CONNECT_OPEN_AUTH:
-            return enif_make_badarg(env);
-
+            enif_release_resource(vp);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
         default:
             return enif_make_badarg(env);
     }
@@ -316,7 +317,8 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
     }
 
     return term;
@@ -357,15 +359,14 @@ vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_RES_SECRET:
             res = virConnectNumOfSecrets(vp->res);
             break;
-        case VERT_RES_FILTER:
 #ifdef THIS_VERSION_SUPPORTS_FILTER
+        case VERT_RES_FILTER:
             res = virConnectNumOfNWFilters(vp->res);
-#else
-            res = 0;
-#endif
             break;
+#endif
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -407,7 +408,8 @@ vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             res = virConnectNumOfDefinedStoragePools(vp->res);
             break;
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -484,13 +486,11 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             res = virConnectListNetworks(vp->res, names, max);
             break;
 
-        case VERT_RES_FILTER:
 #if THIS_VERSION_SUPPORTS_FILTER
+        case VERT_RES_FILTER:
             res = virConnectListNWFilters(vp->res, names, max);
-#else
-            res = 0;
-#endif
             break;
+#endif
 
         case VERT_RES_SECRET:
             res = virConnectListSecrets(vp->res, names, max);
@@ -501,7 +501,8 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -569,7 +570,8 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                    atom_error, atom_unsupported);
     }
 
     VERTERR(res == -1);

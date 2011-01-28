@@ -89,7 +89,8 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     if (np->res == NULL) {
@@ -233,7 +234,8 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_badarg(env);
+            return enif_make_tuple2(env,
+                atom_error, atom_unsupported);
     }
 
     return term;
