@@ -56,32 +56,32 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_ATTR_NAME: {
-                char name[1024]; /* XXX max interface length ??? */
+            char name[1024]; /* XXX max interface length ??? */
 
-                if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
+            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                return enif_make_badarg(env);
 
-                np->res = virNetworkLookupByName(vp->res, name);
+            np->res = virNetworkLookupByName(vp->res, name);
             }
             break;
 
         case VERT_ATTR_RAWUUID: {
-                ErlNifBinary buf = {0};
+            ErlNifBinary buf = {0};
 
-                if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
-                    return enif_make_badarg(env);
+            if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
+                return enif_make_badarg(env);
 
-                np->res = virNetworkLookupByUUID(vp->res, buf.data);
+            np->res = virNetworkLookupByUUID(vp->res, buf.data);
             }
             break;
 
         case VERT_ATTR_UUID: {
-                ErlNifBinary buf = {0};
+            ErlNifBinary buf = {0};
 
-                if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
-                    return enif_make_badarg(env);
+            if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
+                return enif_make_badarg(env);
 
-                np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
+            np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
             }
             break;
 

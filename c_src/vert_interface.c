@@ -56,22 +56,22 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_ATTR_NAME: {
-                char name[1024]; /* XXX max interface length ??? */
+            char name[1024]; /* XXX max interface length ??? */
 
-                if (argc != 3 || enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
+            if (argc != 3 || enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                return enif_make_badarg(env);
 
-                ifp->res = virInterfaceLookupByName(vp->res, name);
+            ifp->res = virInterfaceLookupByName(vp->res, name);
             }
             break;
 
         case VERT_ATTR_MAC: {
-                char mac[1024]; /* XXX max size ??? */
+            char mac[1024]; /* XXX max size ??? */
 
-                if (argc != 3 || enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
+            if (argc != 3 || enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
+                return enif_make_badarg(env);
 
-                ifp->res = virInterfaceLookupByMACString(vp->res, mac);
+            ifp->res = virInterfaceLookupByMACString(vp->res, mac);
             }
             break;
 
@@ -142,8 +142,8 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
                 atom_resource,
                 atom_connect,
                 enif_make_ref(env), res));
-        }
-        break;
+            }
+            break;
 
         default:
             return enif_make_tuple2(env,

@@ -56,31 +56,31 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_ATTR_ID: {
-                int id = 0;
+            int id = 0;
 
-                if (!enif_get_int(env, argv[2], &id))
-                    return enif_make_badarg(env);
-                dp->res = virDomainLookupByID(vp->res, id);
+            if (!enif_get_int(env, argv[2], &id))
+                return enif_make_badarg(env);
+            dp->res = virDomainLookupByID(vp->res, id);
             }
             break;
 
         case VERT_ATTR_NAME: {
-                char name[1024]; /* XXX max size ??? */
+            char name[1024]; /* XXX max size ??? */
 
-                if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
+            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+                return enif_make_badarg(env);
 
-                dp->res = virDomainLookupByName(vp->res, name);
+            dp->res = virDomainLookupByName(vp->res, name);
             }
             break;
 
         case VERT_ATTR_UUID: {
-                char uuid[1024]; /* XXX max size ??? */
+            char uuid[1024]; /* XXX max size ??? */
 
-                if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
-                    return enif_make_badarg(env);
+            if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
+                return enif_make_badarg(env);
 
-                dp->res = virDomainLookupByUUID(vp->res, (const unsigned char *)uuid);
+            dp->res = virDomainLookupByUUID(vp->res, (const unsigned char *)uuid);
             }
             break;
 
