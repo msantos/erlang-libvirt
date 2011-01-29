@@ -45,9 +45,6 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    if (argc != 3)
-        return enif_make_badarg(env);
-
     if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
         return enif_make_badarg(env);
 
