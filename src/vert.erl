@@ -204,21 +204,20 @@ get(#resource{type = connect, res = Res}, info) ->
     end;
 %% struct virDomainInfo{
 %%     unsigned char   state
-%%     unsigned long   maxMem
-%%     unsigned long   memory
+%%     unsigned long   maxMem (Kb)
+%%     unsigned long   memory (Kb)
 %%     unsigned short  nrVirtCpu
-%%     unsigned long long  cpuTime
+%%     unsigned long long  cpuTime (nanoseconds) 
 %% }
 get(#resource{type = domain, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
     case domain_get(Res, attr(info)) of
         {ok, <<
-            State:8,
+            State:8, % _Pad:24,
             MaxMem:Long/native-unsigned-integer-unit:8,
             Memory:Long/native-unsigned-integer-unit:8,
-            NrVirtCpu:2/native-unsigned-integer-unit:8,
-            CpuTime:8/native-unsigned-integer-unit:8,
-            _WTF/binary
+            NrVirtCpu:2/native-unsigned-integer-unit:8, % _Pad1:16,
+            CpuTime:8/native-unsigned-integer-unit:8
             >>} ->
             #domain_info{
                 state = state({domain, State}),

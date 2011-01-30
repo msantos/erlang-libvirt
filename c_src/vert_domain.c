@@ -184,10 +184,25 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_INFO: {
             virDomainInfo info = {0};
             ERL_NIF_TERM buf = {0};
+
+            struct domain_info {
+                unsigned char state;
+                unsigned long maxMem;
+                unsigned long memory;
+                unsigned short nrVirtCpu;
+                unsigned long long cpuTime;
+            } __attribute__((__packed__));
+            struct domain_info dip = {0};
             
             VERTERR(virDomainGetInfo(dp->res, &info) < 0);
 
-            buf = bincopy(env, &info, sizeof(virDomainInfo));
+            dip.state = info.state;
+            dip.maxMem = info.maxMem;
+            dip.memory = info.memory;
+            dip.nrVirtCpu = info.nrVirtCpu;
+            dip.cpuTime = info.cpuTime;
+
+            buf = bincopy(env, &dip, sizeof(struct domain_info));
             NOMEM(buf);
 
             term = enif_make_tuple2(env, atom_ok, buf);
