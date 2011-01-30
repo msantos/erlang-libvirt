@@ -210,7 +210,7 @@ get(#resource{type = connect, res = Res}, info) ->
 %%     unsigned long long  cpuTime (nanoseconds) 
 %% }
 get(#resource{type = domain, res = Res}, info) ->
-    Long = erlang:system_info(wordsize),
+    Long = erlang:system_info({wordsize, external}),
     case domain_get(Res, attr(info)) of
         {ok, <<
             State:8, % _Pad:24,
