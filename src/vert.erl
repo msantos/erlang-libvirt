@@ -271,20 +271,22 @@ get(#resource{type = connect, res = Res}, securitymodel) ->
 
 get(#resource{type = connect, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
     connect_get(Res, attr(Attr), Arg);
-get(#resource{type = connect, res = Res}, Attr) ->
+get(#resource{type = connect, res = Res}, Attr) when is_atom(Attr) ->
     connect_get(Res, attr(Attr));
 
 get(#resource{type = domain, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
     domain_get(Res, attr(Attr), Arg);
-get(#resource{type = domain, res = Res}, Attr) ->
+get(#resource{type = domain, res = Res}, Attr) when is_atom(Attr) ->
     domain_get(Res, attr(Attr));
 
-get(#resource{type = interface, res = Res}, Attr) ->
+get(#resource{type = interface, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
+    domain_get(Res, attr(Attr), Arg);
+get(#resource{type = interface, res = Res}, Attr) when is_atom(Attr) ->
     interface_get(Res, attr(Attr));
 
 get(#resource{type = network, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
     network_get(Res, attr(Attr), Arg);
-get(#resource{type = network, res = Res}, Attr) ->
+get(#resource{type = network, res = Res}, Attr) when is_atom(Attr) ->
     network_get(Res, attr(Attr)).
 
 set(Resource, autostart) ->
