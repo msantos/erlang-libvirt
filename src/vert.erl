@@ -63,6 +63,8 @@ on_load() ->
 %%
 %% Connections
 %%
+open(Name) when is_list(Name) ->
+    open({connect, Name});
 
 open({connect, Name}) when is_list(Name) ->
     connect_open(Name, ?VERT_CONNECT_OPEN);
