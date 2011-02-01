@@ -36,5 +36,7 @@ ERL_NIF_TERM vert_domain_save(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 ERL_NIF_TERM vert_domain_restore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_domain_autostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_domain_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_domain_suspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_domain_resume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 
 

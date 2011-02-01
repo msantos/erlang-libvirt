@@ -45,6 +45,8 @@
         save/2,
         restore/2,
         shutdown/1,
+        suspend/1,
+        resume/1,
 
         resource/2
     ]).
@@ -105,6 +107,12 @@ restore(Resource, File) ->
 shutdown(Resource) ->
     resource(Resource, shutdown).
 
+suspend(Resource) ->
+    resource(Resource, suspend).
+
+resume(Resource) ->
+    resource(Resource, resume).
+
 
 %%-------------------------------------------------------------------------
 %%% Resources
@@ -153,6 +161,10 @@ resource(#resource{type = connect, res = Res}, {resource, File}) when is_list(Fi
 
 resource(#resource{type = domain, res = Res}, shutdown) ->
     domain_shutdown(Res);
+resource(#resource{type = domain, res = Res}, suspend) ->
+    domain_suspend(Res);
+resource(#resource{type = domain, res = Res}, resume) ->
+    domain_resume(Res);
 
 %%
 %% Resource
@@ -341,6 +353,10 @@ domain_save(_,_) ->
 domain_restore(_,_) ->
     erlang:error(not_implemented).
 domain_shutdown(_) ->
+    erlang:error(not_implemented).
+domain_suspend(_) ->
+    erlang:error(not_implemented).
+domain_resume(_) ->
     erlang:error(not_implemented).
 
 domain_set_autostart(_,_) ->

@@ -497,3 +497,37 @@ vert_domain_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
+/* 0: VERT_RESOURCE */
+    ERL_NIF_TERM
+vert_domain_suspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
+        return enif_make_badarg(env);
+
+    res = virDomainSuspend(dp->res);
+    VERTERR(res != 0);
+
+    return atom_ok;
+}
+
+/* 0: VERT_RESOURCE */
+    ERL_NIF_TERM
+vert_domain_resume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+
+    int res = -1;
+
+    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
+        return enif_make_badarg(env);
+
+    res = virDomainResume(dp->res);
+    VERTERR(res != 0);
+
+    return atom_ok;
+}
+

@@ -97,6 +97,8 @@ static ErlNifFunc nif_funcs[] = {
     {"domain_save", 2, vert_domain_save},
     {"domain_restore", 2, vert_domain_restore},
     {"domain_shutdown", 1, vert_domain_shutdown},
+    {"domain_suspend", 1, vert_domain_suspend},
+    {"domain_resume", 1, vert_domain_resume},
 
     {"domain_set_autostart", 2, vert_domain_autostart},
 
