@@ -41,19 +41,24 @@ verterr(ErlNifEnv *env)
 
 
     err = virSaveLastError();
-    res = error_tuple(env, err->message);
+    res = error_string(env, err->message);
     virFreeError(err);
 
     return res;
 }
 
     ERL_NIF_TERM
-error_tuple(ErlNifEnv *env, char *err)
+error_string(ErlNifEnv *env, char *err)
 {
-    return enif_make_tuple2(env,
-            atom_error,
+    return error_tuple(env,
             (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_unsupported));
 }  
+
+    ERL_NIF_TERM
+error_tuple(ErlNifEnv *env, ERL_NIF_TERM error)
+{
+    return enif_make_tuple2(env, atom_error, error);
+}
 
 
     ERL_NIF_TERM

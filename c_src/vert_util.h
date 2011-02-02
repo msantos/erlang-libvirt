@@ -30,9 +30,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 ERL_NIF_TERM verterr(ErlNifEnv *env);
-ERL_NIF_TERM error_tuple(ErlNifEnv *env, char *err);
+ERL_NIF_TERM error_string(ErlNifEnv *env, char *err);
+ERL_NIF_TERM error_tuple(ErlNifEnv *env, ERL_NIF_TERM error);
 ERL_NIF_TERM vert_make_resource(ErlNifEnv *env, ERL_NIF_TERM type, ERL_NIF_TERM resource);
 ERL_NIF_TERM bincopy(ErlNifEnv *env, void *src, size_t len);
 void null_logger(void *userData, virErrorPtr error);
 void vert_cleanup(ErlNifEnv *env, void *obj);
-

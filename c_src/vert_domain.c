@@ -85,8 +85,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     if (dp->res == NULL) {
@@ -385,8 +384,7 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_tuple2(env,
-                atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     return term;

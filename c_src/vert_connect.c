@@ -71,8 +71,7 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_CONNECT_OPEN_AUTH:
             enif_release_resource(vp);
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
         default:
             return enif_make_badarg(env);
     }
@@ -312,8 +311,7 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     return term;
@@ -360,8 +358,7 @@ vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 #endif
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -403,8 +400,7 @@ vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             res = virConnectNumOfDefinedStoragePools(vp->res);
             break;
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -496,8 +492,7 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     VERTERR(res == -1);
@@ -565,8 +560,7 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         default:
-            return enif_make_tuple2(env,
-                    atom_error, atom_unsupported);
+            return error_tuple(env, atom_unsupported);
     }
 
     VERTERR(res == -1);
