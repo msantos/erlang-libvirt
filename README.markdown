@@ -29,6 +29,8 @@ Erlang bindings to the libvirt virtualization API.
 
 ## EXAMPLES
 
+### CREATING A DOMAIN
+
     start(Path) ->
         {ok, Connect} = vert:open({connect, ""}),
         {ok, XML} = file:read_file(Path),
@@ -43,6 +45,66 @@ Erlang bindings to the libvirt virtualization API.
     halt(Connect, Domain) ->
         ok = vert:destroy(Domain),
         ok = vert:close(Connect).
+
+
+### SUSPENDING AND RESUMING A DOMAIN
+
+This example is the Erlang equivalent of a Python script to manipulate a
+running domain. The example is taken from:
+
+http://www.ibm.com/developerworks/linux/library/l-libvirt/
+
+
+    -module(ex6).
+
+    %% Listing 6. Sample Python script for domain control (libvtest.py)
+    %%
+    %% import libvirt
+    %%
+    %% conn = libvirt.open('qemu:///system')
+    %%
+    %% for id in conn.listDomainsID():
+    %%
+    %%         dom = conn.lookupByID(id)
+    %%
+    %%         print "Dom %s  State %s" % ( dom.name(), dom.info()[0] )
+    %%
+    %%             dom.suspend()
+    %%         print "Dom %s  State %s (after suspend)" % ( dom.name(), dom.info()[0] )
+    %%
+    %%             dom.resume()
+    %%         print "Dom %s  State %s (after resume)" % ( dom.name(), dom.info()[0] )
+    %%
+    %%             dom.destroy()
+    %%
+    -export([start/0]).
+
+    start() ->
+        {ok, Connect} = vert:open(""),
+        {ok, DomainIDs} = vert:resource(Connect, {domain, active}),
+
+        [ states(Connect, DomainID) || DomainID <- DomainIDs ],
+
+        ok.
+
+    states(Connect, DomainID) ->
+        {ok, Domain} = vert:resource(Connect, {domain, {id, DomainID}}),
+        io:format("running: ~p~n", [info(Domain)]),
+
+        ok = vert:suspend(Domain),
+        io:format("suspend: ~p~n", [info(Domain)]),
+
+        ok = vert:resume(Domain),
+        io:format("resumed: ~p~n", [info(Domain)]),
+
+        ok = vert:destroy(Domain).
+
+    info(Domain) ->
+        Name = vert:get(Domain, name),
+        Info = vert:get(Domain, info),
+
+        [{name, Name}, {info, Info}].
+
 
 ## TODO
 
