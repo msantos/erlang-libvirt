@@ -124,14 +124,14 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
         case VERT_ATTR_CONNECT: {
             VERT_RESOURCE *cp = NULL;
-            ERL_NIF_TERM res = {0};
+            ERL_NIF_TERM term = {0};
 
             RESALLOC(cp, VERT_RES_CONNECT, NULL);
             cp->res = ifp->conn;
-            res = enif_make_resource(env, cp);
+            term = enif_make_resource(env, cp);
             enif_release_resource(cp);
 
-            res = vert_make_resource(env, atom_connect, res);
+            return vert_make_resource(env, atom_connect, term);
             }
             break;
 
