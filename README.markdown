@@ -108,3 +108,19 @@ http://www.ibm.com/developerworks/linux/library/l-libvirt/
 
 ## TODO
 
+* verp: a port version of the NIF Erlang libvirt bindings
+    * look at creating a libvirtvirt (libvert) abstraction so the C code
+      can be shared between the port and NIF
+
+* verx: (almost) pure Erlang libvirt binding
+    * communicate directly with the libvirtd socket using the remote
+      protocol
+
+* tests: use the libvirt test driver and make a set of tests
+
+* review the Erlang interface
+    * find examples of code in other languages using libvirt and discover
+      how awkward the Erlang interface is by porting them
+    * then of course document the interface
+
+
