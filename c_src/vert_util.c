@@ -47,7 +47,6 @@ verterr(ErlNifEnv *env)
     return res;
 }
 
-
     ERL_NIF_TERM
 error_tuple(ErlNifEnv *env, char *err)
 {
@@ -55,6 +54,18 @@ error_tuple(ErlNifEnv *env, char *err)
             atom_error,
             (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_unsupported));
 }  
+
+
+    ERL_NIF_TERM
+vert_make_resource(ErlNifEnv *env, ERL_NIF_TERM type, ERL_NIF_TERM resource)
+{
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_tuple4(env,
+        atom_resource,
+        type,
+        enif_make_ref(env), resource));
+}
 
 
     ERL_NIF_TERM

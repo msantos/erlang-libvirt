@@ -98,12 +98,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, np);
     enif_release_resource(np);
 
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_tuple4(env,
-            atom_resource,
-            atom_domain,
-            enif_make_ref(env), res));
+    return vert_make_resource(env, atom_domain, res);
 }
 
 /* 0: VERT_RESOURCE, 1: type */
@@ -221,12 +216,7 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             res = enif_make_resource(env, cp);
             enif_release_resource(cp);
 
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_tuple4(env,
-                atom_resource,
-                atom_connect,
-                enif_make_ref(env), res));
+            term = vert_make_resource(env, atom_connect, res);
             }
             break;
 

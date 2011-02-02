@@ -88,12 +88,7 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     res = enif_make_resource(env, vp);
     enif_release_resource(vp);
 
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_tuple4(env,
-            atom_resource,
-            atom_connect,
-            enif_make_ref(env), res));
+    return vert_make_resource(env, atom_connect, res);
 }
 
 /* 0: VERT_RESOURCE */
