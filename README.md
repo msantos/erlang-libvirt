@@ -1,6 +1,16 @@
 
 Erlang bindings to the libvirt virtualization API.
 
+
+## ALTERNATIVES
+
+An (almost) pure Erlang libvirt binding is available here:
+
+<https://github.com/msantos/erlang-libvirt-remote>
+
+This version uses the libvirtd remote procotol over a Unix socket.
+
+
 ## WARNING
 
     The libvirt API is not safe.
@@ -12,12 +22,6 @@ Erlang bindings to the libvirt virtualization API.
     between the same functions for different resources and the sheer
     size of the API mean that there will be mistakes.
 
-    There isn't really a reason to call the libvirt API directly since
-    libvirt provides a command line shell (virsh) that can be run as a
-    port. The usual reasons given for using an NIF (speed, libraries)
-    in this case don't really apply since virsh looks to be complete and
-    using it as a port is much safer. Alternatively, it may be possible
-    to talk to libvirtd directly from Erlang.
 
 ## HOW TO BUILD IT
 
@@ -52,7 +56,7 @@ Erlang bindings to the libvirt virtualization API.
 This example is the Erlang equivalent of a Python script to manipulate a
 running domain. The example is taken from:
 
-http://www.ibm.com/developerworks/linux/library/l-libvirt/
+<http://www.ibm.com/developerworks/linux/library/l-libvirt/>
 
 
     -module(ex6).
@@ -107,14 +111,6 @@ http://www.ibm.com/developerworks/linux/library/l-libvirt/
 
 
 ## TODO
-
-* verp: a port version of the NIF Erlang libvirt bindings
-    * look at creating a libvirtvirt (libvert) abstraction so the C code
-      can be shared between the port and NIF
-
-* verx: (almost) pure Erlang libvirt binding
-    * communicate directly with the libvirtd socket using the remote
-      protocol
 
 * tests: use the libvirt test driver and make a set of tests
 
