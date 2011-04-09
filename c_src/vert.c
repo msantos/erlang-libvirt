@@ -59,7 +59,6 @@ typedef struct _vert_cast {
     ERL_NIF_TERM (*fptr)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
     int argc;
     void *argv;
-    char *name;
 } VERT_CAST;
 
 void *vert_loop(void *arg);
@@ -266,8 +265,6 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     cmd->fptr = vert_funcs[i].fptr;
     (void)memcpy(cmd->argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
     cmd->argc = argc-1;
-
-    cmd->name = (char *)vert_funcs[i].name;
 
     if (write(state->fd[VERT_WRITE], cmd, sizeof(VERT_CAST)) < 0)
         return error_errno(env, errno);
