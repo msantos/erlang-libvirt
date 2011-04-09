@@ -31,6 +31,7 @@
  */
 #include "vert.h"
 #include "vert_util.h"
+#include "erl_driver.h"
 
 
     ERL_NIF_TERM
@@ -53,6 +54,12 @@ error_string(ErlNifEnv *env, char *err)
     return error_tuple(env,
             (err ? enif_make_string(env, err, ERL_NIF_LATIN1) : atom_unsupported));
 }  
+
+    ERL_NIF_TERM
+error_errno(ErlNifEnv *env, int errnum)
+{
+    return error_tuple(env, enif_make_atom(env, erl_errno_id(errnum)));
+}
 
     ERL_NIF_TERM
 error_tuple(ErlNifEnv *env, ERL_NIF_TERM error)

@@ -32,6 +32,9 @@
 -include("vert.hrl").
 
 -export([
+        cast/2, cast/3, cast/4,
+        call/1, call/2,
+
         open/1,
         close/1,
         get/2,
@@ -59,8 +62,37 @@ on_load() ->
 
 
 %%-------------------------------------------------------------------------
-%%% API
+%%% NIF stubs
 %%-------------------------------------------------------------------------
+cast(_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_,_) ->
+    erlang:error(not_implemented).
+
+%%-------------------------------------------------------------------------
+%%% Blocking API
+%%-------------------------------------------------------------------------
+call({Fun, Arg}, Timeout) ->
+    block(cast(Fun, Arg), Timeout);
+call({Fun, Arg1, Arg2}, Timeout) ->
+    block(cast(Fun, Arg1, Arg2), Timeout);
+call({Fun, Arg1, Arg2, Arg3}, Timeout) ->
+    block(cast(Fun, Arg1, Arg2, Arg3), Timeout).
+
+call(Arg) ->
+    call(Arg, infinity).
+
+block(ok, Timeout) ->
+    receive
+        Res -> Res
+    after
+        Timeout -> {error, timeout}
+    end;
+block(Error, _Timeout) ->
+    Error.
+
 
 %%
 %% Connections
@@ -69,27 +101,27 @@ open(Name) when is_list(Name) ->
     open({connect, Name});
 
 open({connect, Name}) when is_list(Name) ->
-    connect_open(Name, ?VERT_CONNECT_OPEN);
+    call({connect_open, Name, ?VERT_CONNECT_OPEN});
 open({connect, Name, read}) when is_list(Name) ->
-    connect_open(Name, ?VERT_CONNECT_OPEN_READONLY);
+    call({connect_open,Name, ?VERT_CONNECT_OPEN_READONLY});
 open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
-%    connect_open(Name, ?VERT_CONNECT_OPEN_AUTH).
+%    call({connect_open, Name, ?VERT_CONNECT_OPEN_AUTH}).
     erlang:error(not_implemented).
 
 close(#resource{type = connect, res = Res}) ->
-    connect_close(Res).
+    call({connect_close, Res}).
 
 define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type),
     ( is_list(Cfg) orelse is_binary(Cfg) ) ->
-    resource_define(Res, res(Type), Cfg).
+    call({resource_define, Res, res(Type), Cfg}).
 
 undefine(#resource{res = Res}) ->
-    resource_undefine(Res).
+    call({resource_undefine, Res}).
 
 create(Resource) ->
     create(Resource, 0).
 create(#resource{res = Res}, Flags) when is_integer(Flags) ->
-    resource_create(Res, Flags).
+    call({resource_create, Res, Flags}).
 
 
 %%
@@ -122,31 +154,31 @@ resume(Resource) ->
 %% connect
 %%
 resource(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_atom(Attr) ->
-    domain_lookup(Res, attr(Attr), Arg);
+    call({domain_lookup, Res, attr(Attr), Arg});
 
 resource(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
-    interface_lookup(Res, attr(Attr), Arg);
+    call({interface_lookup, Res, attr(Attr), Arg});
 
 resource(#resource{type = connect, res = Res}, {network, {Attr, Arg}}) when is_list(Attr) ->
-    network_lookup(Res, attr(Attr), Arg);
+    call({network_lookup, Res, attr(Attr), Arg});
 
 resource(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
-    connect_get_numactive(Res, res(Type));
+    call({connect_get_numactive, Res, res(Type)});
 resource(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
-    connect_get_numinactive(Res, res(Type));
+    call({connect_get_numinactive, Res, res(Type)});
 
 resource(#resource{type = connect, res = Res}, {Type, active}) ->
     Resource = res(Type),
-    case connect_get_numactive(Res, Resource) of
+    case call({connect_get_numactive, Res, Resource}) of
         {ok, 0} -> [];
-        {ok, Max} -> connect_get_listactive(Res, Resource, Max);
+        {ok, Max} -> call({connect_get_listactive, Res, Resource, Max});
         Err -> Err
     end;
 resource(#resource{type = connect, res = Res}, {Type, inactive}) ->
     Resource = res(Type),
-    case connect_get_numactive(Res, Resource) of
+    case call({connect_get_numactive, Res, Resource}) of
         {ok, 0} -> [];
-        {ok, Max} -> connect_get_listinactive(Res, Resource, Max);
+        {ok, Max} -> call({connect_get_listinactive, Res, Resource, Max});
         Err -> Err
     end;
 
@@ -154,23 +186,23 @@ resource(#resource{type = connect, res = Res}, {Type, inactive}) ->
 %% Domain
 %%
 resource(#resource{type = domain, res = Res}, {save, File}) when is_list(File) ->
-    domain_save(Res, File);
+    call({domain_save, Res, File});
 
 resource(#resource{type = connect, res = Res}, {resource, File}) when is_list(File) ->
-    domain_restore(Res, File);
+    call({domain_restore, Res, File});
 
 resource(#resource{type = domain, res = Res}, shutdown) ->
-    domain_shutdown(Res);
+    call({domain_shutdown, Res});
 resource(#resource{type = domain, res = Res}, suspend) ->
-    domain_suspend(Res);
+    call({domain_suspend, Res});
 resource(#resource{type = domain, res = Res}, resume) ->
-    domain_resume(Res);
+    call({domain_resume, Res});
 
 %%
 %% Resource
 %%
 resource(#resource{res = Res}, destroy) ->
-    resource_destroy(Res).
+    call({resource_destroy, Res}).
 
 
 %%-------------------------------------------------------------------------
@@ -178,7 +210,7 @@ resource(#resource{res = Res}, destroy) ->
 %%-------------------------------------------------------------------------
 get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
     {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Conn, info),
-    connect_get(Res, attr(cellsfreememory), Nodes);
+    call({connect_get, Res, attr(cellsfreememory), Nodes});
 
 %% struct _virNodeInfo {
 %%     char model[32];     /* string indicating the CPU model */
@@ -192,7 +224,7 @@ get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
 %% };
 get(#resource{type = connect, res = Res}, info) ->
     Long = erlang:system_info(wordsize),
-    case connect_get(Res, attr(info)) of
+    case call({connect_get, Res, attr(info)}) of
         {ok, <<
             Model:32/native-bytes,
             Memory:Long/native-unsigned-integer-unit:8,
@@ -225,7 +257,7 @@ get(#resource{type = connect, res = Res}, info) ->
 %% }
 get(#resource{type = domain, res = Res}, info) ->
     Long = erlang:system_info({wordsize, external}),
-    case domain_get(Res, attr(info)) of
+    case call({domain_get, Res, attr(info)}) of
         {ok, <<
             State:8, % _Pad:24,
             MaxMem:Long/native-unsigned-integer-unit:8,
@@ -245,14 +277,14 @@ get(#resource{type = domain, res = Res}, info) ->
     end;
 
 get(#resource{type = connect, res = Res}, libversion) ->
-    case connect_get(Res, attr(libversion)) of
+    case call({connect_get, Res, attr(libversion)}) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
     end;
 get(#resource{type = connect, res = Res}, version) ->
-    case connect_get(Res, attr(version)) of
+    case call({connect_get, Res, attr(version)}) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
@@ -260,16 +292,16 @@ get(#resource{type = connect, res = Res}, version) ->
     end;
 
 get(#resource{type = connect, res = Res}, maxvcpus) ->
-    connect_get(Res, attr(maxvcpus), []);
+    call({connect_get, Res, attr(maxvcpus), []});
 get(#resource{type = connect, res = Res}, {maxvcpus, Type}) when is_list(Type) ->
-    connect_get(Res, attr(maxvcpus), Type);
+    call({connect_get, Res, attr(maxvcpus), Type});
 
 %% struct _virSecurityModel {
 %%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
 %%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
 %% }
 get(#resource{type = connect, res = Res}, securitymodel) ->
-    case connect_get(Res, attr(securitymodel)) of
+    case call({connect_get, Res, attr(securitymodel)}) of
         {ok, <<
             Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
             Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
@@ -283,98 +315,33 @@ get(#resource{type = connect, res = Res}, securitymodel) ->
     end;
 
 get(#resource{type = connect, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    connect_get(Res, attr(Attr), Arg);
+    call({connect_get, Res, attr(Attr), Arg});
 get(#resource{type = connect, res = Res}, Attr) when is_atom(Attr) ->
-    connect_get(Res, attr(Attr));
+    call({connect_get, Res, attr(Attr)});
 
 get(#resource{type = domain, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    domain_get(Res, attr(Attr), Arg);
+    call({domain_get, Res, attr(Attr), Arg});
 get(#resource{type = domain, res = Res}, Attr) when is_atom(Attr) ->
-    domain_get(Res, attr(Attr));
+    call({domain_get, Res, attr(Attr)});
 
 get(#resource{type = interface, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    domain_get(Res, attr(Attr), Arg);
+    call({domain_get, Res, attr(Attr), Arg});
 get(#resource{type = interface, res = Res}, Attr) when is_atom(Attr) ->
-    interface_get(Res, attr(Attr));
+    call({interface_get, Res, attr(Attr)});
 
 get(#resource{type = network, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    network_get(Res, attr(Attr), Arg);
+    call({network_get, Res, attr(Attr), Arg});
 get(#resource{type = network, res = Res}, Attr) when is_atom(Attr) ->
-    network_get(Res, attr(Attr)).
+    call({network_get, Res, attr(Attr)}).
 
 set(Resource, autostart) ->
-    set(Resource, {autostart, true});
+    call({set, Resource, {autostart, true}});
 set(#resource{type = domain, res = Res}, {autostart, true}) ->
-    domain_set_autostart(Res, 1);
+    call({domain_set_autostart, Res, 1});
 set(#resource{type = domain, res = Res}, {autostart, false}) ->
-    domain_set_autostart(Res, 0).
+    call({domain_set_autostart, Res, 0}).
 
 
-%%-------------------------------------------------------------------------
-%%% NIF stubs
-%%-------------------------------------------------------------------------
-connect_open(_,_) ->
-    erlang:error(not_implemented).
-
-connect_get(_,_) ->
-    erlang:error(not_implemented).
-connect_get(_,_,_) ->
-    erlang:error(not_implemented).
-
-connect_get_numactive(_,_) ->
-    erlang:error(not_implemented).
-connect_get_numinactive(_,_) ->
-    erlang:error(not_implemented).
-
-connect_get_listactive(_,_,_) ->
-    erlang:error(not_implemented).
-connect_get_listinactive(_,_,_) ->
-    erlang:error(not_implemented).
-
-connect_close(_) ->
-    erlang:error(not_implemented).
-
-domain_lookup(_,_,_) ->
-    erlang:error(not_implemented).
-domain_get(_,_) ->
-    erlang:error(not_implemented).
-domain_get(_,_,_) ->
-    erlang:error(not_implemented).
-
-network_lookup(_,_,_) ->
-    erlang:error(not_implemented).
-network_get(_,_) ->
-    erlang:error(not_implemented).
-network_get(_,_,_) ->
-    erlang:error(not_implemented).
-
-domain_save(_,_) ->
-    erlang:error(not_implemented).
-domain_restore(_,_) ->
-    erlang:error(not_implemented).
-domain_shutdown(_) ->
-    erlang:error(not_implemented).
-domain_suspend(_) ->
-    erlang:error(not_implemented).
-domain_resume(_) ->
-    erlang:error(not_implemented).
-
-domain_set_autostart(_,_) ->
-    erlang:error(not_implemented).
-
-interface_get(_,_) ->
-    erlang:error(not_implemented).
-interface_lookup(_,_,_) ->
-    erlang:error(not_implemented).
-
-resource_define(_,_,_) ->
-    erlang:error(not_implemented).
-resource_undefine(_) ->
-    erlang:error(not_implemented).
-resource_create(_,_) ->
-    erlang:error(not_implemented).
-resource_destroy(_) ->
-    erlang:error(not_implemented).
 
 
 %%-------------------------------------------------------------------------

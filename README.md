@@ -13,14 +13,16 @@ This version uses the libvirtd remote procotol over a Unix socket.
 
 ## WARNING
 
-    The libvirt API is not safe.
+    The libvirt API is not safe. It is huge, inconsistent and error
+    prone.
 
-    Aside from being needlessly huge and error prone, the API is
-    inconsistent: some functions require memory to be freed for one
-    type of resource but not for other resource types. Some functions
-    are blocking and will block the Erlang scheduler. Inconsistencies
-    between the same functions for different resources and the sheer
-    size of the API mean that there will be mistakes.
+    The current implementation calls all libvirt functions in a thread
+    so the Erlang VM will not block. If libvirt blocks, the caller will
+    receive an error immediately ({error, eagain}). This means only one
+    call from a single Erlang VM into libvirt can be running at any time.
+
+    These bindings have not been heavily tested, are still under
+    development and will undergo many changes.
 
 
 ## HOW TO BUILD IT
