@@ -237,8 +237,7 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     state = enif_priv_data(env);
 
-    if (!enif_get_atom(env, argv[0], buf, sizeof(buf), ERL_NIF_LATIN1)
-            || strcmp("cast", buf) == 0)
+    if (!enif_get_atom(env, argv[0], buf, sizeof(buf), ERL_NIF_LATIN1))
         return enif_make_badarg(env);
 
     for (i = 0; vert_funcs[i].name != NULL; i++) {
