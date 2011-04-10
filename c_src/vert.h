@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
+#include <net/if.h>
 #include "erl_nif.h"
 
 
