@@ -232,7 +232,6 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     char buf[MAX_ATOM_LEN+1];
     int i = 0;
     int found = 0;
-    ErlNifPid *pid = NULL;
 
 
     state = enif_priv_data(env);
@@ -253,14 +252,12 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     cmd = enif_alloc(sizeof(VERT_CAST));
     cmd->argv = enif_alloc(sizeof(ERL_NIF_TERM) * (argc-1));
-    pid = enif_alloc(sizeof(ErlNifPid));
+    cmd->pid = enif_alloc(sizeof(ErlNifPid));
 
-    if ( (cmd == NULL) || (cmd->argv == NULL) || (pid == NULL))
+    if ( (cmd == NULL) || (cmd->argv == NULL) || (cmd->pid == NULL))
         return error_tuple(env, atom_enomem);
 
-    (void)enif_self(env, pid);
-
-    cmd->pid = pid;
+    (void)enif_self(env, cmd->pid);
     cmd->fptr = vert_funcs[i].fptr;
     (void)memcpy(cmd->argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
     cmd->argc = argc-1;
