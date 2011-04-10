@@ -65,7 +65,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_NAME: {
-            char name[1024]; /* XXX max size ??? */
+            char name[HOST_NAME_MAX];
 
             if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
                 return enif_make_badarg(env);
@@ -75,7 +75,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_UUID: {
-            char uuid[1024]; /* XXX max size ??? */
+            char uuid[VIR_UUID_BUFLEN];
 
             if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
                 return enif_make_badarg(env);

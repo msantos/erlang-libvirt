@@ -56,7 +56,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     switch (type) {
         case VERT_ATTR_NAME: {
-            char name[1024]; /* XXX max interface length ??? */
+            char name[IFNAMSIZ];
 
             if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
                 return enif_make_badarg(env);

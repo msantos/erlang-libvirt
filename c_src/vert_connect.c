@@ -38,7 +38,7 @@
     ERL_NIF_TERM
 vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    char name[1024]; /* XXX what should be the size of this? */
+    char name[HOST_NAME_MAX];
     int type = VERT_CONNECT_OPEN;
 
     VERT_RESOURCE *vp = NULL;
@@ -166,15 +166,15 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_MAXVCPUS: {
-            char name[1024];
+            char type[1024];
             int max = -1;
 
-            (void)memset(name, '\0', sizeof(name));
+            (void)memset(type, '\0', sizeof(type));
 
-            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 0)
+            if (enif_get_string(env, argv[2], type, sizeof(type), ERL_NIF_LATIN1) < 0)
                 return enif_make_badarg(env);
 
-            max = virConnectGetMaxVcpus(vp->res, (name[0] == '\0' ? NULL : name));
+            max = virConnectGetMaxVcpus(vp->res, (type[0] == '\0' ? NULL : type));
 
             VERTERR(max < 0);
 
