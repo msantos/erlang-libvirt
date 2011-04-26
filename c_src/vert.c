@@ -218,8 +218,11 @@ vert_loop(void *arg)
     }
 
 ERR:
-    enif_free(cmd);
-    enif_free_env(env);
+    if (cmd)
+        enif_free(cmd);
+    if (env)
+        enif_free_env(env);
+
     return NULL;
 }
 
