@@ -254,10 +254,14 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     cmd = enif_alloc(sizeof(VERT_CAST));
+
+    if (cmd == NULL)
+        return error_tuple(env, atom_enomem);
+
     cmd->argv = enif_alloc(sizeof(ERL_NIF_TERM) * (argc-1));
     cmd->pid = enif_alloc(sizeof(ErlNifPid));
 
-    if ( (cmd == NULL) || (cmd->argv == NULL) || (cmd->pid == NULL))
+    if ( (cmd->argv == NULL) || (cmd->pid == NULL))
         return error_tuple(env, atom_enomem);
 
     (void)enif_self(env, cmd->pid);
