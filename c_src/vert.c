@@ -231,10 +231,11 @@ ERR:
 vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_STATE *state = NULL;
-    VERT_CAST *cmd = NULL;
+    VERT_CAST cmd = {0};
     char buf[MAX_ATOM_LEN+1];
     int i = 0;
     int found = 0;
+    ERL_NIF_TERM res = {0};
 
 
     state = enif_priv_data(env);
@@ -253,28 +254,26 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (found == 0)
         return enif_make_badarg(env);
 
-    cmd = enif_alloc(sizeof(VERT_CAST));
+    cmd.argv = enif_alloc(sizeof(ERL_NIF_TERM) * (argc-1));
+    cmd.pid = enif_alloc(sizeof(ErlNifPid));
 
-    if (cmd == NULL)
+    if ( (cmd.argv == NULL) || (cmd.pid == NULL))
         return error_tuple(env, atom_enomem);
 
-    cmd->argv = enif_alloc(sizeof(ERL_NIF_TERM) * (argc-1));
-    cmd->pid = enif_alloc(sizeof(ErlNifPid));
+    (void)enif_self(env, cmd.pid);
+    cmd.fptr = vert_funcs[i].fptr;
+    (void)memcpy(cmd.argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
+    cmd.argc = argc-1;
 
-    if ( (cmd->argv == NULL) || (cmd->pid == NULL))
-        return error_tuple(env, atom_enomem);
+    if (write(state->fd[VERT_WRITE], &cmd, sizeof(VERT_CAST)) < 0) {
+        res = error_errno(env, errno);
+        goto OUT;
+    }
 
-    (void)enif_self(env, cmd->pid);
-    cmd->fptr = vert_funcs[i].fptr;
-    (void)memcpy(cmd->argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
-    cmd->argc = argc-1;
+    res = atom_ok;
 
-    if (write(state->fd[VERT_WRITE], cmd, sizeof(VERT_CAST)) < 0)
-        return error_errno(env, errno);
-
-    enif_free(cmd);
-
-    return atom_ok;
+OUT:
+    return res;
 }
 
 
