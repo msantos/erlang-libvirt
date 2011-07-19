@@ -8,16 +8,18 @@ An (almost) pure Erlang libvirt binding is available here:
 
 <https://github.com/msantos/erlang-libvirt-remote>
 
-This version uses the libvirtd remote procotol over a Unix socket.
+This version uses the (unsupported) libvirtd remote procotol over a
+Unix socket.
 
 
 ## WARNING
 
-    The libvirt API is not safe. It is huge, inconsistent and error
-    prone.
+    The libvirt API is massive, inconsistent and error prone. So consider
+    this language binding to be incomplete, buggy and full of unexpected
+    surprises.
 
-    The current implementation calls all libvirt functions in a thread
-    so the Erlang VM will not block. If libvirt blocks, the caller will
+    The current implementation calls all libvirt functions in a thread so
+    that the Erlang VM will not block. If libvirt blocks, the caller will
     receive an error immediately ({error, eagain}). This means only one
     call from a single Erlang VM into libvirt can be running at any time.
 
@@ -33,30 +35,43 @@ This version uses the libvirtd remote procotol over a Unix socket.
 
 ## HOW TO USE IT
 
+The Erlang libvirt API follows the libvirt C API. For example, if the
+C API has:
+
+    virConnectOpen(char *name)
+    virConnectGetLibVersion(virConnectPtr(conn), unsigned long *version)
+
+To call the same functions in Erlang:
+
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok,{0,7,5}} = vert:virConnectGetLibVersion(Connect).
+
+
+
 ## EXAMPLES
 
 ### CREATING A DOMAIN
 
     start(Path) ->
-        {ok, Connect} = vert:open({connect, ""}),
+        {ok, Connect} = vert:virConnectOpen("qemu:///system"),
         {ok, XML} = file:read_file(Path),
-        {ok, Domain} = vert:define(Connect, {domain, XML}),
-        ok = vert:create(Domain),
+        {ok, Domain} = vert:virDomainDefineXML(Connect, XML),
+        ok = vert:virDomainCreate(Domain, 0),
 
-        Active = vert:resource(Connect, {domain, active}),
+        Active = vert:virConnectNumOfDomains(Connect),
         io:format("Active Domains: ~p~n", [Active]),
 
         {ok, Connect, Domain}.
 
     halt(Connect, Domain) ->
-        ok = vert:destroy(Domain),
-        ok = vert:close(Connect).
+        ok = vert:virDomainDestroy(Domain),
+        ok = vert:virConnectClose(Connect).
 
 
 ### SUSPENDING AND RESUMING A DOMAIN
 
-This example is the Erlang equivalent of a Python script to manipulate a
-running domain. The example is taken from:
+This example is the Erlang equivalent of a Python script to manipulate
+running domains. The example is taken from:
 
 <http://www.ibm.com/developerworks/linux/library/l-libvirt/>
 
@@ -86,28 +101,28 @@ running domain. The example is taken from:
     -export([start/0]).
 
     start() ->
-        {ok, Connect} = vert:open(""),
-        {ok, DomainIDs} = vert:resource(Connect, {domain, active}),
+        {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+        {ok, DomainIDs} = vert:virConnectListDomains(Connect, 10),
 
         [ states(Connect, DomainID) || DomainID <- DomainIDs ],
 
         ok.
 
     states(Connect, DomainID) ->
-        {ok, Domain} = vert:resource(Connect, {domain, {id, DomainID}}),
+        {ok, Domain} = vert:virDomainLookupByID(Connect, DomainID),
         io:format("running: ~p~n", [info(Domain)]),
 
-        ok = vert:suspend(Domain),
+        ok = vert:virDomainSuspend(Domain),
         io:format("suspend: ~p~n", [info(Domain)]),
 
-        ok = vert:resume(Domain),
+        ok = vert:virDomainResume(Domain),
         io:format("resumed: ~p~n", [info(Domain)]),
 
-        ok = vert:destroy(Domain).
+        ok = vert:virDomainDestroy(Domain).
 
     info(Domain) ->
-        Name = vert:get(Domain, name),
-        Info = vert:get(Domain, info),
+        Name = vert:virDomainGetName(Domain),
+        Info = vert:virDomainGetInfo(Domain),
 
         [{name, Name}, {info, Info}].
 
@@ -121,4 +136,6 @@ running domain. The example is taken from:
       how awkward the Erlang interface is by porting them
     * then of course document the interface
 
+* Carefully check the code. There are many copy/paste defects.
 
+* Allow the caller to kill the background thread if it is blocked
