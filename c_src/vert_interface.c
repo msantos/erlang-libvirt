@@ -76,52 +76,52 @@ vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 vert_virInterfaceGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *ifp = NULL;
-    const char *res = NULL;
+    const char *p = NULL;
 
 
     VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
-    res = virInterfaceGetName(ifp->res);
+    p = virInterfaceGetName(ifp->res);
 
-    VERTERR(res == NULL);
+    VERTERR(p == NULL);
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_string(env, res, ERL_NIF_LATIN1));
+        enif_make_string(env, p, ERL_NIF_LATIN1));
 }
 
     ERL_NIF_TERM
 vert_virInterfaceGetMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *ifp = NULL;
-    const char *res = NULL;
+    const char *p = NULL;
 
 
     VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
-    res = virInterfaceGetMACString(ifp->res);
+    p = virInterfaceGetMACString(ifp->res);
 
-    VERTERR(res == NULL);
+    VERTERR(p == NULL);
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_string(env, res, ERL_NIF_LATIN1));
+        enif_make_string(env, p, ERL_NIF_LATIN1));
 }
 
     ERL_NIF_TERM
 vert_virInterfaceGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *ifp = NULL;
-    const char *res = NULL;
+    const char *p = NULL;
 
 
     VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
-    res = virInterfaceGetXMLDesc(ifp->res, 0);
+    p = virInterfaceGetXMLDesc(ifp->res, 0);
 
-    VERTERR(res == NULL);
+    VERTERR(p == NULL);
 
     return enif_make_tuple2(env,
         atom_ok,
-        enif_make_string(env, res, ERL_NIF_LATIN1));
+        enif_make_string(env, p, ERL_NIF_LATIN1));
 }

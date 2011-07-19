@@ -428,15 +428,15 @@ vert_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *dp = NULL;
     char file[MAXPATHLEN] = {0};
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_STRING(1, file, sizeof(file));
 
-    res = virDomainSave(dp->res, file);
+    n = virDomainSave(dp->res, file);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }
@@ -448,15 +448,15 @@ vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *vp = NULL;
     char file[MAXPATHLEN] = {0};
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_STRING(1, file, sizeof(file));
 
-    res = virDomainRestore(vp->res, file);
+    n = virDomainRestore(vp->res, file);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }
@@ -468,15 +468,15 @@ vert_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *dp = NULL;
     int flags = 0;
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_INT(1, flags);
 
-    res = virDomainSetAutostart(dp->res, flags);
+    n = virDomainSetAutostart(dp->res, flags);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }
@@ -487,14 +487,14 @@ vert_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *dp = NULL;
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    res = virDomainShutdown(dp->res);
+    n = virDomainShutdown(dp->res);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }
@@ -505,14 +505,14 @@ vert_virDomainSuspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *dp = NULL;
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    res = virDomainSuspend(dp->res);
+    n = virDomainSuspend(dp->res);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }
@@ -523,14 +523,14 @@ vert_virDomainResume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *dp = NULL;
 
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    res = virDomainResume(dp->res);
+    n = virDomainResume(dp->res);
 
-    VERTERR(res != 0);
+    VERTERR(n != 0);
 
     return atom_ok;
 }

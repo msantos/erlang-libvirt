@@ -198,13 +198,13 @@ vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 vert_virNetworkIsPersistent(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *np = NULL;
-    int res = -1;
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
 
-    res = virNetworkIsPersistent(np->res);
-    VERTERR(res < 0);
+    n = virNetworkIsPersistent(np->res);
+    VERTERR(n == -1);
 
-    return (res == 1 ? atom_true : atom_false);
+    return (n == 1 ? atom_true : atom_false);
 }
