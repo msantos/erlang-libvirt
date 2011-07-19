@@ -38,14 +38,12 @@
     ERL_NIF_TERM
 vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    char name[HOST_NAME_MAX];
+    char name[HOST_NAME_MAX] = {0};
     int type = VERT_CONNECT_OPEN;
 
     VERT_RESOURCE *vp = NULL;
     ERL_NIF_TERM res = {0};
 
-
-    (void)memset(name, '\0', sizeof(name));
 
     /* If the string is truncated, return badarg
      * If the string is empty or has the wrong encoding, consider it to be NULL
@@ -166,10 +164,9 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             break;
 
         case VERT_ATTR_MAXVCPUS: {
-            char type[1024];
+            char type[1024] = {0};
             int max = -1;
 
-            (void)memset(type, '\0', sizeof(type));
 
             if (enif_get_string(env, argv[2], type, sizeof(type), ERL_NIF_LATIN1) < 0)
                 return enif_make_badarg(env);
