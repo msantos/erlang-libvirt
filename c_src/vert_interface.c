@@ -45,11 +45,8 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
@@ -58,8 +55,10 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_NAME: {
             char name[IFNAMSIZ];
 
-            if (argc != 3 || enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
+            if (argc != 3)
                 return enif_make_badarg(env);
+
+            VERT_GET_STRING(2, name, sizeof(name));
 
             ifp->res = virInterfaceLookupByName(vp->res, name);
             }
@@ -68,8 +67,10 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_MAC: {
             char mac[18]; /* aa:bb:cc:00:11:22\0 */
 
-            if (argc != 3 || enif_get_string(env, argv[2], mac, sizeof(mac), ERL_NIF_LATIN1) < 1)
+            if (argc != 3)
                 return enif_make_badarg(env);
+
+            VERT_GET_STRING(2, mac, sizeof(mac));
 
             ifp->res = virInterfaceLookupByMACString(vp->res, mac);
             }
@@ -100,11 +101,8 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     const char *res = NULL;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&ifp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, ifp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(ifp, VERT_RES_INTERFACE);
 
@@ -147,5 +145,3 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         atom_ok,
         enif_make_string(env, res, ERL_NIF_LATIN1));
 }
-
-

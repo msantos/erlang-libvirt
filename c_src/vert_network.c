@@ -45,11 +45,8 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
@@ -58,8 +55,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_NAME: {
             char name[IFNAMSIZ];
 
-            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                return enif_make_badarg(env);
+            VERT_GET_STRING(2, name, sizeof(name));
 
             np->res = virNetworkLookupByName(vp->res, name);
             }
@@ -68,8 +64,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_RAWUUID: {
             ErlNifBinary buf = {0};
 
-            if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
-                return enif_make_badarg(env);
+            VERT_GET_IOLIST(2, buf);
 
             np->res = virNetworkLookupByUUID(vp->res, buf.data);
             }
@@ -78,8 +73,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_UUID: {
             ErlNifBinary buf = {0};
 
-            if (!enif_inspect_iolist_as_binary(env, argv[2], &buf))
-                return enif_make_badarg(env);
+            VERT_GET_IOLIST(2, buf);
 
             np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
             }
@@ -110,11 +104,8 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM term = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&np))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, np);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(np, VERT_RES_NETWORK);
 
@@ -173,8 +164,10 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             char *desc = NULL;
             int flags = 0;
 
-            if (argc != 3 || !enif_get_int(env, argv[2], &flags))
+            if (argc != 3)
                 return enif_make_badarg(env);
+
+            VERT_GET_INT(2, flags);
 
             desc = virNetworkGetXMLDesc(np->res, flags);
 
@@ -225,4 +218,3 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return term;
 }
-

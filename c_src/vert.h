@@ -83,18 +83,37 @@ enum {
     VERT_RES_SECRET,
 };
 
-#define RESOURCE_ALLOC(x,y,z) do { \
-    x = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
-    ISNULL(x); \
-    (x)->type = y; \
-    (x)->res = NULL; \
-    (x)->conn = (z); \
+#define RESOURCE_ALLOC(var,vtype,initial) do { \
+    var = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
+    ISNULL(var); \
+    (var)->type = vtype; \
+    (var)->res = NULL; \
+    (var)->conn = (initial); \
 } while (0)
 
-#define CHECK_RESOURCE_TYPE(x,y) do { \
-    if ((x)->type != (y)) return enif_make_badarg(env); \
+#define CHECK_RESOURCE_TYPE(var,vtype) do { \
+    if ((var)->type != (vtype)) return enif_make_badarg(env); \
 } while (0)
 
+#define VERT_GET_RESOURCE(index, var) do { \
+    if (!enif_get_resource(env, argv[index], NIF_VERT_RESOURCE, (void **)&var)) \
+        return enif_make_badarg(env); \
+} while (0)
+
+#define VERT_GET_STRING(index, var, size) do { \
+    if (enif_get_string(env, argv[(index)], var, size, ERL_NIF_LATIN1) < 1) \
+        return enif_make_badarg(env); \
+} while (0)
+
+#define VERT_GET_INT(index, var) do { \
+    if (enif_get_int(env, argv[(index)], &var) < 0) \
+        return enif_make_badarg(env); \
+} while (0)
+
+#define VERT_GET_IOLIST(index, var) do { \
+    if (!enif_inspect_iolist_as_binary(env, argv[(index)], &var)) \
+        return enif_make_badarg(env); \
+} while (0)
 
 /* nif_virDomainLookup */
 enum {

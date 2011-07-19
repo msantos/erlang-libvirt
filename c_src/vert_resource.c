@@ -46,14 +46,9 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
-
-    if (!enif_inspect_iolist_as_binary(env, argv[2], &cfg))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
+    VERT_GET_IOLIST(2, cfg);
 
     /* NULL terminate the string */
     if (!enif_realloc_binary(&cfg, cfg.size+1))
@@ -108,8 +103,7 @@ vert_resource_undefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *rp = NULL;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&rp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, rp);
 
     switch (rp->type) {
         case VERT_RES_DOMAIN:
@@ -151,11 +145,8 @@ vert_resource_create(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int flags = 0;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&rp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &flags))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, rp);
+    VERT_GET_INT(1, flags);
 
     switch (rp->type) {
         case VERT_RES_DOMAIN:
@@ -194,8 +185,7 @@ vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *vp = NULL;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
 
     switch (vp->type) {
         case VERT_RES_DOMAIN:
@@ -222,4 +212,3 @@ vert_resource_destroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return atom_ok;
 }
-

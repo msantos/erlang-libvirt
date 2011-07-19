@@ -45,11 +45,8 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
@@ -58,8 +55,8 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_ID: {
             int id = 0;
 
-            if (!enif_get_int(env, argv[2], &id))
-                return enif_make_badarg(env);
+            VERT_GET_INT(2, id);
+
             dp->res = virDomainLookupByID(vp->res, id);
             }
             break;
@@ -67,8 +64,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_NAME: {
             char name[HOST_NAME_MAX];
 
-            if (enif_get_string(env, argv[2], name, sizeof(name), ERL_NIF_LATIN1) < 1)
-                return enif_make_badarg(env);
+            VERT_GET_STRING(2, name, sizeof(name));
 
             dp->res = virDomainLookupByName(vp->res, name);
             }
@@ -77,8 +73,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         case VERT_ATTR_UUID: {
             char uuid[VIR_UUID_BUFLEN];
 
-            if (enif_get_string(env, argv[2], uuid, sizeof(uuid), ERL_NIF_LATIN1) < 1)
-                return enif_make_badarg(env);
+            VERT_GET_STRING(2, uuid, sizeof(uuid));
 
             dp->res = virDomainLookupByUUID(vp->res, (const unsigned char *)uuid);
             }
@@ -110,11 +105,8 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM term = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
@@ -134,8 +126,10 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             virDomainInfo info = {0};
             ERL_NIF_TERM buf = {0};
 
-            if (argc != 3 || !enif_get_string(env, argv[2], path, sizeof(path), ERL_NIF_LATIN1))
+            if (argc != 3)
                 return enif_make_badarg(env);
+
+            VERT_GET_STRING(2, path, sizeof(path));
 
             VERTERR(virDomainGetBlockInfo(dp->res, path, &info, 0) < 0);
             buf = bincopy(env, &info, sizeof(virDomainInfo));
@@ -400,11 +394,8 @@ vert_domain_save(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
-
-    if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_STRING(1, file, sizeof(file));
 
     CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
@@ -425,11 +416,8 @@ vert_domain_restore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_STRING(1, file, sizeof(file));
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
@@ -450,11 +438,8 @@ vert_domain_autostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &flags))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_INT(1, flags);
 
     CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
@@ -474,8 +459,7 @@ vert_domain_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, dp);
 
     res = virDomainShutdown(dp->res);
 
@@ -493,8 +477,8 @@ vert_domain_suspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
+
+    VERT_GET_RESOURCE(0, dp);
 
     res = virDomainSuspend(dp->res);
     VERTERR(res != 0);
@@ -510,12 +494,11 @@ vert_domain_resume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&dp))
-        return enif_make_badarg(env);
+
+    VERT_GET_RESOURCE(0, dp);
 
     res = virDomainResume(dp->res);
     VERTERR(res != 0);
 
     return atom_ok;
 }
-

@@ -139,5 +139,3 @@ vert_cleanup(ErlNifEnv *env, void *obj)
 
     vp->res = NULL;
 }
-
-

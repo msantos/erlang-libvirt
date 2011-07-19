@@ -50,11 +50,8 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
      *  This assumes that enif_get_string() does not modify the buffer
      * If the string has a length, ok
      */
-    if (enif_get_string(env, argv[0], name, sizeof(name), ERL_NIF_LATIN1) < 0)
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_STRING(0, name, sizeof(name));
+    VERT_GET_INT(1, type);
 
     RESOURCE_ALLOC(vp, VERT_RES_CONNECT, NULL);
 
@@ -79,7 +76,7 @@ vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return verterr(env);
     }
 
-    /* XXX disable logging to stderr */
+    /* Disable logging to stderr */
     virConnSetErrorFunc(vp->res, NULL, NULL);
 
     res = enif_make_resource(env, vp);
@@ -97,8 +94,7 @@ vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = atom_ok;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     VERTERR(virConnectClose(vp->res) == -1);
@@ -116,11 +112,8 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ERL_NIF_TERM term = {0};
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
@@ -168,8 +161,7 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             int max = -1;
 
 
-            if (enif_get_string(env, argv[2], type, sizeof(type), ERL_NIF_LATIN1) < 0)
-                return enif_make_badarg(env);
+            VERT_GET_STRING(2, type, sizeof(type));
 
             max = virConnectGetMaxVcpus(vp->res, (type[0] == '\0' ? NULL : type));
 
@@ -325,11 +317,8 @@ vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
@@ -375,11 +364,8 @@ vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
@@ -423,13 +409,11 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
+    VERT_GET_INT(2, max);
 
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[2], &max) || max <= 0)
+    if (max <= 0)
         return enif_make_badarg(env);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
@@ -522,19 +506,16 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
-        return enif_make_badarg(env);
+    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_INT(1, type);
+    VERT_GET_INT(2, max);
 
-    if (!enif_get_int(env, argv[1], &type))
-        return enif_make_badarg(env);
-
-    if (!enif_get_int(env, argv[1], &max) || max <= 0)
+    if (max <= 0)
         return enif_make_badarg(env);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     names = calloc(max, sizeof(char *));
-
     ISNULL(names);
 
     list = enif_make_list(env, 0);
@@ -573,5 +554,3 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         atom_ok,
         list);
 }
-
-
