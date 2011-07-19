@@ -46,6 +46,7 @@ ERL_NIF_TERM atom_ok;
 ERL_NIF_TERM atom_resource;
 ERL_NIF_TERM atom_connect;
 ERL_NIF_TERM atom_domain;
+ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_true;
 ERL_NIF_TERM atom_false;
 

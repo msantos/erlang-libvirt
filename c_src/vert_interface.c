@@ -34,109 +34,92 @@
 #include "vert_interface.h"
 
 
-/* 0: VERT_RESOURCE, 1: int type 2: int | char* */
     ERL_NIF_TERM
-vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = VERT_ATTR_NAME;
+    char name[IFNAMSIZ];
 
     VERT_RESOURCE *ifp = NULL;
-    ERL_NIF_TERM res = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
+    VERT_GET_STRING(1, name, sizeof(name));
 
     RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
 
-    switch (type) {
-        case VERT_ATTR_NAME: {
-            char name[IFNAMSIZ];
+    ifp->res = virInterfaceLookupByName(vp->res, name);
 
-            if (argc != 3)
-                return enif_make_badarg(env);
-
-            VERT_GET_STRING(2, name, sizeof(name));
-
-            ifp->res = virInterfaceLookupByName(vp->res, name);
-            }
-            break;
-
-        case VERT_ATTR_MAC: {
-            char mac[18]; /* aa:bb:cc:00:11:22\0 */
-
-            if (argc != 3)
-                return enif_make_badarg(env);
-
-            VERT_GET_STRING(2, mac, sizeof(mac));
-
-            ifp->res = virInterfaceLookupByMACString(vp->res, mac);
-            }
-            break;
-
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
-
-    if (ifp->res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    res = enif_make_resource(env, ifp);
-    enif_release_resource(ifp);
-
-    return vert_make_resource(env, atom_domain, res);
+    VERT_RET_RESOURCE(ifp, atom_interface);
 }
 
-/* 0: VERT_RESOURCE, 1: int type */
     ERL_NIF_TERM
-vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    char mac[18]; /* aa:bb:cc:00:11:22\0 */
+
+    VERT_RESOURCE *ifp = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_STRING(1, mac, sizeof(mac));
+
+    RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
+
+    ifp->res = virInterfaceLookupByMACString(vp->res, mac);
+
+    VERT_RET_RESOURCE(ifp, atom_interface);
+}
+
+    ERL_NIF_TERM
+vert_virInterfaceGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *ifp = NULL;
-    int type = VERT_ATTR_NAME;
-
     const char *res = NULL;
 
 
     VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-    VERT_GET_INT(1, type);
 
-    switch (type) {
-        case VERT_ATTR_NAME:
-            res = virInterfaceGetName(ifp->res);
-            break;
+    res = virInterfaceGetName(ifp->res);
 
-        case VERT_ATTR_MAC:
-            res = virInterfaceGetMACString(ifp->res);
-            break;
+    VERTERR(res == NULL);
 
-        case VERT_ATTR_DESC:
-            res = virInterfaceGetXMLDesc(ifp->res, 0);
-            break;
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, res, ERL_NIF_LATIN1));
+}
 
-        case VERT_ATTR_CONNECT: {
-            VERT_RESOURCE *cp = NULL;
-            ERL_NIF_TERM term = {0};
+    ERL_NIF_TERM
+vert_virInterfaceGetMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *ifp = NULL;
+    const char *res = NULL;
 
-            RESOURCE_ALLOC(cp, VERT_RES_CONNECT, NULL);
-            cp->res = ifp->conn;
-            term = enif_make_resource(env, cp);
-            enif_release_resource(cp);
 
-            return vert_make_resource(env, atom_connect, term);
-            }
-            break;
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
+    res = virInterfaceGetMACString(ifp->res);
 
-    if (res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
+    VERTERR(res == NULL);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, res, ERL_NIF_LATIN1));
+}
+
+    ERL_NIF_TERM
+vert_virInterfaceGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *ifp = NULL;
+    const char *res = NULL;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
+
+    res = virInterfaceGetXMLDesc(ifp->res, 0);
+
+    VERTERR(res == NULL);
 
     return enif_make_tuple2(env,
         atom_ok,

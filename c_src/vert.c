@@ -128,6 +128,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_resource = enif_make_atom(env, "resource");
     atom_connect = enif_make_atom(env, "connect");
     atom_domain = enif_make_atom(env, "domain");
+    atom_interface = enif_make_atom(env, "interface");
     atom_true = enif_make_atom(env, "true");
     atom_false = enif_make_atom(env, "false");
 
