@@ -159,7 +159,7 @@ vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *ifp = NULL;
 
 
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
     VERTERR(virInterfaceUndefine(ifp->res) == -1);
     VERTERR(virInterfaceFree(ifp->res) == -1);
@@ -171,11 +171,11 @@ vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *ifp = NULL;
-    int flags = 0;
+//    int flags = 0;
 
 
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
-    VERT_GET_INT(1, flags);
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
+//    VERT_GET_INT(1, flags);
 
     VERTERR(virInterfaceCreate(ifp->res, 0) == -1);
 
@@ -188,7 +188,7 @@ vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_RESOURCE *ifp = NULL;
 
 
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
     VERTERR(virInterfaceDestroy(ifp->res, 0) != 0);
     VERTERR(virInterfaceFree(ifp->res) != 0);

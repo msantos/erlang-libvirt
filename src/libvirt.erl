@@ -32,26 +32,96 @@
 -include("libvirt.hrl").
 
 -export([
+        virNodeGetSecurityModel/1,
+        virNodeGetInfo/1,
+        virNodeGetFreeMemory/1,
+        virNodeGetCellsFreeMemory/2,
+        virNetworkUndefine/1,
+        virNetworkLookupByUUIDString/2,
+        virNetworkLookupByUUID/2,
+        virNetworkLookupByName/2,
+        virNetworkIsPersistent/1,
+        virNetworkGetXMLDesc/2,
+        virNetworkGetUUID/1,
+        virNetworkGetName/1,
+        virNetworkGetBridgeName/1,
+        virNetworkGetAutostart/1,
+        virNetworkDestroy/1,
+        virNetworkDefineXML/2,
+        virNetworkCreate/1,
+        virInterfaceUndefine/1,
+        virInterfaceLookupByName/2,
+        virInterfaceLookupByMACString/2,
+        virInterfaceGetXMLDesc/1,
+        virInterfaceGetName/1,
+        virInterfaceGetMACString/1,
+        virInterfaceDestroy/1,
+        virInterfaceDefineXML/2,
+        virInterfaceCreate/1,
+        virDomainUndefine/1,
+        virDomainSuspend/1,
+        virDomainShutdown/1,
+        virDomainSetAutostart/2,
+        virDomainSave/2,
+        virDomainResume/1,
+        virDomainRestore/2,
+        virDomainLookupByUUID/2,
+        virDomainLookupByName/2,
+        virDomainLookupByID/2,
+        virDomainGetXMLDesc/2,
+        virDomainGetUUIDString/1,
+        virDomainGetUUID/1,
+        virDomainGetSecurityLabel/1,
+        virDomainGetSchedulerType/1,
+        virDomainGetSchedulerParameters/1,
+        virDomainGetOSType/1,
+        virDomainGetName/1,
+        virDomainGetMaxVcpus/1,
+        virDomainGetMemoryParameters/1,
+        virDomainGetMaxMemory/1,
+        virDomainGetInfo/1,
+        virDomainGetID/1,
+        virDomainGetJobInfo/1,
+        virDomainGetBlockInfo/2,
+        virDomainGetAutostart/1,
+        virDomainDestroy/1,
+        virDomainDefineXML/2,
+        virDomainCreate/2,
+        virConnectOpen/1,
+        virConnectOpenReadOnly/1,
+        virConnectClose/1,
+        virConnectNumOfStoragePools/1,
+        virConnectNumOfSecrets/1,
+        virConnectNumOfNetworks/1,
+        virConnectNumOfNWFilters/1,
+        virConnectNumOfInterfaces/1,
+        virConnectNumOfDomains/1,
+        virConnectNumOfDefinedStoragePools/1,
+        virConnectNumOfDefinedNetworks/1,
+        virConnectNumOfDefinedInterfaces/1,
+        virConnectNumOfDefinedDomains/1,
+        virConnectListStoragePools/2,
+        virConnectListSecrets/2,
+        virConnectListNetworks/2,
+        virConnectListNWFilters/2,
+        virConnectListInterfaces/2,
+        virConnectListDomains/2,
+        virConnectListDefinedStoragePools/2,
+        virConnectListDefinedNetworks/2,
+        virConnectListDefinedInterfaces/2,
+        virConnectListDefinedDomains/2,
+        virConnectIsSecure/1,
+        virConnectIsEncrypted/1,
+        virConnectGetVersion/1,
+        virConnectGetURI/1,
+        virConnectGetType/1,
+        virConnectGetMaxVcpus/2,
+        virConnectGetLibVersion/1,
+        virConnectGetHostname/1,
+        virConnectGetCapabilities/1,
+
         cast/2, cast/3, cast/4,
-        call/1, call/2,
-
-        open/1,
-        close/1,
-        get/2,
-        set/2,
-
-        define/2,
-        undefine/1,
-        create/1, create/2,
-        destroy/1,
-
-        save/2,
-        restore/2,
-        shutdown/1,
-        suspend/1,
-        resume/1,
-
-        resource/2
+        call/1, call/2
     ]).
 
 
@@ -62,155 +132,116 @@ on_load() ->
 
 
 %%-------------------------------------------------------------------------
-%%% NIF stubs
+%%% Stream
 %%-------------------------------------------------------------------------
-cast(_,_) ->
-    erlang:error(not_implemented).
-cast(_,_,_) ->
-    erlang:error(not_implemented).
-cast(_,_,_,_) ->
-    erlang:error(not_implemented).
 
-%%-------------------------------------------------------------------------
-%%% Blocking API
-%%-------------------------------------------------------------------------
-call({Fun, Arg}, Timeout) ->
-    block(cast(Fun, Arg), Timeout);
-call({Fun, Arg1, Arg2}, Timeout) ->
-    block(cast(Fun, Arg1, Arg2), Timeout);
-call({Fun, Arg1, Arg2, Arg3}, Timeout) ->
-    block(cast(Fun, Arg1, Arg2, Arg3), Timeout).
-
-call(Arg) ->
-    call(Arg, infinity).
-
-block(ok, Timeout) ->
-    receive
-        Res -> Res
-    after
-        Timeout -> {error, timeout}
-    end;
-block(Error, _Timeout) ->
-    Error.
-
-
-%%
-%% Connections
-%%
-open(Name) when is_list(Name) ->
-    open({connect, Name});
-
-open({connect, Name}) when is_list(Name) ->
-    call({connect_open, Name, ?VERT_CONNECT_OPEN});
-open({connect, Name, read}) when is_list(Name) ->
-    call({connect_open,Name, ?VERT_CONNECT_OPEN_READONLY});
-open({connect, Name, {auth, Options}}) when is_list(Name), is_list(Options) ->
-%    call({connect_open, Name, ?VERT_CONNECT_OPEN_AUTH}).
-    erlang:error(not_implemented).
-
-close(#resource{type = connect, res = Res}) ->
-    call({connect_close, Res}).
-
-define(#resource{type = connect, res = Res}, {Type, Cfg}) when is_atom(Type),
-    ( is_list(Cfg) orelse is_binary(Cfg) ) ->
-    call({resource_define, Res, res(Type), Cfg}).
-
-undefine(#resource{res = Res}) ->
-    call({resource_undefine, Res}).
-
-create(Resource) ->
-    create(Resource, 0).
-create(#resource{res = Res}, Flags) when is_integer(Flags) ->
-    call({resource_create, Res, Flags}).
-
-
-%%
-%% Resources
-%%
-destroy(Resource) ->
-    resource(Resource, destroy).
-
-save(Resource, File) ->
-    resource(Resource, {save, File}).
-
-restore(Resource, File) ->
-    resource(Resource, {restore, File}).
-
-shutdown(Resource) ->
-    resource(Resource, shutdown).
-
-suspend(Resource) ->
-    resource(Resource, suspend).
-
-resume(Resource) ->
-    resource(Resource, resume).
+%virStreamSendAll(Stream, Handler, Opaque) ->
+%virStreamSend(Stream, Data, Nbytes) ->
+%virStreamRecvAll(Stream, Handler, Opaque) ->
+%virStreamRecv(Stream, Data, Nbytes) ->
+%virStreamNew(Conn, Flags) ->
+%virStreamFree(Stream) ->
+%virStreamFinish(Stream) ->
+%virStreamEventUpdateCallback(Stream, Events) ->
+%virStreamEventRemoveCallback(Stream) ->
+%virStreamEventAddCallback(Stream, Events, Cb, Opaque, Ff) ->
+%virStreamAbort(Stream) ->
 
 
 %%-------------------------------------------------------------------------
-%%% Resources
+%%% Storage Volume
 %%-------------------------------------------------------------------------
 
-%%
-%% connect
-%%
-resource(#resource{type = connect, res = Res}, {domain, {Attr, Arg}}) when is_atom(Attr) ->
-    call({domain_lookup, Res, attr(Attr), Arg});
-
-resource(#resource{type = connect, res = Res}, {interface, {Attr, Arg}}) when is_list(Attr) ->
-    call({interface_lookup, Res, attr(Attr), Arg});
-
-resource(#resource{type = connect, res = Res}, {network, {Attr, Arg}}) when is_list(Attr) ->
-    call({network_lookup, Res, attr(Attr), Arg});
-
-resource(#resource{type = connect, res = Res}, {Type, num_active}) when is_atom(Type) ->
-    call({connect_get_numactive, Res, res(Type)});
-resource(#resource{type = connect, res = Res}, {Type, num_inactive}) when is_atom(Type) ->
-    call({connect_get_numinactive, Res, res(Type)});
-
-resource(#resource{type = connect, res = Res}, {Type, active}) ->
-    Resource = res(Type),
-    case call({connect_get_numactive, Res, Resource}) of
-        {ok, 0} -> [];
-        {ok, Max} -> call({connect_get_listactive, Res, Resource, Max});
-        Err -> Err
-    end;
-resource(#resource{type = connect, res = Res}, {Type, inactive}) ->
-    Resource = res(Type),
-    case call({connect_get_numactive, Res, Resource}) of
-        {ok, 0} -> [];
-        {ok, Max} -> call({connect_get_listinactive, Res, Resource, Max});
-        Err -> Err
-    end;
-
-%%
-%% Domain
-%%
-resource(#resource{type = domain, res = Res}, {save, File}) when is_list(File) ->
-    call({domain_save, Res, File});
-
-resource(#resource{type = connect, res = Res}, {resource, File}) when is_list(File) ->
-    call({domain_restore, Res, File});
-
-resource(#resource{type = domain, res = Res}, shutdown) ->
-    call({domain_shutdown, Res});
-resource(#resource{type = domain, res = Res}, suspend) ->
-    call({domain_suspend, Res});
-resource(#resource{type = domain, res = Res}, resume) ->
-    call({domain_resume, Res});
-
-%%
-%% Resource
-%%
-resource(#resource{res = Res}, destroy) ->
-    call({resource_destroy, Res}).
+%virStorageVolLookupByPath(Conn, Path) ->
+%virStorageVolLookupByName(Pool, Name) ->
+%virStorageVolLookupByKey(Conn, Key) ->
+%virStorageVolGetXMLDesc(Vol, Flags) ->
+%virStorageVolGetPath(Vol) ->
+%virStorageVolGetName(Vol) ->
+%virStorageVolGetKey(Vol) ->
+%virStorageVolGetInfo(Vol, Info) ->
+%virStorageVolGetConnect(Vol) ->
+%virStorageVolFree(Vol) ->
+%virStorageVolDelete(Vol, Flags) ->
+%virStorageVolCreateXMLFrom(Pool, Xmldesc, Clonevol, Flags) ->
+%virStorageVolCreateXML(Pool, Xmldesc, Flags) ->
 
 
 %%-------------------------------------------------------------------------
-%%% Resource attributes
+%%% Storage Pool
 %%-------------------------------------------------------------------------
-get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
-    {ok, #node_info{nodes = Nodes}} = ?MODULE:get(Conn, info),
-    call({connect_get, Res, attr(cellsfreememory), Nodes});
+
+%virStoragePoolUndefine(Pool) ->
+%virStoragePoolSetAutostart(Pool, Autostart) ->
+%virStoragePoolRefresh(Pool, Flags) ->
+%virStoragePoolNumOfVolumes(Pool) ->
+%virStoragePoolLookupByVolume(Vol) ->
+%virStoragePoolLookupByUUIDString(Conn, Uuidstr) ->
+%virStoragePoolLookupByUUID(Conn, Uuid) ->
+%virStoragePoolLookupByName(Conn, Name) ->
+%virStoragePoolListVolumes(Pool, Names, Maxnames) ->
+%virStoragePoolIsPersistent(Pool) ->
+%virStoragePoolIsActive(Pool) ->
+%virStoragePoolGetXMLDesc(Pool, Flags) ->
+%virStoragePoolGetUUIDString(Pool, Buf) ->
+%virStoragePoolGetUUID(Pool, Uuid) ->
+%virStoragePoolGetName(Pool) ->
+%virStoragePoolGetInfo(Pool, Info) ->
+%virStoragePoolGetConnect(Pool) ->
+%virStoragePoolGetAutostart(Pool, Autostart) ->
+%virStoragePoolFree(Pool) ->
+%virStoragePoolDestroy(Pool) ->
+%virStoragePoolDelete(Pool, Flags) ->
+%virStoragePoolDefineXML(Conn, Xml, Flags) ->
+%virStoragePoolCreateXML(Conn, XmlDesc, Flags) ->
+%virStoragePoolCreate(Pool, Flags) ->
+%virStoragePoolBuild(Pool, Flags) ->
+
+
+%%-------------------------------------------------------------------------
+%%% Secret
+%%-------------------------------------------------------------------------
+
+%virSecretUndefine(Secret) ->
+%virSecretSetValue(Secret, Value, Value_size, Flags) ->
+%virSecretLookupByUsage(Conn, UsageType, UsageID) ->
+%virSecretLookupByUUIDString(Conn, Uuidstr) ->
+%virSecretLookupByUUID(Conn, Uuid) ->
+%virSecretGetXMLDesc(Secret, Flags) ->
+%virSecretGetValue(Secret, Value_size, Flags) ->
+%virSecretGetUsageType(Secret) ->
+%virSecretGetUsageID(Secret) ->
+%virSecretGetUUIDString(Secret, Buf) ->
+%virSecretGetUUID(Secret, Uuid) ->
+%virSecretGetConnect(Secret) ->
+%virSecretFree(Secret) ->
+%virSecretDefineXML(Conn, Xml, Flags) ->
+
+
+%%-------------------------------------------------------------------------
+%%% Node
+%%-------------------------------------------------------------------------
+
+%virNodeNumOfDevices(Conn, Cap, Flags) ->
+%virNodeListDevices(Conn, Cap, Names, Maxnames, Flags) ->
+
+%% struct _virSecurityModel {
+%%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
+%%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
+%% }
+virNodeGetSecurityModel(#resource{type = connect, res = Res}) ->
+    case call({virNodeGetSecurityModel, Res}) of
+        {ok, <<
+            Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
+            Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
+            >>} ->
+            {ok, #security_model{
+                    model = Model,
+                    doi = Doi
+                }};
+        Error ->
+            Error
+    end.
 
 %% struct _virNodeInfo {
 %%     char model[32];     /* string indicating the CPU model */
@@ -222,9 +253,9 @@ get(#resource{type = connect, res = Res} = Conn, cellsfreememory) ->
 %%     unsigned int cores; /* number of core per socket */
 %%     unsigned int threads;/* number of threads per core */
 %% };
-get(#resource{type = connect, res = Res}, info) ->
-    Long = erlang:system_info(wordsize),
-    case call({connect_get, Res, attr(info)}) of
+virNodeGetInfo(#resource{type = connect, res = Res}) ->
+    Long = erlang:system_info({wordsize, external}),
+    case call({virNodeGetInfo, Res}) of
         {ok, <<
             Model:32/native-bytes,
             Memory:Long/native-unsigned-integer-unit:8,
@@ -247,7 +278,218 @@ get(#resource{type = connect, res = Res}, info) ->
             }};
         Error ->
             Error
-    end;
+    end.
+
+virNodeGetFreeMemory(#resource{type = connect, res = Res}) ->
+    call({virNodeGetFreeMemory, Res}).
+
+virNodeGetCellsFreeMemory(#resource{type = connect, res = Res}, MaxCells) ->
+    call({virNodeGetFreeMemory, Res, MaxCells}).
+
+
+%%-------------------------------------------------------------------------
+%%% Node Device
+%%-------------------------------------------------------------------------
+
+%virNodeDeviceReset(Dev) ->
+%virNodeDeviceReAttach(Dev) ->
+%virNodeDeviceNumOfCaps(Dev) ->
+%virNodeDeviceLookupByName(Conn, Name) ->
+%virNodeDeviceListCaps(Dev, Names, Maxnames) ->
+%virNodeDeviceGetXMLDesc(Dev, Flags) ->
+%virNodeDeviceGetParent(Dev) ->
+%virNodeDeviceGetName(Dev) ->
+%virNodeDeviceFree(Dev) ->
+%virNodeDeviceDettach(Dev) ->
+%virNodeDeviceDestroy(Dev) ->
+%virNodeDeviceCreateXML(Conn, XmlDesc, Flags) ->
+
+
+%%-------------------------------------------------------------------------
+%%% Network
+%%-------------------------------------------------------------------------
+
+virNetworkUndefine(#resource{type = network, res = Res}) ->
+    call({virNetworkUndefine, Res}).
+
+%virNetworkSetAutostart(#resource{type = network, res = Res}, Autostart)
+%   when is_integer(Autostart) ->
+%    call({virNetworkSetAutostart, Res, Autostart}).
+
+virNetworkLookupByUUIDString(#resource{type = connect, res = Res}, Uuidstr)
+    when is_binary(Uuidstr); is_list(Uuidstr) ->
+    call({virNetworkLookupByUUIDString, Res, Uuidstr}).
+
+virNetworkLookupByUUID(#resource{type = connect, res = Res}, Uuid) when is_binary(Uuid);
+    is_list(Uuid) ->
+    call({virNetworkLookupByUUID, Res, Uuid}).
+
+virNetworkLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+    call({virNetworkLookupByName, Res, Name}).
+
+virNetworkIsPersistent(#resource{type = network, res = Res}) ->
+    call({virNetworkIsPersistent, Res}).
+
+%virNetworkIsActive(#resource{type = network, res = Res}) ->
+%    call({virNetworkIsActive, Res}).
+
+virNetworkGetXMLDesc(#resource{type = network, res = Res}, Flags)
+    when is_integer(Flags) ->
+    call({virNetworkGetXMLDesc, Res, Flags}).
+
+%virNetworkGetUUIDString(Network, Buf) ->
+
+virNetworkGetUUID(#resource{type = network, res = Res}) ->
+    call({virNetworkGetUUID, Res}).
+
+virNetworkGetName(#resource{type = network, res = Res}) ->
+    call({virNetworkGetName, Res}).
+
+%virNetworkGetConnect(#resource{type = network, res = Res}) ->
+
+virNetworkGetBridgeName(#resource{type = network, res = Res}) ->
+    call({virNetworkGetBridgeName, Res}).
+
+virNetworkGetAutostart(#resource{type = network, res = Res}) ->
+    call({virNetworkGetAutostart, Res}).
+
+virNetworkDestroy(#resource{type = network, res = Res}) ->
+    call({virNetworkDestroy, Res}).
+
+virNetworkDefineXML(#resource{type = network, res = Res}, Xml) ->
+    call({virNetworkDefineXML, Res, Xml}).
+
+%virNetworkCreateXML(Conn, XmlDesc) ->
+
+virNetworkCreate(#resource{type = network, res = Res}) ->
+    call({virNetworkCreate, Res}).
+
+
+%%-------------------------------------------------------------------------
+%%% Interface
+%%-------------------------------------------------------------------------
+virInterfaceUndefine(#resource{type = interface, res = Res}) ->
+    call({virInterfaceUndefine, Res}).
+
+virInterfaceLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+    call({virInterfaceLookupByName, Res, Name}).
+
+virInterfaceLookupByMACString(#resource{type = connect, res = Res}, Macstr)
+    when is_list(Macstr) ->
+    call({virInterfaceLookupByMACString, Res, Macstr}).
+
+%virInterfaceIsActive(#resource{type = interface, res = Res}) ->
+%    call({virInterfaceIsActive, Res}).
+
+virInterfaceGetXMLDesc(#resource{type = interface, res = Res}) ->
+    call({virInterfaceGetXMLDesc, Res}).
+
+virInterfaceGetName(#resource{type = interface, res = Res}) ->
+    call({virInterfaceGetName, Res}).
+
+virInterfaceGetMACString(#resource{type = interface, res = Res}) ->
+    call({virInterfaceGetMACString, Res}).
+
+%virInterfaceGetConnect(#resource{type = interface, res = Res}) ->
+%    call({virInterfaceGetConnect, Res}).
+
+virInterfaceDestroy(#resource{type = interface, res = Res}) ->
+    call({virInterfaceDestroy, Res}).
+
+virInterfaceDefineXML(#resource{type = connect, res = Res}, Xml)
+    when is_binary(Xml); is_list(Xml) ->
+    call({virInterfaceDefineXML, Res, Xml}).
+
+virInterfaceCreate(#resource{type = interface, res = Res}) ->
+    call({virInterfaceCreate, Res}).
+
+
+%%-------------------------------------------------------------------------
+%%% Domain
+%%-------------------------------------------------------------------------
+
+virDomainUndefine(#resource{type = domain, res = Res}) ->
+    call({virDomainUndefine, Res}).
+
+virDomainSuspend(#resource{type = domain, res = Res}) ->
+    call({virDomainSuspend, Res}).
+
+virDomainShutdown(#resource{type = domain, res = Res}) ->
+    call({virDomainShutdown, Res}).
+
+%virDomainSetVcpus(#resource{type = domain, res = Res}, Nvcpus) ->
+%virDomainSetSchedulerParameters(#resource{type = domain, res = Res}, Params, Nparams) ->
+%virDomainSetMemory(#resource{type = domain, res = Res}, Memory) ->
+%virDomainSetMaxMemory(#resource{type = domain, res = Res}, Memory) ->
+
+virDomainSetAutostart(#resource{type = domain, res = Res}, Autostart) ->
+    call({virDomainSetAutostart, Res, Autostart}).
+
+virDomainSave(#resource{type = domain, res = Res}, To) when is_list(To) ->
+    call({virDomainSave, Res, To}).
+
+virDomainResume(#resource{type = domain, res = Res}) ->
+    call({virDomainResume, Res}).
+
+virDomainRestore(#resource{type = connect, res = Res}, From) ->
+    call({virDomainRestore, Res, From}).
+
+%virDomainReboot(#resource{type = domain, res = Res}, Flags) ->
+%virDomainPinVcpu(#resource{type = domain, res = Res}, Vcpu, Cpumap, Maplen) ->
+%virDomainMigrateToURI(#resource{type = domain, res = Res}, Duri, Flags, Dname, Bandwidth) ->
+%virDomainMigrate(#resource{type = domain, res = Res}, Dconn, Flags, Dname, Uri, Bandwidth) ->
+%virDomainMemoryStats(#resource{type = domain, res = Res}, Stats, Nr_stats, Flags) ->
+%virDomainMemoryPeek(#resource{type = domain, res = Res}, Start, Size, Buffer, Flags) ->
+%virDomainLookupByUUIDString(#resource{type = connect, res = Res}) ->
+
+virDomainLookupByUUID(#resource{type = connect, res = Res}, Uuid) when is_list(Uuid) ->
+    call({virDomainLookupByUUID, Res, Uuid}).
+
+virDomainLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+    call({virDomainLookupByUUID, Res, Name}).
+
+virDomainLookupByID(#resource{type = connect, res = Res}, Id) when is_integer(Id) ->
+    call({virDomainLookupByID, Res, Id}).
+
+%virDomainIsPersistent(#resource{type = domain, res = Res}) ->
+%virDomainIsActive(#resource{type = domain, res = Res}) ->
+%virDomainInterfaceStats(#resource{type = domain, res = Res}, Path, Stats, Size) ->
+
+virDomainGetXMLDesc(#resource{type = domain, res = Res}, Flags) ->
+    call({virDomainGetXMLDesc, Res, Flags}).
+
+%virDomainGetVcpus(#resource{type = domain, res = Res}, Info, Maxinfo, Cpumaps, Maplen) ->
+
+virDomainGetUUIDString(#resource{type = domain, res = Res}) ->
+    call({virDomainGetUUIDString, Res}).
+
+virDomainGetUUID(#resource{type = domain, res = Res}) ->
+    call({virDomainGetUUID, Res}).
+
+virDomainGetSecurityLabel(#resource{type = domain, res = Res}) ->
+    call({virDomainGetSecurityLabel, Res}).
+
+virDomainGetSchedulerType(#resource{type = domain, res = Res}) ->
+    call({virDomainGetSchedulerType, Res}).
+
+virDomainGetSchedulerParameters(#resource{type = domain, res = Res}) ->
+    call({virDomainGetSchedulerParameters, Res}).
+
+virDomainGetOSType(#resource{type = domain, res = Res}) ->
+    call({virDomainGetOSType, Res}).
+
+virDomainGetName(#resource{type = domain, res = Res}) ->
+    call({virDomainGetName, Res}).
+
+virDomainGetMaxVcpus(#resource{type = domain, res = Res}) ->
+    call({virDomainGetMaxVcpus, Res}).
+
+virDomainGetMemoryParameters(#resource{type = domain, res = Res}) ->
+    call({virDomainGetMemoryParameters, Res}).
+
+virDomainGetMaxMemory(#resource{type = domain, res = Res}) ->
+    call({virDomainGetMaxMemory, Res}).
+
 %% struct virDomainInfo{
 %%     unsigned char   state
 %%     unsigned long   maxMem (Kb)
@@ -255,9 +497,9 @@ get(#resource{type = connect, res = Res}, info) ->
 %%     unsigned short  nrVirtCpu
 %%     unsigned long long  cpuTime (nanoseconds) 
 %% }
-get(#resource{type = domain, res = Res}, info) ->
+virDomainGetInfo(#resource{type = domain, res = Res}) ->
     Long = erlang:system_info({wordsize, external}),
-    case call({domain_get, Res, attr(info)}) of
+    case call({virDomainGetInfo, Res}) of
         {ok, <<
             State:8, % _Pad:24,
             MaxMem:Long/native-unsigned-integer-unit:8,
@@ -274,74 +516,233 @@ get(#resource{type = domain, res = Res}, info) ->
             };
         Err ->
             Err
-    end;
+    end.
 
-get(#resource{type = connect, res = Res}, libversion) ->
-    case call({connect_get, Res, attr(libversion)}) of
+virDomainGetID(#resource{type = domain, res = Res}) ->
+    call({virDomainGetID, Res}).
+
+virDomainGetJobInfo(#resource{type = domain, res = Res}) ->
+    call({virDomainGetJobInfo, Res}).
+
+%virDomainGetConnect(#resource{type = domain, res = Res}) ->
+
+virDomainGetBlockInfo(#resource{type = domain, res = Res}, Path) ->
+    call({virDomainGetBlockInfo, Res, Path}).
+
+virDomainGetAutostart(#resource{type = domain, res = Res}) ->
+    call({virDomainGetAutostart, Res}).
+
+%virDomainDetachDevice(#resource{type = domain, res = Res}, Xml) ->
+
+virDomainDestroy(#resource{type = domain, res = Res}) ->
+    call({virDomainDestroy, Res}).
+
+virDomainDefineXML(#resource{type = domain, res = Res}, Xml) when is_binary(Xml); is_list(Xml) ->
+    call({virDomainDefineXML, Res, Xml}).
+
+%virDomainCreateXML(Conn, XmlDesc, Flags) ->
+%virDomainCreateLinux(Conn, XmlDesc, Flags) ->
+
+virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flags) ->
+    call({virDomainCreate, Res, Flags}).
+
+%virDomainCoreDump(#resource{type = domain, res = Res}, To, Flags) ->
+%virDomainBlockStats(#resource{type = domain, res = Res}, Path, Stats, Size) ->
+%virDomainBlockPeek(#resource{type = domain, res = Res}, Path, Offset, Size, Buffer, Flags) ->
+%virDomainAttachDevice(#resource{type = domain, res = Res}, Xml) ->
+
+
+%%-------------------------------------------------------------------------
+%%% Connect
+%%-------------------------------------------------------------------------
+
+virConnectOpen(#resource{type = connect, res = Res}) ->
+    call({virConnectOpen, Res}).
+
+virConnectOpenReadOnly(#resource{type = connect, res = Res}) ->
+    call({virConnectOpenReadOnly, Res}).
+
+%virConnectOpenAuth(Name, Auth, Flags) ->
+
+virConnectClose(#resource{type = connect, res = Res}) ->
+    call({virConnectClose, Res}).
+
+virConnectNumOfStoragePools(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfStoragePools, Res}).
+
+virConnectNumOfSecrets(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfSecrets, Res}).
+
+virConnectNumOfNetworks(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfNetworks, Res}).
+
+virConnectNumOfNWFilters(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfNWFilters, Res}).
+
+virConnectNumOfInterfaces(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfInterfaces, Res}).
+
+virConnectNumOfDomains(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfDomains, Res}).
+
+virConnectNumOfDefinedStoragePools(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfDefinedStoragePools, Res}).
+
+virConnectNumOfDefinedNetworks(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfDefinedNetworks, Res}).
+
+virConnectNumOfDefinedInterfaces(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfDefinedInterfaces, Res}).
+
+virConnectNumOfDefinedDomains(#resource{type = connect, res = Res}) ->
+    call({virConnectNumOfDefinedDomains, Res}).
+
+virConnectListStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListStoragePools, Res, Maxnames}).
+
+virConnectListSecrets(#resource{type = connect, res = Res}, Maxuuids) when is_integer(Maxuuids) ->
+    call({virConnectListSecrets, Res, Maxuuids}).
+
+virConnectListNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListNetworks, Res, Maxnames}).
+
+virConnectListNWFilters(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListNWFilters, Res, Maxnames}).
+
+virConnectListInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListInterfaces, Res, Maxnames}).
+
+virConnectListDomains(#resource{type = connect, res = Res}, Maxids) when is_integer(Maxids) ->
+    call({virConnectListDomains, Res, Maxids}).
+
+virConnectListDefinedStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListDefinedStoragePools, Res, Maxnames}).
+
+virConnectListDefinedNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListDefinedNetworks, Res, Maxnames}).
+
+virConnectListDefinedInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListDefinedInterfaces, Res, Maxnames}).
+
+virConnectListDefinedDomains(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
+    call({virConnectListDefinedDomains, Res, Maxnames}).
+
+virConnectIsSecure(#resource{type = connect, res = Res}) ->
+    call({virConnectIsSecure, Res}).
+
+virConnectIsEncrypted(#resource{type = connect, res = Res}) ->
+    call({virConnectIsEncrypted, Res}).
+
+virConnectGetVersion(#resource{type = connect, res = Res}) ->
+    case call({virConnectGetVersion, Res}) of
         {ok, Version} ->
             {ok, version(Version)};
         Err ->
             Err
-    end;
-get(#resource{type = connect, res = Res}, version) ->
-    case call({connect_get, Res, attr(version)}) of
+    end.
+
+virConnectGetURI(#resource{type = connect, res = Res}) ->
+    call({virConnectGetURI, Res}).
+
+virConnectGetType(#resource{type = connect, res = Res}) ->
+    call({virConnectGetType, Res}).
+
+virConnectGetMaxVcpus(#resource{type = connect, res = Res}, Type) ->
+    call({virConnectGetMaxVcpus, Res, Type}).
+
+virConnectGetLibVersion(#resource{type = connect, res = Res}) ->
+    case call({virConnectGetLibVersion, Res}) of
         {ok, Version} ->
             {ok, version(Version)};
-        Err ->
-            Err
+        Error ->
+            Error
+    end.
+
+virConnectGetHostname(#resource{type = connect, res = Res}) ->
+    call({virConnectGetHostname, Res}).
+
+virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
+    call({virConnectGetCapabilities, Res}).
+
+%virConnectFindStoragePoolSources(Conn, Type, SrcSpec, Flags) ->
+%virConnectDomainXMLToNative(Conn, NativeFormat, DomainXml, Flags) ->
+%virConnectDomainXMLFromNative(Conn, NativeFormat, NativeConfig, Flags) ->
+
+%virConnectCompareCPU(Conn, XmlDesc, Flags) ->
+
+%virGetVersion(LibVer, Type, TypeVer) ->
+
+%%-------------------------------------------------------------------------
+%%% Not for use in language bindings
+%%-------------------------------------------------------------------------
+%#%virDomainRef(Domain)
+%#%virNetworkRef(Network)
+%#%virNodeDeviceRef(Dev)
+%#%virResetError(Err)
+%#%virResetLastError()
+%#%virSaveLastError()
+%#%virSecretRef(Secret)
+%#%virStoragePoolRef(Pool)
+%#%virStorageVolRef(Vol)
+%#%virStreamRef(Stream)
+
+%#%virCopyLastError(To)
+%#%virDefaultErrorFunc(Err)
+%#%virEventRegisterImpl(AddHandle, UpdateHandle, RemoveHandle, AddTimeout, UpdateTimeout, RemoveTimeout)
+%#%virFreeError(Err)
+%#%virGetLastError()
+%#%virInitialize()
+%#%virInterfaceRef(Iface)
+
+%#%virConnectDomainEventRegister(Conn, Cb, Opaque, Freecb)
+%#%virConnectDomainEventDeregister(Conn, Cb)
+
+%#%virConnSetErrorFunc(Conn, UserData, Handler)
+%#%virConnResetLastError(Conn)
+%#%virConnGetLastError(Conn)
+%#%virConnCopyLastError(Conn, To)
+%#%virSetErrorFunc(UserData, Handler)
+
+%#%virNetworkFree(Network)
+%#%virInterfaceFree(Iface)
+%#%virDomainFree(#resource{type = domain, res = Res})
+%#%virConnectRef(Conn) ->
+
+
+%%-------------------------------------------------------------------------
+%%% NIF stubs
+%%-------------------------------------------------------------------------
+cast(_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_,_) ->
+    erlang:error(not_implemented).
+
+
+%%-------------------------------------------------------------------------
+%%% Blocking API
+%%-------------------------------------------------------------------------
+call({Fun, Arg}, Timeout) ->
+    block(cast(Fun, Arg), Timeout);
+call({Fun, Arg1, Arg2}, Timeout) ->
+    block(cast(Fun, Arg1, Arg2), Timeout);
+call({Fun, Arg1, Arg2, Arg3}, Timeout) ->
+    block(cast(Fun, Arg1, Arg2, Arg3), Timeout).
+
+call(Arg) ->
+    call(Arg, infinity).
+
+block(ok, Timeout) ->
+    receive
+        Res ->
+            Res
+    after
+        Timeout ->
+            {error, timeout}
     end;
-
-get(#resource{type = connect, res = Res}, maxvcpus) ->
-    call({connect_get, Res, attr(maxvcpus), []});
-get(#resource{type = connect, res = Res}, {maxvcpus, Type}) when is_list(Type) ->
-    call({connect_get, Res, attr(maxvcpus), Type});
-
-%% struct _virSecurityModel {
-%%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
-%%  char doi[VIR_SECURITY_DOI_BUFLEN];          /* domain of interpetation */
-%% }
-get(#resource{type = connect, res = Res}, securitymodel) ->
-    case call({connect_get, Res, attr(securitymodel)}) of
-        {ok, <<
-            Model:?VIR_SECURITY_MODEL_BUFLEN/native-bytes,
-            Doi:?VIR_SECURITY_DOI_BUFLEN/native-bytes
-            >>} ->
-            {ok, #security_model{
-                    model = Model,
-                    doi = Doi
-                }};
-        Err ->
-            Err
-    end;
-
-get(#resource{type = connect, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    call({connect_get, Res, attr(Attr), Arg});
-get(#resource{type = connect, res = Res}, Attr) when is_atom(Attr) ->
-    call({connect_get, Res, attr(Attr)});
-
-get(#resource{type = domain, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    call({domain_get, Res, attr(Attr), Arg});
-get(#resource{type = domain, res = Res}, Attr) when is_atom(Attr) ->
-    call({domain_get, Res, attr(Attr)});
-
-get(#resource{type = interface, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    call({domain_get, Res, attr(Attr), Arg});
-get(#resource{type = interface, res = Res}, Attr) when is_atom(Attr) ->
-    call({interface_get, Res, attr(Attr)});
-
-get(#resource{type = network, res = Res}, {Attr, Arg}) when is_atom(Attr) ->
-    call({network_get, Res, attr(Attr), Arg});
-get(#resource{type = network, res = Res}, Attr) when is_atom(Attr) ->
-    call({network_get, Res, attr(Attr)}).
-
-set(Resource, autostart) ->
-    call({set, Resource, {autostart, true}});
-set(#resource{type = domain, res = Res}, {autostart, true}) ->
-    call({domain_set_autostart, Res, 1});
-set(#resource{type = domain, res = Res}, {autostart, false}) ->
-    call({domain_set_autostart, Res, 0}).
-
-
+block(Error, _Timeout) ->
+    Error.
 
 
 %%-------------------------------------------------------------------------
@@ -352,47 +753,6 @@ version(Version) when is_integer(Version) ->
     Minor = Version rem 1000000 div 1000,
     Release = Version rem 1000000 rem 1000,
     {Major, Minor, Release}.
-
-res(domain) -> ?VERT_RES_DOMAIN;
-res(interface) -> ?VERT_RES_INTERFACE;
-res(network) -> ?VERT_RES_NETWORK;
-res(storagepool) -> ?VERT_RES_STORAGEPOOL;
-res(filter) -> ?VERT_RES_FILTER;
-res(secret) -> ?VERT_RES_SECRET.
-
-attr(id) -> ?VERT_ATTR_ID;
-attr(name) -> ?VERT_ATTR_NAME;
-attr(uuid) -> ?VERT_ATTR_UUID;
-attr(rawuuid) -> ?VERT_ATTR_RAWUUID;
-attr(mac) -> ?VERT_ATTR_MAC;
-attr(desc) -> ?VERT_ATTR_DESC;
-attr(info) -> ?VERT_ATTR_INFO;
-attr(autostart) -> ?VERT_ATTR_AUTOSTART;
-attr(blockinfo) -> ?VERT_ATTR_BLOCKINFO;
-attr(connect) -> ?VERT_ATTR_CONNECT;
-attr(jobinfo) -> ?VERT_ATTR_JOBINFO;
-attr(maxmemory) -> ?VERT_ATTR_MAXMEMORY;
-attr(maxvcpus) -> ?VERT_ATTR_MAXVCPUS;
-attr(memoryparameters) -> ?VERT_ATTR_MEMORYPARAMETERS;
-attr(ostype) -> ?VERT_ATTR_OSTYPE;
-attr(scheduleparatmers) -> ?VERT_ATTR_SCHEDULERPARAMETERS;
-attr(schedulertype) -> ?VERT_ATTR_SCHEDULERTYPE;
-attr(securitylabel) -> ?VERT_ATTR_SECURITYLABEL;
-attr(vcpus) -> ?VERT_ATTR_VCPUS;
-attr(capabilities) -> ?VERT_ATTR_CAPABILITIES;
-attr(hostname) -> ?VERT_ATTR_HOSTNAME;
-attr(libversion) -> ?VERT_ATTR_LIBVERSION;
-attr(freememory) -> ?VERT_ATTR_FREEMEMORY;
-attr(cellsfreememory) -> ?VERT_ATTR_CELLSFREEMEMORY;
-attr(type) -> ?VERT_ATTR_TYPE;
-attr(version) -> ?VERT_ATTR_VERSION;
-attr(uri) -> ?VERT_ATTR_URI;
-attr(encrypted) -> ?VERT_ATTR_ENCRYPTED;
-attr(secure) -> ?VERT_ATTR_SECURE;
-attr(securitymodel) -> ?VERT_ATTR_SECURITYMODEL;
-attr(bridgename) -> ?VERT_ATTR_BRIDGENAME;
-attr(active) -> ?VERT_ATTR_ACTIVE;
-attr(persistent) -> ?VERT_ATTR_PERSISTENT.
 
 state({domain, ?VIR_DOMAIN_NOSTATE}) -> undefined;
 state({domain, ?VIR_DOMAIN_RUNNING}) -> running;
@@ -421,4 +781,3 @@ privdir(File) ->
 
 niflib() ->
     privdir(?MODULE).
-

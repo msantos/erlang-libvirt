@@ -101,10 +101,10 @@ vert_virDomainGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return (autostart ? atom_true : atom_false);
 }
 
-#ifdef HAVE_VIRDOMAINGETBLOCKINFO
     ERL_NIF_TERM
 vert_virDomainGetBlockInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+#ifdef HAVE_VIRDOMAINGETBLOCKINFO
     VERT_RESOURCE *dp = NULL;
     char path[MAXPATHLEN];
     virDomainInfo info = {0};
@@ -119,8 +119,10 @@ vert_virDomainGetBlockInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     BINCOPY(buf, &info, sizeof(virDomainInfo));
 
     return enif_make_tuple2(env, atom_ok, buf);
-}
+#else
+    return error_tuple(env, atom_unsupported);
 #endif
+}
 
     ERL_NIF_TERM
 vert_virDomainGetID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -170,10 +172,10 @@ vert_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_tuple2(env, atom_ok, buf);
 }
 
-#ifdef HAVE_VIRDOMAINGETJOBINFO
     ERL_NIF_TERM
 vert_virDomainGetJobInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+#ifdef HAVE_VIRDOMAINGETJOBINFO
     VERT_RESOURCE *dp = NULL;
     virDomainJobInfo info = {0};
     ERL_NIF_TERM buf = {0};
@@ -186,8 +188,10 @@ vert_virDomainGetJobInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     BINCOPY(buf, &info, sizeof(virDomainInfo));
 
     return enif_make_tuple2(env, atom_ok, buf);
-}
+#else
+    return error_tuple(env, atom_unsupported);
 #endif
+}
 
     ERL_NIF_TERM
 vert_virDomainGetMaxMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -219,10 +223,10 @@ vert_virDomainGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return enif_make_int(env, max);
 }
 
-#ifdef HAVE_VIRDOMAINGETMEMORYPARAMETERS
     ERL_NIF_TERM
 vert_virDomainGetMemoryParameters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+#ifdef HAVE_VIRDOMAINGETMEMORYPARAMETERS
     VERT_RESOURCE *dp = NULL;
     int n = 0;
     ErlNifBinary buf = {0};
@@ -237,15 +241,17 @@ vert_virDomainGetMemoryParameters(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
 
     VERTERR(virDomainGetMemoryParameters(dp->res, buf.data, &n, 0) < 0);
 
-    return  enif_make_tuple2(env,
+    return enif_make_tuple2(env,
             atom_ok,
             enif_make_tuple4(env,
                 enif_make_atom(env, "parameter"),
                 erl_make_binary(env, &buf),
                 erl_make_int(env, n)
             ));
-}
+#else
+    return error_tuple(env, atom_unsupported);
 #endif
+}
 
     ERL_NIF_TERM
 vert_virDomainGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
