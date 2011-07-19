@@ -556,11 +556,11 @@ virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flag
 %%% Connect
 %%-------------------------------------------------------------------------
 
-virConnectOpen(#resource{type = connect, res = Res}) ->
-    call({virConnectOpen, Res}).
+virConnectOpen(Name) when is_list(Name) ->
+    call({virConnectOpen, Name}).
 
-virConnectOpenReadOnly(#resource{type = connect, res = Res}) ->
-    call({virConnectOpenReadOnly, Res}).
+virConnectOpenReadOnly(Name) when is_list(Name) ->
+    call({virConnectOpenReadOnly, Name}).
 
 %virConnectOpenAuth(Name, Auth, Flags) ->
 
