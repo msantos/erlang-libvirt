@@ -534,3 +534,77 @@ vert_virDomainResume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return atom_ok;
 }
+
+    ERL_NIF_TERM
+vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary cfg;
+
+    VERT_RESOURCE *dp = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, cfg);
+
+    /* NULL terminate the string */
+    if (!enif_realloc_binary(&cfg, cfg.size+1))
+        return atom_enomem;
+
+    cfg.data[cfg.size-1] = '\0';
+
+    RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+
+    dp->res = virDomainDefineXML(vp->res, (char *)cfg.data);
+    CHECK_VIRPTR_NULL(dp);
+
+    VERT_RET_RESOURCE(dp, atom_domain);
+}
+
+    ERL_NIF_TERM
+vert_virDomainUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+
+    VERTERR(virDomainUndefine(dp->res) == -1); /* Domain is still running */
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+    int flags = 0;
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+    VERT_GET_INT(1, flags);
+
+#if HAVE_VIRDOMAINCREATEWITHFLAGS
+    VERTERR(virDomainCreateWithFlags(dp->res, flags) == -1);
+#else
+    VERTERR(virDomainCreate(dp->res) == -1);
+#endif
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virDomainDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+
+    VERTERR(virDomainDestroy(dp->res) != 0);
+    VERTERR(virDomainFree(dp->res) != 0);
+
+    dp->res = NULL;
+
+    return atom_ok;
+}
