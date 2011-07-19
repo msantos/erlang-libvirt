@@ -35,7 +35,7 @@
 #include "vert_domain.h"
 #include "vert_interface.h"
 #include "vert_network.h"
-#include "vert_resource.h"
+#include "vert_func.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -62,50 +62,6 @@ typedef struct _vert_cast {
 } VERT_CAST;
 
 void *vert_loop(void *arg);
-
-static ErlNifFunc vert_funcs[] = {
-    /* connect */
-    {"connect_open", 2, vert_connect_open},
-    {"connect_close", 1, vert_connect_close},
-
-    {"connect_get", 2, vert_connect_get},
-    {"connect_get", 3, vert_connect_get},
-
-    {"connect_get_numactive", 2, vert_connect_numactive},
-    {"connect_get_numinactive", 2, vert_connect_numinactive},
-    {"connect_get_listactive", 3, vert_connect_listactive},
-    {"connect_get_listinactive", 3, vert_connect_listinactive},
-
-    /* domain */
-    {"domain_lookup", 3, vert_domain_lookup},
-
-    {"domain_get", 2, vert_domain_get},
-    {"domain_get", 3, vert_domain_get},
-
-    {"domain_save", 2, vert_domain_save},
-    {"domain_restore", 2, vert_domain_restore},
-    {"domain_shutdown", 1, vert_domain_shutdown},
-    {"domain_suspend", 1, vert_domain_suspend},
-    {"domain_resume", 1, vert_domain_resume},
-
-    {"domain_set_autostart", 2, vert_domain_autostart},
-
-    /* interface */
-    {"interface_lookup", 3, vert_interface_lookup},
-    {"interface_get", 2, vert_interface_get},
-
-    /* network */
-    {"network_get", 2, vert_network_get},
-    {"network_lookup", 3, vert_network_lookup},
-
-    /* all resource types */
-    {"resource_define", 3, vert_resource_define},
-    {"resource_undefine", 1, vert_resource_undefine},
-    {"resource_create", 2, vert_resource_create},
-    {"resource_destroy", 1, vert_resource_destroy},
-
-    {NULL, 0, NULL}
-};
 
 
     static int
