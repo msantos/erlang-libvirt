@@ -51,7 +51,7 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESALLOC(np, VERT_RES_NETWORK, vp->res);
 
     switch (type) {
@@ -116,7 +116,7 @@ vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(np, VERT_RES_NETWORK);
+    CHECK_RESOURCE_TYPE(np, VERT_RES_NETWORK);
 
     switch (type) {
         case VERT_ATTR_AUTOSTART: {

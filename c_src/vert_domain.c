@@ -51,7 +51,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     switch (type) {
@@ -116,7 +116,7 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(dp, VERT_RES_DOMAIN);
+    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     switch (type) {
         case VERT_ATTR_AUTOSTART: {
@@ -406,7 +406,7 @@ vert_domain_save(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
         return enif_make_badarg(env);
 
-    RESTYPE(dp, VERT_RES_DOMAIN);
+    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     res = virDomainSave(dp->res, file);
 
@@ -431,7 +431,7 @@ vert_domain_restore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (enif_get_string(env, argv[1], file, sizeof(file), ERL_NIF_LATIN1) < 0)
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     res = virDomainRestore(vp->res, file);
 
@@ -456,7 +456,7 @@ vert_domain_autostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &flags))
         return enif_make_badarg(env);
 
-    RESTYPE(dp, VERT_RES_DOMAIN);
+    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     res = virDomainSetAutostart(dp->res, flags);
 

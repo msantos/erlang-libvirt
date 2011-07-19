@@ -91,7 +91,7 @@ enum {
     (x)->conn = (z); \
 } while (0)
 
-#define RESTYPE(x,y) do { \
+#define CHECK_RESOURCE_TYPE(x,y) do { \
     if ((x)->type != (y)) return enif_make_badarg(env); \
 } while (0)
 

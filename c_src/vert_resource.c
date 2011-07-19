@@ -61,7 +61,7 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     cfg.data[cfg.size-1] = '\0';
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESALLOC(rp, type, vp->res);
 
     switch (type) {

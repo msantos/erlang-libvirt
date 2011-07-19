@@ -100,7 +100,7 @@ vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_resource(env, argv[0], NIF_VERT_RESOURCE, (void **)&vp))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     VERTERR(virConnectClose(vp->res) == -1);
     vp->res = NULL;
 
@@ -122,7 +122,7 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_ATTR_CAPABILITIES: {
@@ -331,7 +331,7 @@ vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_RES_DOMAIN:
@@ -381,7 +381,7 @@ vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &type))
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_RES_DOMAIN:
@@ -432,7 +432,7 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[2], &max) || max <= 0)
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     if (type != VERT_RES_DOMAIN) {
         names = calloc(max, sizeof(char *));
@@ -531,7 +531,7 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (!enif_get_int(env, argv[1], &max) || max <= 0)
         return enif_make_badarg(env);
 
-    RESTYPE(vp, VERT_RES_CONNECT);
+    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     names = calloc(max, sizeof(char *));
 
