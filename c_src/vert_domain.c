@@ -52,7 +52,7 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(dp, VERT_RES_DOMAIN, vp->res);
+    RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     switch (type) {
         case VERT_ATTR_ID: {
@@ -150,7 +150,7 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             VERT_RESOURCE *cp = NULL;
             ERL_NIF_TERM res = {0};
 
-            RESALLOC(cp, VERT_RES_CONNECT, NULL);
+            RESOURCE_ALLOC(cp, VERT_RES_CONNECT, NULL);
             cp->res = dp->conn;
             res = enif_make_resource(env, cp);
             enif_release_resource(cp);

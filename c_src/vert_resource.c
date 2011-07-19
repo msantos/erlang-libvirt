@@ -62,7 +62,7 @@ vert_resource_define(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     cfg.data[cfg.size-1] = '\0';
 
     CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
-    RESALLOC(rp, type, vp->res);
+    RESOURCE_ALLOC(rp, type, vp->res);
 
     switch (type) {
         case VERT_RES_DOMAIN:
