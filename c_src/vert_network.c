@@ -208,3 +208,71 @@ vert_virNetworkIsPersistent(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return (n == 1 ? atom_true : atom_false);
 }
+
+    ERL_NIF_TERM
+vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary cfg;
+
+    VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, cfg);
+
+    /* NULL terminate the string */
+    if (!enif_realloc_binary(&cfg, cfg.size+1))
+        return atom_enomem;
+
+    cfg.data[cfg.size-1] = '\0';
+
+    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+
+    np->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
+    CHECK_VIRPTR_NULL(np);
+
+    VERT_RET_RESOURCE(np, atom_network);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    VERTERR(virNetworkUndefine(np->res) == -1); /* Network is still running */
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virNetworkCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    VERTERR(virNetworkCreate(np->res) == -1);
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virNetworkDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    VERTERR(virNetworkDestroy(np->res) != 0);
+    VERTERR(virNetworkFree(np->res) != 0);
+
+    np->res = NULL;
+
+    return atom_ok;
+}
