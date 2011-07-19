@@ -28,8 +28,8 @@
 %% LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 %% ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 %% POSSIBILITY OF SUCH DAMAGE.
--module(vert).
--include("vert.hrl").
+-module(libvirt).
+-include("libvirt.hrl").
 
 -export([
         cast/2, cast/3, cast/4,
