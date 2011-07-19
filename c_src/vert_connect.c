@@ -187,8 +187,7 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             ERL_NIF_TERM buf = {0};
 
             VERTERR(virNodeGetInfo(vp->res, &info) < 0);
-            buf = bincopy(env, &info, sizeof(virNodeInfo));
-            NOMEM(buf);
+            BINCOPY(buf, &info, sizeof(virNodeInfo));
 
             term = enif_make_tuple2(env,
                 atom_ok, buf);
@@ -287,8 +286,7 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             ERL_NIF_TERM buf = {0};
 
             VERTERR(virNodeGetSecurityModel(vp->res, &model) < 0);
-            buf = bincopy(env, &model, sizeof(virSecurityModel));
-            NOMEM(buf);
+            BINCOPY(buf, &model, sizeof(virSecurityModel));
 
             term = enif_make_tuple2(env,
                 atom_ok, buf);

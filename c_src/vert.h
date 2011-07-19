@@ -58,10 +58,6 @@ ERL_NIF_TERM atom_false;
     if ((x) == NULL) return atom_enomem; \
 } while (0)
 
-#define NOMEM(x) do { \
-    if ((x) == atom_enomem) return atom_enomem; \
-} while (0)
-
 #define CHECK_VIRPTR_NULL(var) do { \
     if (var->res == NULL) { \
         enif_release_resource(var); \

@@ -171,8 +171,7 @@ vert_virNetworkGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERTERR(virNetworkGetUUID(np->res, uuid) < 0);
 
-    term = bincopy(env, uuid, sizeof(uuid));
-    NOMEM(term);
+    BINCOPY(term, uuid, sizeof(uuid));
 
     return term;
 }
