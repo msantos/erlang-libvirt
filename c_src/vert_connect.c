@@ -34,60 +34,58 @@
 #include "vert_connect.h"
 
 
-/* 0: const char *name, 1: type */
+/* If the string is truncated, return badarg
+ * If the string is empty or has the wrong encoding, consider it to be NULL
+ *  This assumes that enif_get_string() does not modify the buffer
+ * If the string has a length, ok
+ */
     ERL_NIF_TERM
-vert_connect_open(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     char name[HOST_NAME_MAX] = {0};
-    int type = VERT_CONNECT_OPEN;
 
     VERT_RESOURCE *vp = NULL;
-    ERL_NIF_TERM res = {0};
 
 
-    /* If the string is truncated, return badarg
-     * If the string is empty or has the wrong encoding, consider it to be NULL
-     *  This assumes that enif_get_string() does not modify the buffer
-     * If the string has a length, ok
-     */
     VERT_GET_STRING(0, name, sizeof(name));
-    VERT_GET_INT(1, type);
 
     RESOURCE_ALLOC(vp, VERT_RES_CONNECT, NULL);
 
-    switch (type) {
-        case VERT_CONNECT_OPEN:
-            vp->res = virConnectOpen( (name[0] == '\0' ? NULL : name));
-            break;
+    vp->res = virConnectOpen( (name[0] == '\0' ? NULL : name));
 
-        case VERT_CONNECT_OPEN_READONLY:
-            vp->res = virConnectOpenReadOnly( (name[0] == '\0' ? NULL : name));
-            break;
-
-        case VERT_CONNECT_OPEN_AUTH:
-            enif_release_resource(vp);
-            return error_tuple(env, atom_unsupported);
-        default:
-            return enif_make_badarg(env);
-    }
-
-    if (vp->res == NULL) {
-        enif_release_resource(vp);
-        return verterr(env);
-    }
+    CHECK_VIRPTR_NULL(vp);
 
     /* Disable logging to stderr */
     virConnSetErrorFunc(vp->res, NULL, NULL);
 
-    res = enif_make_resource(env, vp);
-    enif_release_resource(vp);
+    VERT_RET_RESOURCE(vp, atom_connect);
+}
 
-    return vert_make_resource(env, atom_connect, res);
+    ERL_NIF_TERM
+vert_virConnectOpenReadOnly(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    char name[HOST_NAME_MAX] = {0};
+
+    VERT_RESOURCE *vp = NULL;
+
+
+    VERT_GET_STRING(0, name, sizeof(name));
+
+    RESOURCE_ALLOC(vp, VERT_RES_CONNECT, NULL);
+
+    vp->res = virConnectOpenReadOnly( (name[0] == '\0' ? NULL : name));
+
+    CHECK_VIRPTR_NULL(vp);
+
+    /* Disable logging to stderr */
+    virConnSetErrorFunc(vp->res, NULL, NULL);
+
+    VERT_RET_RESOURCE(vp, atom_connect);
 }
 
 /* 0: VERT_RESOURCE */
     ERL_NIF_TERM
-vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectClose(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
 
@@ -101,372 +99,507 @@ vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return atom_ok;
 }
 
-/* 0: VERT_RESOURCE, 1: int type */
     ERL_NIF_TERM
-vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = 0;
+    char *cap = NULL;
 
     ERL_NIF_TERM term = {0};
 
+
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
 
-    switch (type) {
-        case VERT_ATTR_CAPABILITIES: {
-            char *cap = NULL;
+    cap = virConnectGetCapabilities(vp->res);
 
-            cap = virConnectGetCapabilities(vp->res);
+    VERTERR(cap == NULL);
 
-            VERTERR(cap == NULL);
+    term = enif_make_tuple2(env, atom_ok,
+        enif_make_string(env, cap, ERL_NIF_LATIN1));
 
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_string(env, cap, ERL_NIF_LATIN1));
-            free(cap);
-            }
-            break;
-
-        case VERT_ATTR_HOSTNAME: {
-            char *hostname = NULL;
-
-            hostname = virConnectGetHostname(vp->res);
-
-            VERTERR(hostname == NULL);
-
-            term = enif_make_tuple2(env, atom_ok,
-                    enif_make_string(env, hostname, ERL_NIF_LATIN1));
-
-            free(hostname);
-            }
-            break;
-
-        case VERT_ATTR_LIBVERSION: {
-            unsigned long version = -1;
-
-            VERTERR(virConnectGetLibVersion(vp->res, &version) < 0);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_ulong(env, version));
-            }
-            break;
-
-        case VERT_ATTR_MAXVCPUS: {
-            char type[1024] = {0};
-            int max = -1;
-
-
-            VERT_GET_STRING(2, type, sizeof(type));
-
-            max = virConnectGetMaxVcpus(vp->res, (type[0] == '\0' ? NULL : type));
-
-            VERTERR(max < 0);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_int(env, max));
-            }
-            break;
-
-        case VERT_ATTR_FREEMEMORY: {
-            u_int64_t mem = 0;
-
-            mem = virNodeGetFreeMemory(vp->res);
-
-            VERTERR(mem == 0);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_uint64(env, mem));
-            }
-            break;
-
-        case VERT_ATTR_INFO: {
-            virNodeInfo info;
-            ERL_NIF_TERM buf = {0};
-
-            VERTERR(virNodeGetInfo(vp->res, &info) < 0);
-            BINCOPY(buf, &info, sizeof(virNodeInfo));
-
-            term = enif_make_tuple2(env,
-                atom_ok, buf);
-            }
-            break;
-
-        case VERT_ATTR_CELLSFREEMEMORY: {
-            int max = 0;
-            u_int64_t *mem = NULL;
-            ERL_NIF_TERM list = {0};
-            int i = 0;
-
-            mem = calloc(max, sizeof(u_int64_t));
-            ISNULL(mem);
-
-            if (!enif_get_int(env, argv[2], &max) || max <= 0)
-                return enif_make_badarg(env);
-
-            VERTERR(virNodeGetCellsFreeMemory(vp->res, mem, 0, max) < 0);
-
-            list = enif_make_list(env, 0);
-            for (i = 0; i < max; i++)
-                list = enif_make_list_cell(env, enif_make_int(env, mem[i]), list);
-
-            free(mem);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                list);
-            }
-            break;
-
-        case VERT_ATTR_TYPE: {
-            const char *name = NULL;
-
-            name = virConnectGetType(vp->res);
-
-            VERTERR(name == NULL);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_string(env, name, ERL_NIF_LATIN1));
-            }
-            break;
-
-        case VERT_ATTR_VERSION: {
-            unsigned long version = 0;
-
-            VERTERR(virConnectGetVersion(vp->res, &version) < 0);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_ulong(env, version));
-            }
-            break;
-
-        case VERT_ATTR_URI: {
-            char *uri = NULL;
-
-            uri = virConnectGetURI(vp->res);
-
-            VERTERR(uri == NULL);
-
-            term = enif_make_tuple2(env,
-                atom_ok,
-                enif_make_string(env, uri, ERL_NIF_LATIN1));
-
-            free(uri);
-            }
-            break;
-
-        case VERT_ATTR_ENCRYPTED: {
-            int res = -1;
-
-            res = virConnectIsEncrypted(vp->res);
-
-            VERTERR(res < 0);
-
-            term = (res == 1 ? atom_true : atom_false);
-            }
-            break;
-
-        case VERT_ATTR_SECURE: {
-            int res = -1;
-
-            res = virConnectIsSecure(vp->res);
-
-            VERTERR(res == -1);
-
-            term = (res == 1 ? atom_true : atom_false);
-            }
-            break;
-
-        case VERT_ATTR_SECURITYMODEL: {
-            virSecurityModel model;
-            ERL_NIF_TERM buf = {0};
-
-            VERTERR(virNodeGetSecurityModel(vp->res, &model) < 0);
-            BINCOPY(buf, &model, sizeof(virSecurityModel));
-
-            term = enif_make_tuple2(env,
-                atom_ok, buf);
-            }
-            break;
-
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
+    free(cap);
 
     return term;
 }
 
-
-/* 0: virConnectPtr, 1: int type */
     ERL_NIF_TERM
-vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectGetHostname(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = 0;
+    char *hostname = NULL;
 
-    int res = -1;
+    ERL_NIF_TERM term = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
 
-    switch (type) {
-        case VERT_RES_DOMAIN:
-            res = virConnectNumOfDomains(vp->res);
-            break;
-        case VERT_RES_INTERFACE:
-            res = virConnectNumOfInterfaces(vp->res);
-            break;
-        case VERT_RES_NETWORK:
-            res = virConnectNumOfNetworks(vp->res);
-            break;
-        case VERT_RES_STORAGEPOOL:
-            res = virConnectNumOfStoragePools(vp->res);
-            break;
-        case VERT_RES_SECRET:
-            res = virConnectNumOfSecrets(vp->res);
-            break;
-#ifdef THIS_VERSION_SUPPORTS_FILTER
-        case VERT_RES_FILTER:
-            res = virConnectNumOfNWFilters(vp->res);
-            break;
-#endif
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
+    hostname = virConnectGetHostname(vp->res);
 
-    VERTERR(res == -1);
+    VERTERR(hostname == NULL);
 
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_int(env, res));
+    term = enif_make_tuple2(env, atom_ok,
+        enif_make_string(env, hostname, ERL_NIF_LATIN1));
+
+    free(hostname);
+
+    return term;
 }
 
-/* 0: virConnectPtr */
     ERL_NIF_TERM
-vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectGetLibVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = 0;
-
-    int res = -1;
+    unsigned long version = -1;
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
 
-    switch (type) {
-        case VERT_RES_DOMAIN:
-            res = virConnectNumOfDefinedDomains(vp->res);
-            break;
-        case VERT_RES_INTERFACE:
-            res = virConnectNumOfDefinedInterfaces(vp->res);
-            break;
-        case VERT_RES_NETWORK:
-            res = virConnectNumOfDefinedNetworks(vp->res);
-            break;
-        case VERT_RES_STORAGEPOOL:
-            res = virConnectNumOfDefinedStoragePools(vp->res);
-            break;
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
-
-    VERTERR(res == -1);
+    VERTERR(virConnectGetLibVersion(vp->res, &version) < 0);
 
     return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_int(env, res));
+        atom_ok,
+        enif_make_ulong(env, version));
 }
 
-
-/* 0: VERT_RESOURCE, 1: int type 2: int maxdomains */
     ERL_NIF_TERM
-vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = 0;
+    char type[1024] = {0};
+    int max = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_STRING(1, type, sizeof(type));
+
+    max = virConnectGetMaxVcpus(vp->res, (type[0] == '\0' ? NULL : type));
+    VERTERR(max < 0);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_int(env, max));
+}
+
+    ERL_NIF_TERM
+vert_virNodeGetFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    u_int64_t mem = 0;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    mem = virNodeGetFreeMemory(vp->res);
+    VERTERR(mem == 0);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_uint64(env, mem));
+}
+
+    ERL_NIF_TERM
+vert_virNodeGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    virNodeInfo info;
+    ERL_NIF_TERM buf = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    VERTERR(virNodeGetInfo(vp->res, &info) < 0);
+
+    BINCOPY(buf, &info, sizeof(virNodeInfo));
+
+    return enif_make_tuple2(env,
+        atom_ok, buf);
+}
+
+    ERL_NIF_TERM
+vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
     int max = 0;
+    u_int64_t *mem = NULL;
+    ERL_NIF_TERM list = {0};
+    int i = 0;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    mem = calloc(max, sizeof(u_int64_t));
+    ISNULL(mem);
+
+    VERTERR(virNodeGetCellsFreeMemory(vp->res, mem, 0, max) < 0);
+
+    list = enif_make_list(env, 0);
+    for (i = 0; i < max; i++)
+        list = enif_make_list_cell(env, enif_make_int(env, mem[i]), list);
+
+    free(mem);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectGetType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    const char *name = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    name = virConnectGetType(vp->res);
+    VERTERR(name == NULL);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, name, ERL_NIF_LATIN1));
+}
+
+    ERL_NIF_TERM
+vert_virConnectGetVersion(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    unsigned long version = 0;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    VERTERR(virConnectGetVersion(vp->res, &version) < 0);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_ulong(env, version));
+}
+
+    ERL_NIF_TERM
+vert_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    char *uri = NULL;
+
+    ERL_NIF_TERM term = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    uri = virConnectGetURI(vp->res);
+
+    VERTERR(uri == NULL);
+
+    term = enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, uri, ERL_NIF_LATIN1));
+
+    free(uri);
+
+    return term;
+}
+
+    ERL_NIF_TERM
+vert_virConnectIsEncrypted(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectIsEncrypted(vp->res);
+
+    VERTERR(n == -1);
+
+    return (n == 1 ? atom_true : atom_false);
+}
+
+    ERL_NIF_TERM
+vert_virConnectIsSecure(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectIsSecure(vp->res);
+
+    VERTERR(n == -1);
+
+    return (n == 1 ? atom_true : atom_false);
+}
+
+    ERL_NIF_TERM
+vert_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    virSecurityModel model;
+    ERL_NIF_TERM buf = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    VERTERR(virNodeGetSecurityModel(vp->res, &model) < 0);
+    BINCOPY(buf, &model, sizeof(virSecurityModel));
+
+    return enif_make_tuple2(env,
+        atom_ok, buf);
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfDomains(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfInterfaces(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfNetworks(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfStoragePools(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfSecrets(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfSecrets(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+#ifdef HAVE_VIRCONNECTNUMOFNWFILTERS
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfNWFilters(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+#else
+    return error_tuple(env, atom_unsupported);
+#endif
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfDefinedDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfDefinedDomains(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfDefinedInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfDefinedInterfaces(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfDefinedNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfDefinedNetworks(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectNumOfDefinedStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    n = virConnectNumOfDefinedStoragePools(vp->res);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_virConnectListDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+    int *domains = NULL;
 
     int i = 0;
-    int res = -1;
-
-    char **names = NULL;
+    int n = -1;
     ERL_NIF_TERM list = {0};
 
-
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
-    VERT_GET_INT(2, max);
+    VERT_GET_INT(1, max);
 
     if (max <= 0)
         return enif_make_badarg(env);
 
-    if (type != VERT_RES_DOMAIN) {
-        names = calloc(max, sizeof(char *));
-        ISNULL(names);
-    }
+    domains = calloc(max, sizeof(int));
+    ISNULL(domains);
+
+    n = virConnectListDomains(vp->res, domains, max);
+
+    VERTERR(n == -1);
 
     list = enif_make_list(env, 0);
 
-    switch (type) {
-        case VERT_RES_DOMAIN: {
-            int *domains = NULL;
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_int(env, domains[i]),
+            list);
 
-            domains = calloc(max, sizeof(int));
+    free(domains);
 
-            ISNULL(domains);
+    return enif_make_tuple2(env,
+            atom_ok,
+            list);
+}
 
-            res = virConnectListDomains(vp->res, domains, max);
+    ERL_NIF_TERM
+vert_virConnectListInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+    char **names = NULL;
 
-            VERTERR(res == -1);
+    int i = 0;
+    int n = -1;
+    ERL_NIF_TERM list = {0};
 
-            for (i = 0; i < res; i++)
-                list = enif_make_list_cell(env,
-                        enif_make_int(env, domains[i]),
-                        list);
 
-            free(domains);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
 
-            return enif_make_tuple2(env,
-                atom_ok,
-                list);
-            }
-            break;
+    if (max <= 0)
+        return enif_make_badarg(env);
 
-        case VERT_RES_INTERFACE:
-            res = virConnectListInterfaces(vp->res, names, max);
-            break;
-            
-        case VERT_RES_NETWORK:
-            res = virConnectListNetworks(vp->res, names, max);
-            break;
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
 
-#if THIS_VERSION_SUPPORTS_FILTER
-        case VERT_RES_FILTER:
-            res = virConnectListNWFilters(vp->res, names, max);
-            break;
-#endif
+    n = virConnectListInterfaces(vp->res, names, max);
 
-        case VERT_RES_SECRET:
-            res = virConnectListSecrets(vp->res, names, max);
-            break;
+    VERTERR(n == -1);
 
-        case VERT_RES_STORAGEPOOL:
-            res = virConnectListStoragePools(vp->res, names, max);
-            break;
+    list = enif_make_list(env, 0);
 
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
-
-    VERTERR(res == -1);
-
-    for (i = 0; i < res; i++)
+    for (i = 0; i < n; i++)
         list = enif_make_list_cell(env,
             enif_make_string(env, names[i], ERL_NIF_LATIN1),
             list);
@@ -479,24 +612,185 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         list);
 }
 
-/* 0: VERT_RESOURCE, 1: int type, 2: int maxdomains */
     ERL_NIF_TERM
-vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virConnectListNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = 0;
-    int max= 0;
+    int max = 0;
+    char **names = NULL;
 
     int i = 0;
-    int res = -1;
+    int n = -1;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    n = virConnectListNetworks(vp->res, names, max);
+
+    VERTERR(n == -1);
+
+    list = enif_make_list(env, 0);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    if (names)
+        free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+#if HAVE_VIRCONNECTlISTNWfILTERS
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+    char **names = NULL;
+
+    int i = 0;
+    int n = -1;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    n = virConnectListNWFilters(vp->res, names, max);
+
+    VERTERR(n == -1);
+
+    list = enif_make_list(env, 0);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    if (names)
+        free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+#else
+    return error_tuple(env, atom_unsupported);
+#endif
+}
+
+    ERL_NIF_TERM
+vert_virConnectListSecrets(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+    char **names = NULL;
+
+    int i = 0;
+    int n = -1;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    n = virConnectListSecrets(vp->res, names, max);
+
+    VERTERR(n == -1);
+
+    list = enif_make_list(env, 0);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    if (names)
+        free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+    char **names = NULL;
+
+    int i = 0;
+    int n = -1;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    n = virConnectListStoragePools(vp->res, names, max);
+
+    VERTERR(n == -1);
+
+    list = enif_make_list(env, 0);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    if (names)
+        free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListDefinedDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+
+    int i = 0;
+    int n = -1;
 
     char **names = NULL;
     ERL_NIF_TERM list = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_INT(1, type);
-    VERT_GET_INT(2, max);
+    VERT_GET_INT(1, max);
 
     if (max <= 0)
         return enif_make_badarg(env);
@@ -506,33 +800,126 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     list = enif_make_list(env, 0);
 
-    switch (type) {
-        case VERT_RES_DOMAIN:
-            res = virConnectListDefinedDomains(vp->res, names, max);
-            break;
+    n = virConnectListDefinedDomains(vp->res, names, max);
 
-        case VERT_RES_INTERFACE:
-            res = virConnectListDefinedInterfaces(vp->res, names, max);
-            break;
-
-        case VERT_RES_NETWORK:
-            res = virConnectListDefinedNetworks(vp->res, names, max);
-            break;
-            
-        case VERT_RES_STORAGEPOOL:
-            res = virConnectListDefinedStoragePools(vp->res, names, max);
-            break;
-
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
-
-    VERTERR(res == -1);
-
-    for (i = 0; i < res; i++)
+    for (i = 0; i < n; i++)
         list = enif_make_list_cell(env,
-        enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
         list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListDefinedInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+
+    int i = 0;
+    int n = -1;
+
+    char **names = NULL;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    list = enif_make_list(env, 0);
+
+    n = virConnectListDefinedInterfaces(vp->res, names, max);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListDefinedNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+
+    int i = 0;
+    int n = -1;
+
+    char **names = NULL;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    list = enif_make_list(env, 0);
+
+    n = virConnectListDefinedNetworks(vp->res, names, max);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
+
+    free(names);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        list);
+}
+
+    ERL_NIF_TERM
+vert_virConnectListDefinedStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    int max = 0;
+
+    int i = 0;
+    int n = -1;
+
+    char **names = NULL;
+    ERL_NIF_TERM list = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, max);
+
+    if (max <= 0)
+        return enif_make_badarg(env);
+
+    names = calloc(max, sizeof(char *));
+    ISNULL(names);
+
+    list = enif_make_list(env, 0);
+
+    n = virConnectListDefinedStoragePools(vp->res, names, max);
+
+    for (i = 0; i < n; i++)
+        list = enif_make_list_cell(env,
+            enif_make_string(env, names[i], ERL_NIF_LATIN1),
+            list);
 
     free(names);
 
