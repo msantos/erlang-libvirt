@@ -91,16 +91,14 @@ vert_connect_close(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
 
-    ERL_NIF_TERM res = atom_ok;
 
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
 
-    VERT_GET_RESOURCE(0, vp);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     VERTERR(virConnectClose(vp->res) == -1);
+
     vp->res = NULL;
 
-    return res;
+    return atom_ok;
 }
 
 /* 0: VERT_RESOURCE, 1: int type */
@@ -112,10 +110,8 @@ vert_connect_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ERL_NIF_TERM term = {0};
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_ATTR_CAPABILITIES: {
@@ -317,10 +313,8 @@ vert_connect_numactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_RES_DOMAIN:
@@ -364,10 +358,8 @@ vert_connect_numinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     switch (type) {
         case VERT_RES_DOMAIN:
@@ -409,14 +401,12 @@ vert_connect_listactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
     VERT_GET_INT(2, max);
 
     if (max <= 0)
         return enif_make_badarg(env);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     if (type != VERT_RES_DOMAIN) {
         names = calloc(max, sizeof(char *));
@@ -506,14 +496,12 @@ vert_connect_listinactive(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM list = {0};
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
     VERT_GET_INT(2, max);
 
     if (max <= 0)
         return enif_make_badarg(env);
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     names = calloc(max, sizeof(char *));
     ISNULL(names);

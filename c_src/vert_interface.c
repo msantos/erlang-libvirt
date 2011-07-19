@@ -45,10 +45,9 @@ vert_interface_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
 
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
 
     switch (type) {
@@ -101,10 +100,8 @@ vert_interface_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     const char *res = NULL;
 
 
-    VERT_GET_RESOURCE(0, ifp);
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
     VERT_GET_INT(1, type);
-
-    CHECK_RESOURCE_TYPE(ifp, VERT_RES_INTERFACE);
 
     switch (type) {
         case VERT_ATTR_NAME:

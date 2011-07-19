@@ -62,6 +62,13 @@ ERL_NIF_TERM atom_false;
     if ((x) == atom_enomem) return atom_enomem; \
 } while (0)
 
+#define CHECK_VIRPTR_NULL(var) do { \
+    if (var->res == NULL) { \
+        enif_release_resource(var); \
+        return verterr(env); \
+    } \
+} while (0)
+
 
 /* NIF resource */
 ErlNifResourceType *NIF_VERT_RESOURCE;
@@ -91,11 +98,13 @@ enum {
     (var)->conn = (initial); \
 } while (0)
 
-#define CHECK_RESOURCE_TYPE(var,vtype) do { \
-    if ((var)->type != (vtype)) return enif_make_badarg(env); \
+#define VERT_GET_RESOURCE(index, var, vtype) do { \
+    if (!enif_get_resource(env, argv[index], NIF_VERT_RESOURCE, (void **)&var) || \
+        ((var)->type != (vtype))) \
+        return enif_make_badarg(env); \
 } while (0)
 
-#define VERT_GET_RESOURCE(index, var) do { \
+#define VERT_GET_RESOURCE1(index, var) do { \
     if (!enif_get_resource(env, argv[index], NIF_VERT_RESOURCE, (void **)&var)) \
         return enif_make_badarg(env); \
 } while (0)

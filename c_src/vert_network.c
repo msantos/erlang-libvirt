@@ -34,59 +34,24 @@
 #include "vert_network.h"
 
 
-/* 0: VERT_RESOURCE, 1: int type 2: int | char* */
     ERL_NIF_TERM
-vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    int type = VERT_ATTR_NAME;
+    char name[IFNAMSIZ] = {0};
 
     VERT_RESOURCE *np = NULL;
     ERL_NIF_TERM res = {0};
 
 
-    VERT_GET_RESOURCE(0, vp);
-    VERT_GET_INT(1, type);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_STRING(1, name, sizeof(name));
 
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
-    switch (type) {
-        case VERT_ATTR_NAME: {
-            char name[IFNAMSIZ];
+    np->res = virNetworkLookupByName(vp->res, name);
 
-            VERT_GET_STRING(2, name, sizeof(name));
-
-            np->res = virNetworkLookupByName(vp->res, name);
-            }
-            break;
-
-        case VERT_ATTR_RAWUUID: {
-            ErlNifBinary buf = {0};
-
-            VERT_GET_IOLIST(2, buf);
-
-            np->res = virNetworkLookupByUUID(vp->res, buf.data);
-            }
-            break;
-
-        case VERT_ATTR_UUID: {
-            ErlNifBinary buf = {0};
-
-            VERT_GET_IOLIST(2, buf);
-
-            np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
-            }
-            break;
-
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
+    CHECK_VIRPTR_NULL(np);
 
     res = enif_make_resource(env, np);
     enif_release_resource(np);
@@ -94,127 +59,153 @@ vert_network_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return vert_make_resource(env, atom_domain, res);
 }
 
-/* 0: VERT_RESOURCE, 1: type */
     ERL_NIF_TERM
-vert_network_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary buf = {0};
+
+    VERT_RESOURCE *np = NULL;
+    ERL_NIF_TERM res = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, buf);
+
+    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+
+    np->res = virNetworkLookupByUUID(vp->res, buf.data);
+
+    CHECK_VIRPTR_NULL(np);
+
+    res = enif_make_resource(env, np);
+    enif_release_resource(np);
+
+    return vert_make_resource(env, atom_domain, res);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary buf = {0};
+
+    VERT_RESOURCE *np = NULL;
+    ERL_NIF_TERM res = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, buf);
+
+    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+
+    np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
+
+    CHECK_VIRPTR_NULL(np);
+
+    res = enif_make_resource(env, np);
+    enif_release_resource(np);
+
+    return vert_make_resource(env, atom_domain, res);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *np = NULL;
-    int type = 0;
+    int autostart = 0;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    VERTERR(virNetworkGetAutostart(np->res, &autostart) < 0);
+
+    return (autostart ? atom_true : atom_false);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+    char *name = NULL;
 
     ERL_NIF_TERM term = {0};
 
 
-    VERT_GET_RESOURCE(0, np);
-    VERT_GET_INT(1, type);
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
 
-    CHECK_RESOURCE_TYPE(np, VERT_RES_NETWORK);
+    name = virNetworkGetBridgeName(np->res);
+    VERTERR(name == NULL);
 
-    switch (type) {
-        case VERT_ATTR_AUTOSTART: {
-            int autostart = 0;
-
-            VERTERR(virNetworkGetAutostart(np->res, &autostart) < 0);
-
-            term = (autostart ? atom_true : atom_false);
-            }
-            break;
-
-        case VERT_ATTR_BRIDGENAME: {
-            char *name = NULL;
-
-            name = virNetworkGetBridgeName(np->res);
-
-            VERTERR(name == NULL);
-
-            term = enif_make_string(env, name, ERL_NIF_LATIN1);
-            free(name);
-            }
-            break;
-
-        case VERT_ATTR_NAME: {
-            const char *name = NULL;
-
-            name = virNetworkGetName(np->res);
-
-            VERTERR(name == NULL);
-
-            term = enif_make_string(env, name, ERL_NIF_LATIN1);
-            }
-            break;
-
-        case VERT_ATTR_RAWUUID: {
-            unsigned char uuid[VIR_UUID_BUFLEN];
-
-            VERTERR(virNetworkGetUUID(np->res, uuid) < 0);
-            term = bincopy(env, uuid, sizeof(uuid));
-            NOMEM(term);
-            }
-            break;
-
-        case VERT_ATTR_UUID: {
-            char uuid[VIR_UUID_STRING_BUFLEN];
-
-            VERTERR (virNetworkGetUUIDString(np->res, uuid) < 0);
-
-            term = enif_make_string(env, uuid, ERL_NIF_LATIN1);
-            }
-            break;
-
-        case VERT_ATTR_DESC: {
-            char *desc = NULL;
-            int flags = 0;
-
-            if (argc != 3)
-                return enif_make_badarg(env);
-
-            VERT_GET_INT(2, flags);
-
-            desc = virNetworkGetXMLDesc(np->res, flags);
-
-            VERTERR(desc == NULL);
-
-            term = enif_make_string(env, desc, ERL_NIF_LATIN1);
-            }
-            break;
-
-        case VERT_ATTR_ACTIVE: {
-            int res = -1;
-
-            res = virNetworkIsPersistent(np->res);
-
-            VERTERR(res < 0);
-
-            term = (res == 1 ? atom_true : atom_false);
-            }
-            break;
-
-        case VERT_ATTR_PERSISTENT: {
-            int res = -1;
-
-            res = virNetworkIsPersistent(np->res);
-
-            VERTERR(res < 0);
-
-            term = (res == 1 ? atom_true : atom_false);
-            }
-            break;
-
-        case VERT_ATTR_CONNECT: {
-            VERT_RESOURCE *cp = NULL;
-            ERL_NIF_TERM res = {0};
-
-            RESOURCE_ALLOC(cp, VERT_RES_CONNECT, NULL);
-            cp->res = np->conn;
-            res = enif_make_resource(env, cp);
-            enif_release_resource(cp);
-
-            term = vert_make_resource(env, atom_connect, res);
-            }
-            break;
-
-        default:
-            return error_tuple(env, atom_unsupported);
-    }
+    term = enif_make_string(env, name, ERL_NIF_LATIN1);
+    free(name);
 
     return term;
+}
+
+    ERL_NIF_TERM
+vert_virNetworkGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+    const char *name = NULL;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    name = virNetworkGetName(np->res);
+    VERTERR(name == NULL);
+
+    return enif_make_string(env, name, ERL_NIF_LATIN1);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+    unsigned char uuid[VIR_UUID_BUFLEN];
+
+    ERL_NIF_TERM term = {0};
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    VERTERR(virNetworkGetUUID(np->res, uuid) < 0);
+
+    term = bincopy(env, uuid, sizeof(uuid));
+    NOMEM(term);
+
+    return term;
+}
+
+    ERL_NIF_TERM
+vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+    int flags = 0;
+
+    char *desc = NULL;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+    VERT_GET_INT(1, flags);
+
+    desc = virNetworkGetXMLDesc(np->res, flags);
+    VERTERR(desc == NULL);
+
+    return enif_make_string(env, desc, ERL_NIF_LATIN1);
+}
+
+    ERL_NIF_TERM
+vert_virNetworkIsPersistent(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *np = NULL;
+    int res = -1;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    res = virNetworkIsPersistent(np->res);
+    VERTERR(res < 0);
+
+    return (res == 1 ? atom_true : atom_false);
 }

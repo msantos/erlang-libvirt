@@ -45,10 +45,9 @@ vert_domain_lookup(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM res = {0};
 
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, type);
 
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     switch (type) {
@@ -105,10 +104,8 @@ vert_domain_get(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM term = {0};
 
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_INT(1, type);
-
-    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     switch (type) {
         case VERT_ATTR_AUTOSTART: {
@@ -394,10 +391,8 @@ vert_domain_save(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_STRING(1, file, sizeof(file));
-
-    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     res = virDomainSave(dp->res, file);
 
@@ -416,10 +411,8 @@ vert_domain_restore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    VERT_GET_RESOURCE(0, vp);
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_STRING(1, file, sizeof(file));
-
-    CHECK_RESOURCE_TYPE(vp, VERT_RES_CONNECT);
 
     res = virDomainRestore(vp->res, file);
 
@@ -438,10 +431,8 @@ vert_domain_autostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_INT(1, flags);
-
-    CHECK_RESOURCE_TYPE(dp, VERT_RES_DOMAIN);
 
     res = virDomainSetAutostart(dp->res, flags);
 
@@ -459,7 +450,7 @@ vert_domain_shutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     int res = -1;
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
     res = virDomainShutdown(dp->res);
 
@@ -478,7 +469,7 @@ vert_domain_suspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
     res = virDomainSuspend(dp->res);
     VERTERR(res != 0);
@@ -495,7 +486,7 @@ vert_domain_resume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int res = -1;
 
 
-    VERT_GET_RESOURCE(0, dp);
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
     res = virDomainResume(dp->res);
     VERTERR(res != 0);
