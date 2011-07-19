@@ -69,6 +69,12 @@ ERL_NIF_TERM atom_false;
     } \
 } while (0)
 
+#define BINCOPY(dst, src, size) do { \
+    dst = bincopy(env, src, size); \
+    if ((dst) == atom_enomem) \
+        return atom_enomem; \
+} while (0)
+
 
 /* NIF resource */
 ErlNifResourceType *NIF_VERT_RESOURCE;
@@ -122,6 +128,17 @@ enum {
 #define VERT_GET_IOLIST(index, var) do { \
     if (!enif_inspect_iolist_as_binary(env, argv[(index)], &var)) \
         return enif_make_badarg(env); \
+} while (0)
+
+#define VERT_RET_RESOURCE(var, atom) do { \
+    ERL_NIF_TERM res = {0}; \
+    if (var->res == NULL) { \
+        enif_release_resource(var); \
+        return verterr(env); \
+    } \
+    res = enif_make_resource(env, var); \
+    enif_release_resource(var); \
+    return vert_make_resource(env, atom, res); \
 } while (0)
 
 /* nif_virDomainLookup */
