@@ -125,3 +125,75 @@ vert_virInterfaceGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         atom_ok,
         enif_make_string(env, p, ERL_NIF_LATIN1));
 }
+
+    ERL_NIF_TERM
+vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary cfg;
+
+    VERT_RESOURCE *ifp = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, cfg);
+
+    /* NULL terminate the string */
+    if (!enif_realloc_binary(&cfg, cfg.size+1))
+        return atom_enomem;
+
+    cfg.data[cfg.size-1] = '\0';
+
+    RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
+
+    ifp->res = virInterfaceDefineXML(vp->res, (char *)cfg.data, 0);
+
+    CHECK_VIRPTR_NULL(ifp);
+
+    VERT_RET_RESOURCE(ifp, atom_interface);
+}
+
+    ERL_NIF_TERM
+vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *ifp = NULL;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
+
+    VERTERR(virInterfaceUndefine(ifp->res) == -1);
+    VERTERR(virInterfaceFree(ifp->res) == -1);
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *ifp = NULL;
+    int flags = 0;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
+    VERT_GET_INT(1, flags);
+
+    VERTERR(virInterfaceCreate(ifp->res, 0) == -1);
+
+    return atom_ok;
+}
+
+    ERL_NIF_TERM
+vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *ifp = NULL;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_DOMAIN);
+
+    VERTERR(virInterfaceDestroy(ifp->res, 0) != 0);
+    VERTERR(virInterfaceFree(ifp->res) != 0);
+
+    ifp->res = NULL;
+
+    return atom_ok;
+}
