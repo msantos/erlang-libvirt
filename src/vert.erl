@@ -356,7 +356,7 @@ virNetworkGetAutostart(#resource{type = network, res = Res}) ->
 virNetworkDestroy(#resource{type = network, res = Res}) ->
     call({virNetworkDestroy, Res}).
 
-virNetworkDefineXML(#resource{type = network, res = Res}, Xml) ->
+virNetworkDefineXML(#resource{type = connect, res = Res}, Xml) ->
     call({virNetworkDefineXML, Res, Xml}).
 
 %virNetworkCreateXML(Conn, XmlDesc) ->
@@ -537,7 +537,7 @@ virDomainGetAutostart(#resource{type = domain, res = Res}) ->
 virDomainDestroy(#resource{type = domain, res = Res}) ->
     call({virDomainDestroy, Res}).
 
-virDomainDefineXML(#resource{type = domain, res = Res}, Xml) when is_binary(Xml); is_list(Xml) ->
+virDomainDefineXML(#resource{type = connect, res = Res}, Xml) when is_binary(Xml); is_list(Xml) ->
     call({virDomainDefineXML, Res, Xml}).
 
 %virDomainCreateXML(Conn, XmlDesc, Flags) ->
