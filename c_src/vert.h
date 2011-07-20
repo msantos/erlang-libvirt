@@ -108,11 +108,6 @@ enum {
         return enif_make_badarg(env); \
 } while (0)
 
-#define VERT_GET_RESOURCE1(index, var) do { \
-    if (!enif_get_resource(env, argv[index], NIF_VERT_RESOURCE, (void **)&var)) \
-        return enif_make_badarg(env); \
-} while (0)
-
 #define VERT_GET_STRING(index, var, size) do { \
     if (enif_get_string(env, argv[(index)], var, size, ERL_NIF_LATIN1) < 1) \
         return enif_make_badarg(env); \
