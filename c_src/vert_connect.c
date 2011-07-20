@@ -222,7 +222,6 @@ vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
     int max = 0;
     u_int64_t *mem = NULL;
     ERL_NIF_TERM list = {0};
-    int i = 0;
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
@@ -233,9 +232,7 @@ vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
 
     VERTERR(virNodeGetCellsFreeMemory(vp->res, mem, 0, max) < 0);
 
-    list = enif_make_list(env, 0);
-    for (i = 0; i < max; i++)
-        list = enif_make_list_cell(env, enif_make_int(env, mem[i]), list);
+    VERT_COPY_LIST(list, mem, max);
 
     free(mem);
 
@@ -541,7 +538,6 @@ vert_virConnectListDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int max = 0;
     int *domains = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -558,12 +554,7 @@ vert_virConnectListDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
-
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_int(env, domains[i]),
-            list);
+    VERT_COPY_LIST(list, domains, n);
 
     free(domains);
 
@@ -579,7 +570,6 @@ vert_virConnectListInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
     int max = 0;
     char **names = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -597,15 +587,9 @@ vert_virConnectListInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
+    VERT_COPY_STRING(list, names, n);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
-
-    if (names)
-        free(names);
+    free(names);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -619,7 +603,6 @@ vert_virConnectListNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int max = 0;
     char **names = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -637,15 +620,9 @@ vert_virConnectListNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
+    VERT_COPY_STRING(list, names, n);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
-
-    if (names)
-        free(names);
+    free(names);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -660,7 +637,6 @@ vert_virConnectListNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
     int max = 0;
     char **names = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -678,15 +654,9 @@ vert_virConnectListNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
+    VERT_COPY_STRING(list, names, n);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
-
-    if (names)
-        free(names);
+    free(names);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -703,7 +673,6 @@ vert_virConnectListSecrets(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     int max = 0;
     char **names = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -721,15 +690,9 @@ vert_virConnectListSecrets(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
+    VERT_COPY_STRING(list, names, n);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
-
-    if (names)
-        free(names);
+    free(names);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -743,7 +706,6 @@ vert_virConnectListStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
     int max = 0;
     char **names = NULL;
 
-    int i = 0;
     int n = -1;
     ERL_NIF_TERM list = {0};
 
@@ -761,15 +723,9 @@ vert_virConnectListStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
 
     VERTERR(n == -1);
 
-    list = enif_make_list(env, 0);
+    VERT_COPY_STRING(list, names, n);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
-
-    if (names)
-        free(names);
+    free(names);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -782,7 +738,6 @@ vert_virConnectListDefinedDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
     VERT_RESOURCE *vp = NULL;
     int max = 0;
 
-    int i = 0;
     int n = -1;
 
     char **names = NULL;
@@ -798,14 +753,9 @@ vert_virConnectListDefinedDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
     names = calloc(max, sizeof(char *));
     ISNULL(names);
 
-    list = enif_make_list(env, 0);
-
     n = virConnectListDefinedDomains(vp->res, names, max);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
+    VERT_COPY_STRING(list, names, n);
 
     free(names);
 
@@ -820,7 +770,6 @@ vert_virConnectListDefinedInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TER
     VERT_RESOURCE *vp = NULL;
     int max = 0;
 
-    int i = 0;
     int n = -1;
 
     char **names = NULL;
@@ -836,14 +785,9 @@ vert_virConnectListDefinedInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TER
     names = calloc(max, sizeof(char *));
     ISNULL(names);
 
-    list = enif_make_list(env, 0);
-
     n = virConnectListDefinedInterfaces(vp->res, names, max);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
+    VERT_COPY_STRING(list, names, n);
 
     free(names);
 
@@ -858,7 +802,6 @@ vert_virConnectListDefinedNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
     VERT_RESOURCE *vp = NULL;
     int max = 0;
 
-    int i = 0;
     int n = -1;
 
     char **names = NULL;
@@ -874,14 +817,9 @@ vert_virConnectListDefinedNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
     names = calloc(max, sizeof(char *));
     ISNULL(names);
 
-    list = enif_make_list(env, 0);
-
     n = virConnectListDefinedNetworks(vp->res, names, max);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
+    VERT_COPY_STRING(list, names, n);
 
     free(names);
 
@@ -896,7 +834,6 @@ vert_virConnectListDefinedStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_T
     VERT_RESOURCE *vp = NULL;
     int max = 0;
 
-    int i = 0;
     int n = -1;
 
     char **names = NULL;
@@ -912,14 +849,9 @@ vert_virConnectListDefinedStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_T
     names = calloc(max, sizeof(char *));
     ISNULL(names);
 
-    list = enif_make_list(env, 0);
-
     n = virConnectListDefinedStoragePools(vp->res, names, max);
 
-    for (i = 0; i < n; i++)
-        list = enif_make_list_cell(env,
-            enif_make_string(env, names[i], ERL_NIF_LATIN1),
-            list);
+    VERT_COPY_STRING(list, names, n);
 
     free(names);
 

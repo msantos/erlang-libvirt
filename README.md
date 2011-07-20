@@ -8,15 +8,14 @@ An (almost) pure Erlang libvirt binding is available here:
 
 <https://github.com/msantos/erlang-libvirt-remote>
 
-This version uses the (unsupported) libvirtd remote procotol over a
+libvirt-remote uses the (unsupported) libvirtd remote procotol over a
 Unix socket.
 
 
 ## WARNING
 
     The libvirt API is massive, inconsistent and error prone. So consider
-    this language binding to be incomplete, buggy and full of unexpected
-    surprises.
+    this language binding to be incomplete, buggy and erratic.
 
     The current implementation calls all libvirt functions in a thread so
     that the Erlang VM will not block. If libvirt blocks, the caller will

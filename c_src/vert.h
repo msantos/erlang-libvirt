@@ -135,6 +135,23 @@ enum {
     return vert_make_resource(env, atom, res); \
 } while (0)
 
+#define VERT_COPY_LIST(dst, src, size) do { \
+    int i = 0; \
+    dst = enif_make_list(env, 0); \
+        for (i = 0; i < size; i++) \
+            dst = enif_make_list_cell(env, \
+                    enif_make_int(env, src[i]), dst); \
+} while (0)
+
+#define VERT_COPY_STRING(dst, src, size) do { \
+    int i = 0; \
+    dst = enif_make_list(env, 0); \
+    for (i = 0; i < size; i++) \
+        dst = enif_make_list_cell(env, \
+            enif_make_string(env, src[i], ERL_NIF_LATIN1), \
+            dst); \
+} while (0)
+
 /* nif_virDomainLookup */
 enum {
     VERT_CONNECT_OPEN = 0,
