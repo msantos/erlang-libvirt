@@ -50,6 +50,7 @@ ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_network;
 ERL_NIF_TERM atom_true;
 ERL_NIF_TERM atom_false;
+ERL_NIF_TERM atom_vert;
 
 
 #define VERTERR(x) do { \

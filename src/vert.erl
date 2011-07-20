@@ -712,6 +712,13 @@ virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
 %%-------------------------------------------------------------------------
 %%% NIF stubs
 %%-------------------------------------------------------------------------
+cast({Fun, Arg1}) ->
+    cast(Fun, Arg1);
+cast({Fun, Arg1, Arg2}) ->
+    cast(Fun, Arg1, Arg2);
+cast({Fun, Arg1, Arg2, Arg3}) ->
+    cast(Fun, Arg1, Arg2, Arg3).
+
 cast(_,_) ->
     erlang:error(not_implemented).
 cast(_,_,_) ->
@@ -719,30 +726,41 @@ cast(_,_,_) ->
 cast(_,_,_,_) ->
     erlang:error(not_implemented).
 
-
 %%-------------------------------------------------------------------------
 %%% Blocking API
 %%-------------------------------------------------------------------------
-call({Fun, Arg}, Timeout) ->
-    block(cast(Fun, Arg), Timeout);
-call({Fun, Arg1, Arg2}, Timeout) ->
-    block(cast(Fun, Arg1, Arg2), Timeout);
-call({Fun, Arg1, Arg2, Arg3}, Timeout) ->
-    block(cast(Fun, Arg1, Arg2, Arg3), Timeout).
-
 call(Arg) ->
     call(Arg, infinity).
 
-block(ok, Timeout) ->
+call(Arg, Timeout) ->
+    Self = self(),
+    {_Pid, Ref} = erlang:spawn_monitor(fun() -> block(Self, Arg, Timeout) end),
     receive
-        Res ->
-            Res
+        {vert, Response} ->
+            Response;
+        {'DOWN', Ref, _Type, _Object, _Info} ->
+            {error, timeout}
+    end.
+
+block(Pid, Arg, Timeout) ->
+    % Result is returned from the NIF
+    % function, so not a tagged tuple
+    case cast(Arg) of
+        ok ->
+            wait(Pid, Timeout);
+        Error ->
+            Pid ! {vert, Error}
+    end.
+
+wait(Pid, Timeout) ->
+    % Message sent by the background thread
+    receive
+        {vert, _} = Response ->
+            Pid ! Response
     after
         Timeout ->
             {error, timeout}
-    end;
-block(Error, _Timeout) ->
-    Error.
+    end.
 
 
 %%-------------------------------------------------------------------------

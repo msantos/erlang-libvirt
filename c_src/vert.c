@@ -88,6 +88,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_network = enif_make_atom(env, "network");
     atom_true = enif_make_atom(env, "true");
     atom_false = enif_make_atom(env, "false");
+    atom_vert = enif_make_atom(env, "vert");
 
     if ( (NIF_VERT_RESOURCE = enif_open_resource_type(env, NULL,
             "vert_resource", vert_cleanup,
@@ -167,7 +168,12 @@ vert_loop(void *arg)
 
         res = (*cmd->fptr)(env, cmd->argc, (ERL_NIF_TERM *)cmd->argv);
 
-        (void)enif_send(NULL, cmd->pid, env, res);
+        (void)enif_send(
+                NULL,
+                cmd->pid,
+                env,
+                enif_make_tuple2(env, atom_vert, res)
+                );
 
         enif_free(cmd->pid);
         enif_free(cmd->argv);
