@@ -562,7 +562,6 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     dp->res = virDomainDefineXML(vp->res, (char *)cfg.data);
-    CHECK_VIRPTR_NULL(dp);
 
     VERT_RET_RESOURCE(dp, atom_domain);
 }

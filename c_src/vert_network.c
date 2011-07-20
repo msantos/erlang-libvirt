@@ -41,7 +41,6 @@ vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     char name[IFNAMSIZ] = {0};
 
     VERT_RESOURCE *np = NULL;
-    ERL_NIF_TERM res = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
@@ -51,12 +50,7 @@ vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     np->res = virNetworkLookupByName(vp->res, name);
 
-    CHECK_VIRPTR_NULL(np);
-
-    res = enif_make_resource(env, np);
-    enif_release_resource(np);
-
-    return vert_make_resource(env, atom_domain, res);
+    VERT_RET_RESOURCE(np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -66,7 +60,6 @@ vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ErlNifBinary buf = {0};
 
     VERT_RESOURCE *np = NULL;
-    ERL_NIF_TERM res = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
@@ -76,12 +69,7 @@ vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     np->res = virNetworkLookupByUUID(vp->res, buf.data);
 
-    CHECK_VIRPTR_NULL(np);
-
-    res = enif_make_resource(env, np);
-    enif_release_resource(np);
-
-    return vert_make_resource(env, atom_domain, res);
+    VERT_RET_RESOURCE(np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -91,7 +79,6 @@ vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
     ErlNifBinary buf = {0};
 
     VERT_RESOURCE *np = NULL;
-    ERL_NIF_TERM res = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
@@ -101,12 +88,7 @@ vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
 
     np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
 
-    CHECK_VIRPTR_NULL(np);
-
-    res = enif_make_resource(env, np);
-    enif_release_resource(np);
-
-    return vert_make_resource(env, atom_domain, res);
+    VERT_RET_RESOURCE(np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -230,7 +212,6 @@ vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
     np->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
-    CHECK_VIRPTR_NULL(np);
 
     VERT_RET_RESOURCE(np, atom_network);
 }

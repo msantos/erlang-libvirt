@@ -148,8 +148,6 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ifp->res = virInterfaceDefineXML(vp->res, (char *)cfg.data, 0);
 
-    CHECK_VIRPTR_NULL(ifp);
-
     VERT_RET_RESOURCE(ifp, atom_interface);
 }
 
