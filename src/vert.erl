@@ -541,7 +541,6 @@ virDomainDefineXML(#resource{type = connect, res = Res}, Xml) when is_binary(Xml
     call({virDomainDefineXML, Res, Xml}).
 
 %virDomainCreateXML(Conn, XmlDesc, Flags) ->
-%virDomainCreateLinux(Conn, XmlDesc, Flags) ->
 
 virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flags) ->
     call({virDomainCreate, Res, Flags}).
@@ -706,7 +705,8 @@ virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
 %#%virNetworkFree(Network)
 %#%virInterfaceFree(Iface)
 %#%virDomainFree(#resource{type = domain, res = Res})
-%#%virConnectRef(Conn) ->
+%#%virConnectRef(Conn)
+%#%virDomainCreateLinux(Conn, XmlDesc, Flags)
 
 
 %%-------------------------------------------------------------------------

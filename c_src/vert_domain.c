@@ -553,11 +553,7 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_IOLIST(1, cfg);
 
-    /* NULL terminate the string */
-    if (!enif_realloc_binary(&cfg, cfg.size+1))
-        return atom_enomem;
-
-    cfg.data[cfg.size-1] = '\0';
+    VERT_NULL_TERM_BIN(cfg);
 
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 

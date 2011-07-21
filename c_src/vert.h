@@ -152,6 +152,12 @@ enum {
             dst); \
 } while (0)
 
+#define VERT_NULL_TERM_BIN(bin) do { \
+    if (!enif_realloc_binary(&bin, bin.size+1)) \
+        return atom_enomem; \
+    bin.data[bin.size-1] = '\0'; \
+} while (0)
+
 /* nif_virDomainLookup */
 enum {
     VERT_CONNECT_OPEN = 0,
