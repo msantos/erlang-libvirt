@@ -446,7 +446,7 @@ virDomainLookupByUUID(#resource{type = connect, res = Res}, Uuid) when is_list(U
     call({virDomainLookupByUUID, Res, Uuid}).
 
 virDomainLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
-    call({virDomainLookupByUUID, Res, Name}).
+    call({virDomainLookupByName, Res, Name}).
 
 virDomainLookupByID(#resource{type = connect, res = Res}, Id) when is_integer(Id) ->
     call({virDomainLookupByID, Res, Id}).
