@@ -58,7 +58,7 @@ typedef struct _vert_cast {
     ErlNifPid *pid;
     ERL_NIF_TERM (*fptr)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
     int argc;
-    void *argv;
+    ERL_NIF_TERM *argv;
 } VERT_CAST;
 
 void *vert_loop(void *arg);
@@ -98,9 +98,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     if (virInitialize() != 0)
         return -2;
 
-    /* XXX Disable error messges to stderr
-     * XXX Probably should send the errors to a mailbox
-     * */
+    /* Disable error messges to stderr */
     virSetErrorFunc(NULL, null_logger);
 
     /* Create a thread for blocking libvirt operations */
@@ -166,7 +164,7 @@ vert_loop(void *arg)
         if (read(state->fd[VERT_READ], cmd, sizeof(VERT_CAST)) < 0)
             goto ERR;
 
-        res = (*cmd->fptr)(env, cmd->argc, (ERL_NIF_TERM *)cmd->argv);
+        res = (*cmd->fptr)(env, cmd->argc, cmd->argv);
 
         (void)enif_send(
                 NULL,
