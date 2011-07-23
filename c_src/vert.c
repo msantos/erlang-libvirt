@@ -56,7 +56,7 @@ typedef struct _vert_state {
 
 typedef struct _vert_cast {
     ErlNifPid *pid;
-    ERL_NIF_TERM (*fptr)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+    char name[MAX_ATOM_LEN+1];
     int argc;
     ERL_NIF_TERM *argv;
 } VERT_CAST;
@@ -133,11 +133,11 @@ vert_loop(void *arg)
     VERT_STATE *state = arg;
     VERT_CAST *cmd = NULL;
     ErlNifEnv *env = NULL;
-    ERL_NIF_TERM res = {0};
 
     fd_set rfds;
     ssize_t n = 0;
 
+    ErlNifFunc *fp = NULL;
 
     env = enif_alloc_env();
     cmd = enif_alloc(sizeof(VERT_CAST));
@@ -146,6 +146,8 @@ vert_loop(void *arg)
         goto ERR;
 
     for ( ; ; ) {
+        ERL_NIF_TERM res = enif_make_badarg(env);
+
         FD_ZERO(&rfds);
         FD_SET(state->fd[VERT_READ], &rfds);
 
@@ -164,7 +166,13 @@ vert_loop(void *arg)
         if (read(state->fd[VERT_READ], cmd, sizeof(VERT_CAST)) < 0)
             goto ERR;
 
-        res = (*cmd->fptr)(env, cmd->argc, cmd->argv);
+        for (fp = vert_funcs; fp->name != NULL; fp++) {
+            if ( (strcmp(fp->name, cmd->name) == 0) &&
+                    (fp->arity == cmd->argc)) {
+                res = (*fp->fptr)(env, cmd->argc, cmd->argv);
+                break;
+            }
+        }
 
         (void)enif_send(
                 NULL,
@@ -194,36 +202,27 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_STATE *state = NULL;
     VERT_CAST cmd = {0};
-    char buf[MAX_ATOM_LEN+1];
-    int i = 0;
-    int found = 0;
     ERL_NIF_TERM res = {0};
 
 
     state = enif_priv_data(env);
 
-    if (!enif_get_atom(env, argv[0], buf, sizeof(buf), ERL_NIF_LATIN1))
-        return enif_make_badarg(env);
-
-    for (i = 0; vert_funcs[i].name != NULL; i++) {
-        if ( (strcmp(vert_funcs[i].name, buf) == 0) &&
-                (vert_funcs[i].arity == argc-1)) {
-            found = 1;
-            break;
-        }
-    }
-
-    if (found == 0)
+    if (!enif_get_atom(env, argv[0], cmd.name, sizeof(cmd.name), ERL_NIF_LATIN1))
         return enif_make_badarg(env);
 
     cmd.argv = enif_alloc(sizeof(ERL_NIF_TERM) * (argc-1));
-    cmd.pid = enif_alloc(sizeof(ErlNifPid));
 
-    if ( (cmd.argv == NULL) || (cmd.pid == NULL))
+    if (cmd.argv == NULL)
         return error_tuple(env, atom_enomem);
 
+    cmd.pid = enif_alloc(sizeof(ErlNifPid));
+
+    if (cmd.pid == NULL) {
+        free(cmd.argv);
+        return error_tuple(env, atom_enomem);
+    }
+
     (void)enif_self(env, cmd.pid);
-    cmd.fptr = vert_funcs[i].fptr;
     (void)memcpy(cmd.argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
     cmd.argc = argc-1;
 
