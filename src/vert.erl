@@ -627,7 +627,7 @@ virConnectListInterfaces(#resource{type = connect, res = Res}, Maxnames) when is
     call(virConnectListInterfaces, [Res, Maxnames]).
 
 virConnectListDomains(Res) ->
-    {ok, Maxids} = vert:virConnectNumOfDomains(Res),
+    {ok, Maxids} = virConnectNumOfDomains(Res),
     call(virConnectListDomains, [Res, Maxids]).
 virConnectListDomains(#resource{type = connect, res = Res}, Maxids) when is_integer(Maxids) ->
     call(virConnectListDomains, [Res, Maxids]).
