@@ -100,16 +100,16 @@
         virConnectNumOfDefinedNetworks/1,
         virConnectNumOfDefinedInterfaces/1,
         virConnectNumOfDefinedDomains/1,
-        virConnectListStoragePools/2,
-        virConnectListSecrets/2,
-        virConnectListNetworks/2,
-        virConnectListNWFilters/2,
-        virConnectListInterfaces/2,
-        virConnectListDomains/2,
-        virConnectListDefinedStoragePools/2,
-        virConnectListDefinedNetworks/2,
-        virConnectListDefinedInterfaces/2,
-        virConnectListDefinedDomains/2,
+        virConnectListStoragePools/1, virConnectListStoragePools/2,
+        virConnectListSecrets/1, virConnectListSecrets/2,
+        virConnectListNetworks/1, virConnectListNetworks/2,
+        virConnectListNWFilters/1, virConnectListNWFilters/2,
+        virConnectListInterfaces/1, virConnectListInterfaces/2,
+        virConnectListDomains/1, virConnectListDomains/2,
+        virConnectListDefinedStoragePools/1, virConnectListDefinedStoragePools/2,
+        virConnectListDefinedNetworks/1, virConnectListDefinedNetworks/2,
+        virConnectListDefinedInterfaces/1, virConnectListDefinedInterfaces/2,
+        virConnectListDefinedDomains/1, virConnectListDefinedDomains/2,
         virConnectIsSecure/1,
         virConnectIsEncrypted/1,
         virConnectGetVersion/1,
@@ -596,33 +596,63 @@ virConnectNumOfDefinedInterfaces(#resource{type = connect, res = Res}) ->
 virConnectNumOfDefinedDomains(#resource{type = connect, res = Res}) ->
     call({virConnectNumOfDefinedDomains, Res}).
 
+virConnectListStoragePools(Res) ->
+    {ok, Maxnames} = virConnectNumOfStoragePools(Res),
+    call({virConnectListStoragePools, Res, Maxnames}).
 virConnectListStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListStoragePools, Res, Maxnames}).
 
+virConnectListSecrets(Res) ->
+    {ok, Maxuuids} = virConnectNumOfSecrets(Res),
+    call({virConnectListSecrets, Res, Maxuuids}).
 virConnectListSecrets(#resource{type = connect, res = Res}, Maxuuids) when is_integer(Maxuuids) ->
     call({virConnectListSecrets, Res, Maxuuids}).
 
+virConnectListNetworks(Res) ->
+    {ok, Maxnames} = virConnectNumOfNetworks(Res),
+    call({virConnectListNetworks, Res, Maxnames}).
 virConnectListNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListNetworks, Res, Maxnames}).
 
+virConnectListNWFilters(Res) ->
+    {ok, Maxnames} = virConnectListNWFilters(Res),
+    call({virConnectListNWFilters, Res, Maxnames}).
 virConnectListNWFilters(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListNWFilters, Res, Maxnames}).
 
+virConnectListInterfaces(Res) ->
+    {ok, Maxnames} = virConnectNumOfInterfaces(Res),
+    call({virConnectListInterfaces, Res, Maxnames}).
 virConnectListInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListInterfaces, Res, Maxnames}).
 
+virConnectListDomains(Res) ->
+    {ok, Maxids} = virConnectNumOfDomains(Res),
+    call({virConnectListDomains, Res, Maxids}).
 virConnectListDomains(#resource{type = connect, res = Res}, Maxids) when is_integer(Maxids) ->
     call({virConnectListDomains, Res, Maxids}).
 
+virConnectListDefinedStoragePools(Res) ->
+    {ok, Maxnames} = virConnectNumOfDefinedStoragePools(Res),
+    call({virConnectListDefinedStoragePools, Res, Maxnames}).
 virConnectListDefinedStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListDefinedStoragePools, Res, Maxnames}).
 
+virConnectListDefinedNetworks(Res) ->
+    {ok, Maxnames} = virConnectNumOfDefinedNetworks(Res),
+    call({virConnectListDefinedNetworks, Res, Maxnames}).
 virConnectListDefinedNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListDefinedNetworks, Res, Maxnames}).
 
+virConnectListDefinedInterfaces(Res) ->
+    {ok, Maxnames} = virConnectNumOfDefinedInterfaces(Res),
+    call({virConnectListDefinedInterfaces, Res, Maxnames}).
 virConnectListDefinedInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListDefinedInterfaces, Res, Maxnames}).
 
+virConnectListDefinedDomains(Res) ->
+    {ok, Maxnames} = virConnectNumOfDefinedDomains(Res),
+    call({virConnectListDefinedDomains, Res, Maxnames}).
 virConnectListDefinedDomains(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call({virConnectListDefinedDomains, Res, Maxnames}).
 

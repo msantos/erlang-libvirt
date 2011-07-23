@@ -101,7 +101,7 @@ running domains. The example is taken from:
 
     start() ->
         {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-        {ok, DomainIDs} = vert:virConnectListDomains(Connect, 10),
+        {ok, DomainIDs} = vert:virConnectListDomains(Connect),
 
         [ states(Connect, DomainID) || DomainID <- DomainIDs ],
 
