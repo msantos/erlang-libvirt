@@ -627,10 +627,10 @@ virConnectListDefinedDomains(#resource{type = connect, res = Res}, Maxnames) whe
     call({virConnectListDefinedDomains, Res, Maxnames}).
 
 virConnectIsSecure(#resource{type = connect, res = Res}) ->
-    call({virConnectIsSecure, Res}).
+    bool(call({virConnectIsSecure, Res})).
 
 virConnectIsEncrypted(#resource{type = connect, res = Res}) ->
-    call({virConnectIsEncrypted, Res}).
+    bool(call({virConnectIsEncrypted, Res})).
 
 virConnectGetVersion(#resource{type = connect, res = Res}) ->
     case call({virConnectGetVersion, Res}) of
@@ -788,6 +788,9 @@ state({domain, shutdown}) -> ?VIR_DOMAIN_SHUTDOWN;
 state({domain, shutoff}) -> ?VIR_DOMAIN_SHUTOFF;
 state({domain, crashed}) -> ?VIR_DOMAIN_CRASHED.
 
+bool({ok, 0}) -> false;
+bool({ok, 1}) -> true;
+bool(Error) -> Error.
 
 privdir(File) ->
     filename:join([
