@@ -492,7 +492,7 @@ vert_connect_string_res_charpp_int(
     names = calloc(max, sizeof(char *));
     ISNULL(names);
 
-    n = virConnectListInterfaces(vp->res, names, max);
+    n = fp(vp->res, names, max);
 
     VERTERR(n == -1);
 
