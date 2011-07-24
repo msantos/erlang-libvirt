@@ -131,7 +131,7 @@ unload(ErlNifEnv *env, void *priv_data)
 vert_loop(void *arg)
 {
     VERT_STATE *state = arg;
-    VERT_CAST *cmd = NULL;
+    VERT_CAST cmd;
     ErlNifEnv *env = NULL;
 
     fd_set rfds;
@@ -140,9 +140,8 @@ vert_loop(void *arg)
     ErlNifFunc *fp = NULL;
 
     env = enif_alloc_env();
-    cmd = enif_alloc(sizeof(VERT_CAST));
 
-    if ( (env == NULL) || (cmd == NULL))
+    if (env == NULL)
         goto ERR;
 
     for ( ; ; ) {
@@ -163,32 +162,30 @@ vert_loop(void *arg)
             }
         }
 
-        if (read(state->fd[VERT_READ], cmd, sizeof(VERT_CAST)) < 0)
+        if (read(state->fd[VERT_READ], &cmd, sizeof(cmd)) < 0)
             goto ERR;
 
         for (fp = vert_funcs; fp->name != NULL; fp++) {
-            if ( (strcmp(fp->name, cmd->name) == 0) &&
-                    (fp->arity == cmd->argc)) {
-                res = (*fp->fptr)(env, cmd->argc, cmd->argv);
+            if ( (strcmp(fp->name, cmd.name) == 0) &&
+                    (fp->arity == cmd.argc)) {
+                res = (*fp->fptr)(env, cmd.argc, cmd.argv);
                 break;
             }
         }
 
         (void)enif_send(
                 NULL,
-                &cmd->pid,
+                &cmd.pid,
                 env,
                 enif_make_tuple2(env, atom_vert, res)
                 );
 
-        enif_free(cmd->argv);
+        enif_free(cmd.argv);
 
         enif_clear_env(env);
     }
 
 ERR:
-    if (cmd)
-        enif_free(cmd);
     if (env)
         enif_free_env(env);
 
