@@ -61,13 +61,6 @@ ERL_NIF_TERM atom_vert;
     if ((x) == NULL) return atom_enomem; \
 } while (0)
 
-#define CHECK_VIRPTR_NULL(var) do { \
-    if (var->res == NULL) { \
-        enif_release_resource(var); \
-        return verterr(env); \
-    } \
-} while (0)
-
 #define BINCOPY(dst, src, size) do { \
     dst = bincopy(env, src, size); \
     if ((dst) == atom_enomem) \

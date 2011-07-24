@@ -348,7 +348,10 @@ vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr 
 
     vp->res = fp( (name[0] == '\0' ? NULL : name));
 
-    CHECK_VIRPTR_NULL(vp);
+    if (vp->res == NULL) {
+        enif_release_resource(vp);
+        return verterr(env);
+    }
 
     /* Disable logging to stderr */
     virConnSetErrorFunc(vp->res, NULL, NULL);
