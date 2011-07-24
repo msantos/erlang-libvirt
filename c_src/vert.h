@@ -134,7 +134,7 @@ enum {
             dst); \
 } while (0)
 
-#define VERT_NULL_TERM_BIN(bin) do { \
+#define VERT_BIN_APPEND_NULL(bin) do { \
     if (!enif_realloc_binary(&bin, bin.size+1)) \
         return atom_enomem; \
     bin.data[bin.size-1] = '\0'; \

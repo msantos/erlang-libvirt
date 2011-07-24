@@ -510,7 +510,7 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_IOLIST(1, cfg);
 
-    VERT_NULL_TERM_BIN(cfg);
+    VERT_BIN_APPEND_NULL(cfg);
 
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
