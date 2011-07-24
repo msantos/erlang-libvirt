@@ -118,12 +118,12 @@
         virConnectGetMaxVcpus/2,
         virConnectGetLibVersion/1,
         virConnectGetHostname/1,
-        virConnectGetCapabilities/1,
-
-        cast/2, cast/3, cast/4,
-        call/2, call/3
+        virConnectGetCapabilities/1
     ]).
-
+%-export([
+%        cast/2, cast/3, cast/4,
+%        call/2, call/3
+%    ]).
 
 -on_load(on_load/0).
 
