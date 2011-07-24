@@ -78,7 +78,6 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
 
     atom_ok = enif_make_atom(env, "ok");
     atom_error = enif_make_atom(env, "error");
-    atom_badarg = enif_make_atom(env, "badarg");
     atom_undefined = enif_make_atom(env, "undefined");
     atom_unsupported = enif_make_atom(env, "unsupported");
     atom_enomem = enif_make_atom(env, "enomem");
@@ -174,7 +173,7 @@ vert_loop(void *arg)
         }
 
         if (fp->name == NULL)
-            res = error_tuple(env, atom_badarg);
+            res = error_tuple(env, atom_unsupported);
 
         (void)enif_send(
                 NULL,
