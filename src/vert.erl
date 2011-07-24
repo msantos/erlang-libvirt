@@ -121,7 +121,7 @@
         virConnectGetCapabilities/1,
 
         cast/2, cast/3, cast/4,
-        call/1, call/2
+        call/2, call/3
     ]).
 
 
@@ -746,11 +746,11 @@ virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
 %%-------------------------------------------------------------------------
 %%% NIF stubs
 %%-------------------------------------------------------------------------
-cast({Fun, Arg1}) ->
+cast_2(Fun, [Arg1]) ->
     cast(Fun, Arg1);
-cast({Fun, Arg1, Arg2}) ->
+cast_2(Fun, [Arg1, Arg2]) ->
     cast(Fun, Arg1, Arg2);
-cast({Fun, Arg1, Arg2, Arg3}) ->
+cast_2(Fun, [Arg1, Arg2, Arg3]) ->
     cast(Fun, Arg1, Arg2, Arg3).
 
 cast(_,_) ->
@@ -763,19 +763,13 @@ cast(_,_,_,_) ->
 %%-------------------------------------------------------------------------
 %%% Blocking API
 %%-------------------------------------------------------------------------
-call(Arg) ->
-    call(Arg, infinity).
+call(Fun, Arg) ->
+    call(Fun, Arg, infinity).
 
-call(Fun, [Arg1]) ->
-    call({Fun, Arg1});
-call(Fun, [Arg1, Arg2]) ->
-    call({Fun, Arg1, Arg2});
-call(Fun, [Arg1, Arg2, Arg3]) ->
-    call({Fun, Arg1, Arg2, Arg3});
-
-call(Arg, Timeout) ->
+call(Fun, Arg, Timeout) when is_atom(Fun), is_list(Arg),
+    ( is_integer(Timeout) orelse Timeout == infinity ) ->
     Self = self(),
-    {_Pid, Ref} = erlang:spawn_monitor(fun() -> block(Self, Arg, Timeout) end),
+    {_Pid, Ref} = erlang:spawn_monitor(fun() -> block(Self, Fun, Arg, Timeout) end),
     receive
         {vert, Response} ->
             Response;
@@ -783,10 +777,10 @@ call(Arg, Timeout) ->
             {error, timeout}
     end.
 
-block(Pid, Arg, Timeout) ->
+block(Pid, Fun, Arg, Timeout) ->
     % Result is returned from the NIF
     % function, so not a tagged tuple
-    case cast(Arg) of
+    case cast_2(Fun, Arg) of
         ok ->
             wait(Pid, Timeout);
         Error ->
