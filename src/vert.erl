@@ -52,7 +52,7 @@
         virInterfaceUndefine/1,
         virInterfaceLookupByName/2,
         virInterfaceLookupByMACString/2,
-        virInterfaceGetXMLDesc/1,
+        virInterfaceGetXMLDesc/1, virInterfaceGetXMLDesc/2,
         virInterfaceGetName/1,
         virInterfaceGetMACString/1,
         virInterfaceDestroy/1,
@@ -369,20 +369,24 @@ virNetworkCreate(#resource{type = network, res = Res}) ->
 %%% Interface
 %%-------------------------------------------------------------------------
 virInterfaceUndefine(#resource{type = interface, res = Res}) ->
-    call(virInterfaceUndefine, [Res]).
+    bool(call(virInterfaceUndefine, [Res])).
 
-virInterfaceLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+virInterfaceLookupByName(#resource{type = connect, res = Res}, Name)
+    when is_list(Name); length(Name) < 128 ->
     call(virInterfaceLookupByName, [Res, Name]).
 
 virInterfaceLookupByMACString(#resource{type = connect, res = Res}, Macstr)
-    when is_list(Macstr) ->
+    when is_list(Macstr); length(Macstr) =< 18 ->
     call(virInterfaceLookupByMACString, [Res, Macstr]).
 
 %virInterfaceIsActive(#resource{type = interface, res = Res}) ->
 %    call(virInterfaceIsActive, [Res]).
 
 virInterfaceGetXMLDesc(#resource{type = interface, res = Res}) ->
-    call(virInterfaceGetXMLDesc, [Res]).
+    call(virInterfaceGetXMLDesc, [Res, 0]).
+virInterfaceGetXMLDesc(#resource{type = interface, res = Res}, Flags)
+    when is_integer(Flags) ->
+    call(virInterfaceGetXMLDesc, [Res, Flags]).
 
 virInterfaceGetName(#resource{type = interface, res = Res}) ->
     call(virInterfaceGetName, [Res]).
@@ -394,14 +398,14 @@ virInterfaceGetMACString(#resource{type = interface, res = Res}) ->
 %    call(virInterfaceGetConnect, [Res]).
 
 virInterfaceDestroy(#resource{type = interface, res = Res}) ->
-    call(virInterfaceDestroy, [Res]).
+    bool(call(virInterfaceDestroy, [Res])).
 
 virInterfaceDefineXML(#resource{type = connect, res = Res}, Xml)
     when is_binary(Xml); is_list(Xml) ->
     call(virInterfaceDefineXML, [Res, Xml]).
 
 virInterfaceCreate(#resource{type = interface, res = Res}) ->
-    call(virInterfaceCreate, [Res]).
+    bool(call(virInterfaceCreate, [Res])).
 
 
 %%-------------------------------------------------------------------------

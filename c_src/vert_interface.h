@@ -38,3 +38,27 @@ ERL_NIF_TERM vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_
 ERL_NIF_TERM vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+
+ERL_NIF_TERM vert_interface_res_res_ccharp(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        virInterfacePtr (*fp)(virConnectPtr, const char *)
+        );
+ERL_NIF_TERM vert_interface_ccharp_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        const char *(*fp)(virInterfacePtr)
+        );
+ERL_NIF_TERM vert_interface_ccharp_res_uint(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        char *(*fp)(virInterfacePtr, unsigned int)); 
+ERL_NIF_TERM vert_interface_int_res(ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virInterfacePtr)
+        );
+ERL_NIF_TERM vert_interface_int_res_int(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virInterfacePtr, unsigned int)
+        );

@@ -37,103 +37,31 @@
     ERL_NIF_TERM
 vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *vp = NULL;
-    char name[IFNAMSIZ];
-
-    VERT_RESOURCE *ifp = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, name, sizeof(name));
-
-    RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
-
-    ifp->res = virInterfaceLookupByName(vp->res, name);
-
-    if (ifp->res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, ifp, atom_interface);
+    return vert_interface_res_res_ccharp(env, argv, virInterfaceLookupByName);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *vp = NULL;
-    char mac[18]; /* aa:bb:cc:00:11:22\0 */
-
-    VERT_RESOURCE *ifp = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, mac, sizeof(mac));
-
-    RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
-
-    ifp->res = virInterfaceLookupByMACString(vp->res, mac);
-
-    if (ifp->res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, ifp, atom_interface);
+    return vert_interface_res_res_ccharp(env, argv, virInterfaceLookupByMACString);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *ifp = NULL;
-    const char *p = NULL;
-
-
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-
-    p = virInterfaceGetName(ifp->res);
-
-    VERTERR(p == NULL);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
+    return vert_interface_ccharp_res(env, argv, virInterfaceGetName);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceGetMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *ifp = NULL;
-    const char *p = NULL;
-
-
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-
-    p = virInterfaceGetMACString(ifp->res);
-
-    VERTERR(p == NULL);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
+    return vert_interface_ccharp_res(env, argv, virInterfaceGetMACString);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *ifp = NULL;
-    const char *p = NULL;
-
-
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-
-    p = virInterfaceGetXMLDesc(ifp->res, 0);
-
-    VERTERR(p == NULL);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
+    return vert_interface_ccharp_res_uint(env, argv, virInterfaceGetXMLDesc);
 }
 
     ERL_NIF_TERM
@@ -165,44 +93,162 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *ifp = NULL;
+    int n = 0;;
 
+    n = vert_interface_int_res(env, argv, virInterfaceUndefine);
 
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
+    if ( (n == -1) || (vert_interface_int_res(env, argv, virInterfaceUndefine) == -1))
+        return verterr(env);
 
-    VERTERR(virInterfaceUndefine(ifp->res) == -1);
-    VERTERR(virInterfaceFree(ifp->res) == -1);
-
-    return atom_ok;
+    return n;
 }
 
     ERL_NIF_TERM
 vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *ifp = NULL;
-//    int flags = 0;
-
-
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-//    VERT_GET_INT(1, flags);
-
-    VERTERR(virInterfaceCreate(ifp->res, 0) == -1);
-
-    return atom_ok;
+    return vert_interface_int_res_int(env, argv, virInterfaceCreate);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+    int n = -1;
+
+    n = vert_interface_int_res_int(env, argv, virInterfaceDestroy);
+
+    if ( (n == -1) || (vert_interface_int_res(env, argv, virInterfaceFree) == -1))
+        return verterr(env);
+
+    return n;
+}
+
+/*
+ * Internal functions
+ */
+    ERL_NIF_TERM
+vert_interface_res_res_ccharp(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        virInterfacePtr (*fp)(virConnectPtr, const char *))
+{
+    VERT_RESOURCE *vp = NULL;
+    const char name[256];
+
     VERT_RESOURCE *ifp = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+
+    if (enif_get_string(env, argv[1], (char *)name, sizeof(name), ERL_NIF_LATIN1) < 1)
+        return enif_make_badarg(env);
+
+    ifp = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE));
+
+    if (ifp == NULL)
+        return atom_enomem;
+
+    ifp->type = VERT_RES_INTERFACE;
+    ifp->conn = vp->res;
+
+    ifp->res = fp(vp->res, name);
+
+    if (ifp->res == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, ifp, atom_interface);
+}
+
+    ERL_NIF_TERM
+vert_interface_ccharp_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        const char *(*fp)(virInterfacePtr))
+{
+    VERT_RESOURCE *vp = NULL;
+    const char *p = NULL;
+
+    ERL_NIF_TERM term = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_INTERFACE);
+
+    p = fp(vp->res);
+
+    VERTERR(p == NULL);
+
+    term = enif_make_tuple2(env, atom_ok,
+        enif_make_string(env, p, ERL_NIF_LATIN1));
+
+    return term;
+}
+
+    ERL_NIF_TERM
+vert_interface_ccharp_res_uint(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        char *(*fp)(virInterfacePtr, unsigned int))
+{
+    VERT_RESOURCE *ifp = NULL;
+    int flag;
+
+    const char *p = NULL;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
+    VERT_GET_INT(1, flag);
+
+    p = fp(ifp->res, flag);
+
+    VERTERR(p == NULL);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, p, ERL_NIF_LATIN1));
+}
+
+    ERL_NIF_TERM
+vert_interface_int_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virInterfacePtr))
+{
+    VERT_RESOURCE *ifp = NULL;
+    int n = 0;
 
 
     VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
 
-    VERTERR(virInterfaceDestroy(ifp->res, 0) != 0);
-    VERTERR(virInterfaceFree(ifp->res) != 0);
+    n = fp(ifp->res);
 
-    ifp->res = NULL;
+    VERTERR(n == -1);
 
-    return atom_ok;
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_int(env, n));
+}
+
+    ERL_NIF_TERM
+vert_interface_int_res_int(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virInterfacePtr, unsigned int))
+{
+    VERT_RESOURCE *ifp = NULL;
+    int flags = 0;
+
+    int n = 0;
+
+
+    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
+    VERT_GET_INT(1, flags);
+
+    n = fp(ifp->res, (unsigned int)flags);
+
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_int(env, n));
 }
