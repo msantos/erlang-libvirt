@@ -65,3 +65,13 @@ ERL_NIF_TERM vert_domain_int_res(
     const ERL_NIF_TERM argv[],
     int (*fp)(virDomainPtr)
     );
+ERL_NIF_TERM vert_domain_int_res(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    int (*fp)(virDomainPtr)
+    );
+ERL_NIF_TERM vert_domain_int_res_int(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    int (*fp)(virDomainPtr, int)
+    );
