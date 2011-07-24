@@ -42,3 +42,19 @@ ERL_NIF_TERM vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TE
 ERL_NIF_TERM vert_virNetworkUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virNetworkCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virNetworkDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+
+ERL_NIF_TERM vert_network_res_res_cucharp(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    virNetworkPtr (*fp)(virConnectPtr, const unsigned char *)
+    );   
+ERL_NIF_TERM vert_network_ccharp_res(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    const char *(*fp)(virNetworkPtr)
+    );
+ERL_NIF_TERM vert_network_int_res(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    int (*fp)(virNetworkPtr)
+    );

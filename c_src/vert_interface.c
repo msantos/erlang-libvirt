@@ -93,14 +93,12 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    int n = 0;;
+    ERL_NIF_TERM res = {0};
 
-    n = vert_interface_int_res(env, argv, virInterfaceUndefine);
+    res = vert_interface_int_res(env, argv, virInterfaceUndefine);
+    (void)vert_interface_int_res(env, argv, virInterfaceFree);
 
-    if ( (n == -1) || (vert_interface_int_res(env, argv, virInterfaceUndefine) == -1))
-        return verterr(env);
-
-    return n;
+    return res;
 }
 
     ERL_NIF_TERM
@@ -112,14 +110,12 @@ vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    int n = -1;
+    ERL_NIF_TERM res = {0};
 
-    n = vert_interface_int_res_int(env, argv, virInterfaceDestroy);
+    res = vert_interface_int_res_int(env, argv, virInterfaceDestroy);
+    (void)vert_interface_int_res(env, argv, virInterfaceFree);
 
-    if ( (n == -1) || (vert_interface_int_res(env, argv, virInterfaceFree) == -1))
-        return verterr(env);
-
-    return n;
+    return res;
 }
 
 /*

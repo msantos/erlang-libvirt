@@ -37,73 +37,19 @@
     ERL_NIF_TERM
 vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *vp = NULL;
-    char name[IFNAMSIZ] = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, name, sizeof(name));
-
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = virNetworkLookupByName(vp->res, name);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
+    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByName);
 }
 
     ERL_NIF_TERM
 vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary buf = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, buf);
-
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = virNetworkLookupByUUID(vp->res, buf.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
+    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByUUID);
 }
 
     ERL_NIF_TERM
 vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary buf = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, buf);
-
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
+    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByUUID);
 }
 
     ERL_NIF_TERM
@@ -123,36 +69,13 @@ vert_virNetworkGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *np = NULL;
-    char *name = NULL;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    name = virNetworkGetBridgeName(np->res);
-    VERTERR(name == NULL);
-
-    term = enif_make_string(env, name, ERL_NIF_LATIN1);
-    free(name);
-
-    return term;
+    return vert_network_ccharp_res(env, argv, virNetworkGetBridgeName);
 }
 
     ERL_NIF_TERM
 vert_virNetworkGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *np = NULL;
-    const char *name = NULL;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    name = virNetworkGetName(np->res);
-    VERTERR(name == NULL);
-
-    return enif_make_string(env, name, ERL_NIF_LATIN1);
+    return vert_network_ccharp_res(env, argv, virNetworkGetName);
 }
 
     ERL_NIF_TERM
@@ -194,16 +117,7 @@ vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virNetworkIsPersistent(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *np = NULL;
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    n = virNetworkIsPersistent(np->res);
-    VERTERR(n == -1);
-
-    return (n == 1 ? atom_true : atom_false);
+    return vert_network_int_res(env, argv, virNetworkIsPersistent);
 }
 
     ERL_NIF_TERM
@@ -235,41 +149,98 @@ vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virNetworkUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    VERTERR(virNetworkUndefine(np->res) == -1); /* Network is still running */
-
-    return atom_ok;
+    return vert_network_int_res(env, argv, virNetworkUndefine);
 }
 
     ERL_NIF_TERM
 vert_virNetworkCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    VERTERR(virNetworkCreate(np->res) == -1);
-
-    return atom_ok;
+    return vert_network_int_res(env, argv, virNetworkCreate);
 }
 
     ERL_NIF_TERM
 vert_virNetworkDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+    ERL_NIF_TERM res = {0};
+
+    res = vert_network_int_res(env, argv, virNetworkDestroy);
+    (void)vert_network_int_res(env, argv, virNetworkFree);
+
+    return res;
+}
+
+/*
+ * Internal functions
+ */
+    ERL_NIF_TERM
+vert_network_res_res_cucharp(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        virNetworkPtr (*fp)(virConnectPtr, const unsigned char *)
+        )
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary buf = {0};
+
     VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, buf);
+
+    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+
+    np->res = fp(vp->res, buf.data);
+
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
+}
+
+    ERL_NIF_TERM
+vert_network_ccharp_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        const char *(*fp)(virNetworkPtr))
+{
+    VERT_RESOURCE *np = NULL;
+    char *name = NULL;
+
+    ERL_NIF_TERM term = {0};
 
 
     VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
 
-    VERTERR(virNetworkDestroy(np->res) != 0);
-    VERTERR(virNetworkFree(np->res) != 0);
+    name = (char *)fp(np->res);
+    VERTERR(name == NULL);
 
-    np->res = NULL;
+    term = enif_make_string(env, name, ERL_NIF_LATIN1);
+    free(name);
 
-    return atom_ok;
+    return enif_make_tuple2(env,
+        atom_ok,
+        term);
+}
+
+    ERL_NIF_TERM
+vert_network_int_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virNetworkPtr))
+{
+    VERT_RESOURCE *np = NULL;
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    n = fp(np->res);
+    VERTERR(n == -1);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_int(env, n));
 }
