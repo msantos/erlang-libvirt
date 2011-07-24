@@ -226,16 +226,7 @@ vert_virDomainGetMaxMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virDomainGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *dp = NULL;
-    int max = -1;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    max = virDomainGetMaxVcpus(dp->res);
-    VERTERR(max < 0);
-
-    return enif_make_int(env, max);
+    return vert_domain_int_res(env, argv, virDomainGetMaxVcpus);
 }
 
     ERL_NIF_TERM
@@ -506,54 +497,21 @@ vert_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *dp = NULL;
-
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    n = virDomainShutdown(dp->res);
-
-    VERTERR(n != 0);
-
-    return atom_ok;
+    return vert_domain_int_res(env, argv, virDomainShutdown);
 }
 
 /* 0: VERT_RESOURCE */
     ERL_NIF_TERM
 vert_virDomainSuspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *dp = NULL;
-
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    n = virDomainSuspend(dp->res);
-
-    VERTERR(n != 0);
-
-    return atom_ok;
+    return vert_domain_int_res(env, argv, virDomainSuspend);
 }
 
 /* 0: VERT_RESOURCE */
     ERL_NIF_TERM
 vert_virDomainResume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *dp = NULL;
-
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    n = virDomainResume(dp->res);
-
-    VERTERR(n != 0);
-
-    return atom_ok;
+    return vert_domain_int_res(env, argv, virDomainResume);
 }
 
     ERL_NIF_TERM
@@ -585,19 +543,13 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virDomainUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    VERT_RESOURCE *dp = NULL;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    VERTERR(virDomainUndefine(dp->res) == -1); /* Domain is still running */
-
-    return atom_ok;
+    return vert_domain_int_res(env, argv, virDomainUndefine);
 }
 
     ERL_NIF_TERM
 vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+#if HAVE_VIRDOMAINCREATEWITHFLAGS
     VERT_RESOURCE *dp = NULL;
     int flags = 0;
 
@@ -605,27 +557,47 @@ vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
     VERT_GET_INT(1, flags);
 
-#if HAVE_VIRDOMAINCREATEWITHFLAGS
     VERTERR(virDomainCreateWithFlags(dp->res, flags) == -1);
-#else
-    VERTERR(virDomainCreate(dp->res) == -1);
-#endif
 
     return atom_ok;
+#else
+    return vert_domain_int_res(env, argv, virDomainUndefine);
+#endif
 }
 
     ERL_NIF_TERM
 vert_virDomainDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
+    ERL_NIF_TERM res = {0};
+
+
+    res = vert_domain_int_res(env, argv, virDomainDestroy);
+    (void)vert_domain_int_res(env, argv, virDomainFree);
+
+    return res;
+}
+
+/*
+ * Internal function
+ */
+    ERL_NIF_TERM
+vert_domain_int_res(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virDomainPtr))
+{
     VERT_RESOURCE *dp = NULL;
+
+    int n = -1;
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainDestroy(dp->res) != 0);
-    VERTERR(virDomainFree(dp->res) != 0);
+    n = fp(dp->res);
 
-    dp->res = NULL;
+    VERTERR(n == -1);
 
-    return atom_ok;
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_int(env, n));
 }

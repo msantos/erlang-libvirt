@@ -413,13 +413,13 @@ virInterfaceCreate(#resource{type = interface, res = Res}) ->
 %%-------------------------------------------------------------------------
 
 virDomainUndefine(#resource{type = domain, res = Res}) ->
-    call(virDomainUndefine, [Res]).
+    ok(call(virDomainUndefine, [Res])).
 
 virDomainSuspend(#resource{type = domain, res = Res}) ->
-    call(virDomainSuspend, [Res]).
+    ok(call(virDomainSuspend, [Res])).
 
 virDomainShutdown(#resource{type = domain, res = Res}) ->
-    call(virDomainShutdown, [Res]).
+    ok(call(virDomainShutdown, [Res])).
 
 %virDomainSetVcpus(#resource{type = domain, res = Res}, Nvcpus) ->
 %virDomainSetSchedulerParameters(#resource{type = domain, res = Res}, Params, Nparams) ->
@@ -433,7 +433,7 @@ virDomainSave(#resource{type = domain, res = Res}, To) when is_list(To) ->
     call(virDomainSave, [Res, To]).
 
 virDomainResume(#resource{type = domain, res = Res}) ->
-    call(virDomainResume, [Res]).
+    ok(call(virDomainResume, [Res])).
 
 virDomainRestore(#resource{type = connect, res = Res}, From) ->
     call(virDomainRestore, [Res, From]).
@@ -539,7 +539,7 @@ virDomainGetAutostart(#resource{type = domain, res = Res}) ->
 %virDomainDetachDevice(#resource{type = domain, res = Res}, Xml) ->
 
 virDomainDestroy(#resource{type = domain, res = Res}) ->
-    call(virDomainDestroy, [Res]).
+    ok(call(virDomainDestroy, [Res])).
 
 virDomainDefineXML(#resource{type = connect, res = Res}, Xml) when is_binary(Xml); is_list(Xml) ->
     call(virDomainDefineXML, [Res, Xml]).
@@ -547,7 +547,7 @@ virDomainDefineXML(#resource{type = connect, res = Res}, Xml) when is_binary(Xml
 %virDomainCreateXML(Conn, XmlDesc, Flags) ->
 
 virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flags) ->
-    call(virDomainCreate, [Res, Flags]).
+    ok(call(virDomainCreate, [Res, Flags])).
 
 %virDomainCoreDump(#resource{type = domain, res = Res}, To, Flags) ->
 %virDomainBlockStats(#resource{type = domain, res = Res}, Path, Stats, Size) ->
@@ -826,6 +826,9 @@ state({domain, crashed}) -> ?VIR_DOMAIN_CRASHED.
 bool({ok, 0}) -> false;
 bool({ok, 1}) -> true;
 bool(Error) -> Error.
+
+ok({ok, _}) -> ok;
+ok(Error) -> Error.
 
 privdir(File) ->
     filename:join([

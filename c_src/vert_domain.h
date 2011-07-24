@@ -59,3 +59,9 @@ ERL_NIF_TERM vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TER
 ERL_NIF_TERM vert_virDomainUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+
+ERL_NIF_TERM vert_domain_int_res(
+    ErlNifEnv *env,
+    const ERL_NIF_TERM argv[],
+    int (*fp)(virDomainPtr)
+    );
