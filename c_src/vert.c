@@ -55,7 +55,7 @@ typedef struct _vert_state {
 } VERT_STATE;
 
 typedef struct _vert_cast {
-    ErlNifPid *pid;
+    ErlNifPid pid;
     char name[MAX_ATOM_LEN+1];
     int argc;
     ERL_NIF_TERM *argv;
@@ -176,12 +176,11 @@ vert_loop(void *arg)
 
         (void)enif_send(
                 NULL,
-                cmd->pid,
+                &cmd->pid,
                 env,
                 enif_make_tuple2(env, atom_vert, res)
                 );
 
-        enif_free(cmd->pid);
         enif_free(cmd->argv);
 
         enif_clear_env(env);
@@ -201,11 +200,13 @@ ERR:
 vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_STATE *state = NULL;
-    VERT_CAST cmd = {0};
+    VERT_CAST cmd;
     ERL_NIF_TERM res = {0};
 
 
     state = enif_priv_data(env);
+
+    (void)memset(&cmd, '\0', sizeof(cmd));
 
     if (!enif_get_atom(env, argv[0], cmd.name, sizeof(cmd.name), ERL_NIF_LATIN1))
         return enif_make_badarg(env);
@@ -215,14 +216,7 @@ vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     if (cmd.argv == NULL)
         return error_tuple(env, atom_enomem);
 
-    cmd.pid = enif_alloc(sizeof(ErlNifPid));
-
-    if (cmd.pid == NULL) {
-        free(cmd.argv);
-        return error_tuple(env, atom_enomem);
-    }
-
-    (void)enif_self(env, cmd.pid);
+    (void)enif_self(env, &cmd.pid);
     (void)memcpy(cmd.argv, &argv[1], sizeof(ERL_NIF_TERM) * (argc-1));
     cmd.argc = argc-1;
 
