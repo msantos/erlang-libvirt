@@ -69,14 +69,25 @@ error_tuple(ErlNifEnv *env, ERL_NIF_TERM error)
 
 
     ERL_NIF_TERM
-vert_make_resource(ErlNifEnv *env, ERL_NIF_TERM type, ERL_NIF_TERM resource)
+vert_make_resource(ErlNifEnv *env, VERT_RESOURCE *vp, ERL_NIF_TERM type)
 {
+    ERL_NIF_TERM res = {0};
+
+
+    if (vp->res == NULL) {
+        enif_release_resource(vp);
+        return verterr(env);
+    }
+
+    res = enif_make_resource(env, vp);
+    enif_release_resource(vp);
+
     return enif_make_tuple2(env,
         atom_ok,
         enif_make_tuple4(env,
         atom_resource,
         type,
-        enif_make_ref(env), resource));
+        enif_make_ref(env), res));
 }
 
 

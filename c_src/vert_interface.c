@@ -50,7 +50,12 @@ vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 
     ifp->res = virInterfaceLookupByName(vp->res, name);
 
-    VERT_RET_RESOURCE(ifp, atom_interface);
+    if (ifp->res == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, ifp, atom_interface);
 }
 
     ERL_NIF_TERM
@@ -69,7 +74,12 @@ vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 
     ifp->res = virInterfaceLookupByMACString(vp->res, mac);
 
-    VERT_RET_RESOURCE(ifp, atom_interface);
+    if (ifp->res == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, ifp, atom_interface);
 }
 
     ERL_NIF_TERM
@@ -144,7 +154,12 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     ifp->res = virInterfaceDefineXML(vp->res, (char *)cfg.data, 0);
 
-    VERT_RET_RESOURCE(ifp, atom_interface);
+    if (ifp->res == NULL) {
+        enif_release_resource(ifp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, ifp, atom_interface);
 }
 
     ERL_NIF_TERM

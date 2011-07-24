@@ -356,7 +356,7 @@ vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr 
     /* Disable logging to stderr */
     virConnSetErrorFunc(vp->res, NULL, NULL);
 
-    VERT_RET_RESOURCE(vp, atom_connect);
+    return vert_make_resource(env, vp, atom_connect);
 }
 
     ERL_NIF_TERM

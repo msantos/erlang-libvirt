@@ -49,7 +49,12 @@ vert_virDomainLookupByID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp->res = virDomainLookupByID(vp->res, id);
 
-    VERT_RET_RESOURCE(dp, atom_domain);
+    if (dp->res == NULL) {
+        enif_release_resource(dp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, dp, atom_domain);
 }
 
     ERL_NIF_TERM
@@ -68,7 +73,12 @@ vert_virDomainLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp->res = virDomainLookupByName(vp->res, name);
 
-    VERT_RET_RESOURCE(dp, atom_domain);
+    if (dp->res == NULL) {
+        enif_release_resource(dp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, dp, atom_domain);
 }
 
     ERL_NIF_TERM
@@ -84,7 +94,12 @@ vert_virDomainLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp->res = virDomainLookupByUUID(vp->res, (const unsigned char *)uuid);
 
-    VERT_RET_RESOURCE(dp, atom_domain);
+    if (dp->res == NULL) {
+        enif_release_resource(dp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, dp, atom_domain);
 }
 
     ERL_NIF_TERM
@@ -559,7 +574,12 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     dp->res = virDomainDefineXML(vp->res, (char *)cfg.data);
 
-    VERT_RET_RESOURCE(dp, atom_domain);
+    if (dp->res == NULL) {
+        enif_release_resource(dp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, dp, atom_domain);
 }
 
     ERL_NIF_TERM

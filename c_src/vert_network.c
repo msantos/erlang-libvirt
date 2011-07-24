@@ -50,7 +50,12 @@ vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     np->res = virNetworkLookupByName(vp->res, name);
 
-    VERT_RET_RESOURCE(np, atom_network);
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -69,7 +74,12 @@ vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     np->res = virNetworkLookupByUUID(vp->res, buf.data);
 
-    VERT_RET_RESOURCE(np, atom_network);
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -88,7 +98,12 @@ vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
 
     np->res = virNetworkLookupByUUIDString(vp->res, (const char *)buf.data);
 
-    VERT_RET_RESOURCE(np, atom_network);
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
 }
 
     ERL_NIF_TERM
@@ -209,7 +224,12 @@ vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     np->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
 
-    VERT_RET_RESOURCE(np, atom_network);
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
 }
 
     ERL_NIF_TERM

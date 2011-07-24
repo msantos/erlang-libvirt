@@ -117,17 +117,6 @@ enum {
         return enif_make_badarg(env); \
 } while (0)
 
-#define VERT_RET_RESOURCE(var, atom) do { \
-    ERL_NIF_TERM res = {0}; \
-    if (var->res == NULL) { \
-        enif_release_resource(var); \
-        return verterr(env); \
-    } \
-    res = enif_make_resource(env, var); \
-    enif_release_resource(var); \
-    return vert_make_resource(env, atom, res); \
-} while (0)
-
 #define VERT_COPY_LIST(dst, src, size) do { \
     int i = 0; \
     dst = enif_make_list(env, 0); \
