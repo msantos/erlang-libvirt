@@ -128,7 +128,12 @@
 -on_load(on_load/0).
 
 on_load() ->
-    erlang:load_nif(niflib(), []).
+    case erlang:system_info(smp_support) of
+        true ->
+            erlang:load_nif(niflib(), []);
+        false ->
+            {error, "Requires smp support (-smp flag to enable)"}
+    end.
 
 
 %%-------------------------------------------------------------------------
