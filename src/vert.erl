@@ -383,7 +383,7 @@ virInterfaceLookupByMACString(#resource{type = connect, res = Res}, Macstr)
 %    call(virInterfaceIsActive, [Res]).
 
 virInterfaceGetXMLDesc(#resource{type = interface, res = Res}) ->
-    call(virInterfaceGetXMLDesc, [Res, 0]).
+    virInterfaceGetXMLDesc(Res, 0).
 virInterfaceGetXMLDesc(#resource{type = interface, res = Res}, Flags)
     when is_integer(Flags) ->
     call(virInterfaceGetXMLDesc, [Res, Flags]).
@@ -602,61 +602,61 @@ virConnectNumOfDefinedDomains(#resource{type = connect, res = Res}) ->
 
 virConnectListStoragePools(Res) ->
     {ok, Maxnames} = virConnectNumOfStoragePools(Res),
-    call(virConnectListStoragePools, [Res, Maxnames]).
+    virConnectListStoragePools(Res, Maxnames).
 virConnectListStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListStoragePools, [Res, Maxnames]).
 
 virConnectListSecrets(Res) ->
     {ok, Maxuuids} = virConnectNumOfSecrets(Res),
-    call(virConnectListSecrets, [Res, Maxuuids]).
+    virConnectListSecrets(Res, Maxuuids).
 virConnectListSecrets(#resource{type = connect, res = Res}, Maxuuids) when is_integer(Maxuuids) ->
     call(virConnectListSecrets, [Res, Maxuuids]).
 
 virConnectListNetworks(Res) ->
     {ok, Maxnames} = virConnectNumOfNetworks(Res),
-    call(virConnectListNetworks, [Res, Maxnames]).
+    virConnectListNetworks(Res, Maxnames).
 virConnectListNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListNetworks, [Res, Maxnames]).
 
 virConnectListNWFilters(Res) ->
     {ok, Maxnames} = virConnectListNWFilters(Res),
-    call(virConnectListNWFilters, [Res, Maxnames]).
+    virConnectListNWFilters(Res, Maxnames).
 virConnectListNWFilters(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListNWFilters, [Res, Maxnames]).
 
 virConnectListInterfaces(Res) ->
     {ok, Maxnames} = virConnectNumOfInterfaces(Res),
-    call(virConnectListInterfaces, [Res, Maxnames]).
+    virConnectListInterfaces(Res, Maxnames).
 virConnectListInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListInterfaces, [Res, Maxnames]).
 
 virConnectListDomains(Res) ->
     {ok, Maxids} = virConnectNumOfDomains(Res),
-    call(virConnectListDomains, [Res, Maxids]).
+    virConnectListDomains(Res, Maxids).
 virConnectListDomains(#resource{type = connect, res = Res}, Maxids) when is_integer(Maxids) ->
     call(virConnectListDomains, [Res, Maxids]).
 
 virConnectListDefinedStoragePools(Res) ->
     {ok, Maxnames} = virConnectNumOfDefinedStoragePools(Res),
-    call(virConnectListDefinedStoragePools, [Res, Maxnames]).
+    virConnectListDefinedStoragePools(Res, Maxnames).
 virConnectListDefinedStoragePools(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListDefinedStoragePools, [Res, Maxnames]).
 
 virConnectListDefinedNetworks(Res) ->
     {ok, Maxnames} = virConnectNumOfDefinedNetworks(Res),
-    call(virConnectListDefinedNetworks, [Res, Maxnames]).
+    virConnectListDefinedNetworks(Res, Maxnames).
 virConnectListDefinedNetworks(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListDefinedNetworks, [Res, Maxnames]).
 
 virConnectListDefinedInterfaces(Res) ->
     {ok, Maxnames} = virConnectNumOfDefinedInterfaces(Res),
-    call(virConnectListDefinedInterfaces, [Res, Maxnames]).
+    virConnectListDefinedInterfaces(Res, Maxnames).
 virConnectListDefinedInterfaces(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListDefinedInterfaces, [Res, Maxnames]).
 
 virConnectListDefinedDomains(Res) ->
     {ok, Maxnames} = virConnectNumOfDefinedDomains(Res),
-    call(virConnectListDefinedDomains, [Res, Maxnames]).
+    virConnectListDefinedDomains(Res, Maxnames).
 virConnectListDefinedDomains(#resource{type = connect, res = Res}, Maxnames) when is_integer(Maxnames) ->
     call(virConnectListDefinedDomains, [Res, Maxnames]).
 
