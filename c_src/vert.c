@@ -78,6 +78,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
 
     atom_ok = enif_make_atom(env, "ok");
     atom_error = enif_make_atom(env, "error");
+    atom_badarg = enif_make_atom(env, "badarg");
     atom_undefined = enif_make_atom(env, "undefined");
     atom_unsupported = enif_make_atom(env, "unsupported");
     atom_enomem = enif_make_atom(env, "enomem");
@@ -136,6 +137,7 @@ vert_loop(void *arg)
 
     fd_set rfds;
     ssize_t n = 0;
+    ERL_NIF_TERM res = {0};
 
     ErlNifFunc *fp = NULL;
 
@@ -145,8 +147,6 @@ vert_loop(void *arg)
         goto ERR;
 
     for ( ; ; ) {
-        ERL_NIF_TERM res = enif_make_badarg(env);
-
         FD_ZERO(&rfds);
         FD_SET(state->fd[VERT_READ], &rfds);
 
@@ -173,6 +173,9 @@ vert_loop(void *arg)
             }
         }
 
+        if (fp->name == NULL)
+            res = error_tuple(env, atom_badarg);
+
         (void)enif_send(
                 NULL,
                 &cmd.pid,
@@ -181,7 +184,6 @@ vert_loop(void *arg)
                 );
 
         enif_free(cmd.argv);
-
         enif_clear_env(env);
     }
 

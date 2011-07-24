@@ -39,6 +39,7 @@
 
 
 ERL_NIF_TERM atom_error;
+ERL_NIF_TERM atom_badarg;
 ERL_NIF_TERM atom_undefined;
 ERL_NIF_TERM atom_unsupported;
 ERL_NIF_TERM atom_enomem;
