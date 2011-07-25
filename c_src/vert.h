@@ -139,3 +139,22 @@ enum {
         return atom_enomem; \
     bin.data[bin.size-1] = '\0'; \
 } while (0)
+
+#define VERT_FUN_INT_RES(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+ \
+    VERT_RESOURCE *vp = NULL; \
+    int n = -1; \
+ \
+    VERT_GET_RESOURCE(0, vp, type); \
+ \
+    n = fun(vp->res); \
+ \
+    if (n < 0) return verterr(env); \
+ \
+    return enif_make_tuple2(env, \
+            atom_ok, \
+            enif_make_int(env, n)); \
+}

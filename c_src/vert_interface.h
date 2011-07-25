@@ -53,10 +53,6 @@ ERL_NIF_TERM vert_interface_ccharp_res_uint(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
         char *(*fp)(virInterfacePtr, unsigned int)); 
-ERL_NIF_TERM vert_interface_int_res(ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        int (*fp)(virInterfacePtr)
-        );
 ERL_NIF_TERM vert_interface_int_res_int(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],

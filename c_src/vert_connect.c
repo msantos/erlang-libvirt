@@ -34,6 +34,27 @@
 #include "vert_connect.h"
 
 
+VERT_FUN_INT_RES(virConnectIsEncrypted, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectIsSecure, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfDomains, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfInterfaces, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfNetworks, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfStoragePools, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfSecrets, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfDefinedDomains, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfDefinedInterfaces, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfDefinedNetworks, VERT_RES_CONNECT)
+VERT_FUN_INT_RES(virConnectNumOfDefinedStoragePools, VERT_RES_CONNECT)
+#ifdef HAVE_VIRCONNECTNUMOFNWFILTERS
+VERT_FUN_INT_RES(virConnectNumOfNWFilters, VERT_RES_CONNECT)
+#else
+    ERL_NIF_TERM
+vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    return error_tuple(env, atom_unsupported);
+}
+#endif
+
 /* If the string is truncated, return badarg
  * If the string is empty or has the wrong encoding, consider it to be NULL
  *  This assumes that enif_get_string() does not modify the buffer
@@ -168,18 +189,6 @@ vert_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
     ERL_NIF_TERM
-vert_virConnectIsEncrypted(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectIsEncrypted);
-}
-
-    ERL_NIF_TERM
-vert_virConnectIsSecure(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectIsSecure);
-}
-
-    ERL_NIF_TERM
 vert_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
@@ -194,70 +203,6 @@ vert_virNodeGetSecurityModel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
 
     return enif_make_tuple2(env,
         atom_ok, buf);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfDomains);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfInterfaces);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfNetworks);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfStoragePools);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfSecrets(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfSecrets);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-#ifdef HAVE_VIRCONNECTNUMOFNWFILTERS
-    return vert_connect_int_res(env, argv, virConnectNumOfNWFilters);
-#else
-    return error_tuple(env, atom_unsupported);
-#endif
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfDefinedDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfDefinedDomains);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfDefinedInterfaces(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfDefinedInterfaces);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfDefinedNetworks(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfDefinedNetworks);
-}
-
-    ERL_NIF_TERM
-vert_virConnectNumOfDefinedStoragePools(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectNumOfDefinedStoragePools);
 }
 
     ERL_NIF_TERM
@@ -351,24 +296,6 @@ vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr 
     virConnSetErrorFunc(vp->res, NULL, NULL);
 
     return vert_make_resource(env, vp, atom_connect);
-}
-
-    ERL_NIF_TERM
-vert_connect_int_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], int (*fp)(virConnectPtr))
-{   
-    VERT_RESOURCE *vp = NULL;
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-
-    n = fp(vp->res);
-
-    VERTERR(n < 0);
-
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_int(env, n));
 }
 
     ERL_NIF_TERM

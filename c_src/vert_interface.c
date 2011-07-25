@@ -34,6 +34,9 @@
 #include "vert_interface.h"
 
 
+VERT_FUN_INT_RES(virInterfaceUndefine, VERT_RES_INTERFACE)
+
+
     ERL_NIF_TERM
 vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -90,11 +93,6 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return vert_make_resource(env, ifp, atom_interface);
 }
 
-    ERL_NIF_TERM
-vert_virInterfaceUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_interface_int_res(env, argv, virInterfaceUndefine);
-}
 
     ERL_NIF_TERM
 vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -188,27 +186,6 @@ vert_interface_ccharp_res_uint(
     return enif_make_tuple2(env,
         atom_ok,
         enif_make_string(env, p, ERL_NIF_LATIN1));
-}
-
-    ERL_NIF_TERM
-vert_interface_int_res(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        int (*fp)(virInterfacePtr))
-{
-    VERT_RESOURCE *ifp = NULL;
-    int n = 0;
-
-
-    VERT_GET_RESOURCE(0, ifp, VERT_RES_INTERFACE);
-
-    n = fp(ifp->res);
-
-    VERTERR(n < 0);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_int(env, n));
 }
 
     ERL_NIF_TERM
