@@ -515,13 +515,13 @@ virDomainGetInfo(#resource{type = domain, res = Res}) ->
             NrVirtCpu:2/native-unsigned-integer-unit:8, % _Pad1:16,
             CpuTime:8/native-unsigned-integer-unit:8
             >>} ->
-            #domain_info{
+            {ok, #domain_info{
                 state = state({domain, State}),
                 maxmem = MaxMem,
                 memory = Memory,
                 nrvirtcpu = NrVirtCpu,
                 cputime = CpuTime
-            };
+            }};
         Err ->
             Err
     end.

@@ -152,7 +152,9 @@ vert_virDomainGetID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERTERR(id == (unsigned int)-1);
 
-    return enif_make_uint(env, id);
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_uint(env, id));
 }
 
     ERL_NIF_TERM
@@ -220,7 +222,10 @@ vert_virDomainGetMaxMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     mem = virDomainGetMaxMemory(dp->res);    // XXX can also be NULL for domain0
 
     VERTERR(mem == 0);
-    return enif_make_ulong(env, mem);
+
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_ulong(env, mem));
 }
 
     ERL_NIF_TERM
@@ -271,7 +276,9 @@ vert_virDomainGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     name = virDomainGetName(dp->res);
     VERTERR(name == NULL);
 
-    return enif_make_string(env, name, ERL_NIF_LATIN1);
+    return enif_make_tuple2(env,
+            atom_ok,
+            enif_make_string(env, name, ERL_NIF_LATIN1));
 }
 
     ERL_NIF_TERM
@@ -291,7 +298,9 @@ vert_virDomainGetOSType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     term = enif_make_string(env, name, ERL_NIF_LATIN1);
     free(name);
 
-    return term;
+    return enif_make_tuple2(env,
+            atom_ok,
+            term);
 }
 
     ERL_NIF_TERM

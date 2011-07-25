@@ -93,7 +93,9 @@ vert_virNetworkGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     BINCOPY(term, uuid, sizeof(uuid));
 
-    return term;
+    return enif_make_tuple2(env,
+        atom_ok,
+        term);
 }
 
     ERL_NIF_TERM
@@ -111,7 +113,9 @@ vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     desc = virNetworkGetXMLDesc(np->res, flags);
     VERTERR(desc == NULL);
 
-    return enif_make_string(env, desc, ERL_NIF_LATIN1);
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, desc, ERL_NIF_LATIN1));
 }
 
     ERL_NIF_TERM

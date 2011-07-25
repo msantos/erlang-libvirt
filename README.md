@@ -120,8 +120,8 @@ running domains. The example is taken from:
         ok = vert:virDomainDestroy(Domain).
 
     info(Domain) ->
-        Name = vert:virDomainGetName(Domain),
-        Info = vert:virDomainGetInfo(Domain),
+        {ok, Name} = vert:virDomainGetName(Domain),
+        {ok, Info} = vert:virDomainGetInfo(Domain),
 
         [{name, Name}, {info, Info}].
 

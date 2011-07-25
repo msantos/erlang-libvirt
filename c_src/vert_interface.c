@@ -155,8 +155,6 @@ vert_interface_ccharp_res(
     VERT_RESOURCE *vp = NULL;
     const char *p = NULL;
 
-    ERL_NIF_TERM term = {0};
-
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_INTERFACE);
 
@@ -164,10 +162,8 @@ vert_interface_ccharp_res(
 
     VERTERR(p == NULL);
 
-    term = enif_make_tuple2(env, atom_ok,
+    return  enif_make_tuple2(env, atom_ok,
         enif_make_string(env, p, ERL_NIF_LATIN1));
-
-    return term;
 }
 
     ERL_NIF_TERM
