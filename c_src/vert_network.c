@@ -37,19 +37,37 @@
     ERL_NIF_TERM
 vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByName);
+    return vert_network_res_res_ccharp(env, argv, virNetworkLookupByName);
 }
 
     ERL_NIF_TERM
 vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByUUID);
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary buf = {0};
+
+    VERT_RESOURCE *np = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, buf);
+
+    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+
+    np->res = virNetworkLookupByUUID(vp->res, buf.data);
+
+    if (np->res == NULL) {
+        enif_release_resource(np);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, np, atom_network);
 }
 
     ERL_NIF_TERM
 vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_network_res_res_cucharp(env, argv, virNetworkLookupByUUID);
+    return vert_network_res_res_ccharp(env, argv, virNetworkLookupByUUIDString);
 }
 
     ERL_NIF_TERM
@@ -69,13 +87,44 @@ vert_virNetworkGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_network_ccharp_res(env, argv, virNetworkGetBridgeName);
+    VERT_RESOURCE *np = NULL;
+    char *name = NULL;
+
+    ERL_NIF_TERM term = {0};
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    name = virNetworkGetBridgeName(np->res);
+    VERTERR(name == NULL);
+
+    term = enif_make_string(env, name, ERL_NIF_LATIN1);
+    free(name);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        term);
 }
 
     ERL_NIF_TERM
 vert_virNetworkGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_network_ccharp_res(env, argv, virNetworkGetName);
+    VERT_RESOURCE *np = NULL;
+    const char *name = NULL;
+
+    ERL_NIF_TERM term = {0};
+
+
+    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
+
+    name = virNetworkGetName(np->res);
+    VERTERR(name == NULL);
+
+    term = enif_make_string(env, name, ERL_NIF_LATIN1);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        term);
 }
 
     ERL_NIF_TERM
@@ -172,10 +221,10 @@ vert_virNetworkDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
  * Internal functions
  */
     ERL_NIF_TERM
-vert_network_res_res_cucharp(
+vert_network_res_res_ccharp(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
-        virNetworkPtr (*fp)(virConnectPtr, const unsigned char *)
+        virNetworkPtr (*fp)(virConnectPtr, const char *)
         )
 {
     VERT_RESOURCE *vp = NULL;
@@ -189,7 +238,7 @@ vert_network_res_res_cucharp(
 
     RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
-    np->res = fp(vp->res, buf.data);
+    np->res = fp(vp->res, (char *)buf.data);
 
     if (np->res == NULL) {
         enif_release_resource(np);
@@ -197,31 +246,6 @@ vert_network_res_res_cucharp(
     }
 
     return vert_make_resource(env, np, atom_network);
-}
-
-    ERL_NIF_TERM
-vert_network_ccharp_res(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        const char *(*fp)(virNetworkPtr))
-{
-    VERT_RESOURCE *np = NULL;
-    char *name = NULL;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    name = (char *)fp(np->res);
-    VERTERR(name == NULL);
-
-    term = enif_make_string(env, name, ERL_NIF_LATIN1);
-    free(name);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        term);
 }
 
     ERL_NIF_TERM
