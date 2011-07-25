@@ -768,37 +768,20 @@ cast(_,_,_,_) ->
 %%% Blocking API
 %%-------------------------------------------------------------------------
 call(Fun, Arg) ->
-    call(Fun, Arg, infinity).
-
-call(Fun, Arg, Timeout) when is_atom(Fun), is_list(Arg),
-    ( is_integer(Timeout) orelse Timeout == infinity ) ->
-    Self = self(),
-    {_Pid, Ref} = erlang:spawn_monitor(fun() -> block(Self, Fun, Arg, Timeout) end),
-    receive
-        {vert, Response} ->
-            Response;
-        {'DOWN', Ref, _Type, _Object, _Info} ->
-            {error, timeout}
-    end.
-
-block(Pid, Fun, Arg, Timeout) ->
     % Result is returned from the NIF
     % function, so not a tagged tuple
     case cast_2(Fun, Arg) of
         ok ->
-            wait(Pid, Timeout);
+            block();
         Error ->
-            Pid ! {vert, Error}
+            Error
     end.
 
-wait(Pid, Timeout) ->
+block() ->
     % Message sent by the background thread
     receive
-        {vert, _} = Response ->
-            Pid ! Response
-    after
-        Timeout ->
-            {error, timeout}
+        {vert, Response} ->
+            Response
     end.
 
 
