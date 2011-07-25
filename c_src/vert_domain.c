@@ -176,7 +176,7 @@ vert_virDomainGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetInfo(dp->res, &info) == -1);
+    VERTERR(virDomainGetInfo(dp->res, &info) < 0);
 
     dip.state = info.state;
     dip.maxMem = info.maxMem;
@@ -200,7 +200,7 @@ vert_virDomainGetJobInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetJobInfo(dp->res, &info) == -1);
+    VERTERR(virDomainGetJobInfo(dp->res, &info) < 0);
 
     BINCOPY(buf, &info, sizeof(virDomainInfo));
 
@@ -245,12 +245,12 @@ vert_virDomainGetMemoryParameters(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR( (virDomainGetMemoryParameters(dp->res, NULL, &n, 0) == -1) || n == 0);
+    VERTERR( (virDomainGetMemoryParameters(dp->res, NULL, &n, 0) < 0) || n == 0);
 
     if (!enif_alloc_binary(sizeof(virMemoryParameter)*n, &buf))
         return atom_enomem;
 
-    VERTERR(virDomainGetMemoryParameters(dp->res, buf.data, &n, 0) == -1);
+    VERTERR(virDomainGetMemoryParameters(dp->res, buf.data, &n, 0) < 0);
 
     return enif_make_tuple2(env,
             atom_ok,
@@ -314,7 +314,7 @@ vert_virDomainGetSchedulerParameters(ErlNifEnv *env, int argc, const ERL_NIF_TER
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetSchedulerParameters(dp->res, &params, &n) == -1);
+    VERTERR(virDomainGetSchedulerParameters(dp->res, &params, &n) < 0);
 
     BINCOPY(buf, &params, sizeof(virSchedParameter));
 
@@ -362,7 +362,7 @@ vert_virDomainGetSecurityLabel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetSecurityLabel(dp->res, &label) == -1);
+    VERTERR(virDomainGetSecurityLabel(dp->res, &label) < 0);
 
     BINCOPY(buf, &label, sizeof(virSecurityLabel));
 
@@ -379,7 +379,7 @@ vert_virDomainGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetUUID(dp->res, uuid) == -1);
+    VERTERR(virDomainGetUUID(dp->res, uuid) < 0);
     BINCOPY(buf, &uuid, sizeof(VIR_UUID_BUFLEN));
 
     return enif_make_tuple2(env, atom_ok, buf);
@@ -394,7 +394,7 @@ vert_virDomainGetUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
 
-    VERTERR(virDomainGetUUIDString(dp->res, uuid) == -1);
+    VERTERR(virDomainGetUUIDString(dp->res, uuid) < 0);
 
     return enif_make_tuple2(env, atom_ok,
         enif_make_string(env, uuid, ERL_NIF_LATIN1));
@@ -456,7 +456,7 @@ vert_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     n = virDomainSave(dp->res, (const char *)buf.data);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return atom_ok;
 }
@@ -475,7 +475,7 @@ vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     n = virDomainRestore(vp->res, (const char *)buf.data);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return atom_ok;
 }
@@ -574,7 +574,7 @@ vert_domain_int_res(
 
     n = fp(dp->res);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -598,7 +598,7 @@ vert_domain_int_res_int(
 
     n = fp(dp->res, flags);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return atom_ok;
 }

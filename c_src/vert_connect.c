@@ -364,7 +364,7 @@ vert_connect_int_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], int (*fp)(virCon
 
     n = fp(vp->res);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return enif_make_tuple2(env,
             atom_ok,
@@ -455,7 +455,7 @@ vert_connect_list_res_intp_int(
 
     n = fp(vp->res, array, max);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     VERT_COPY_LIST(list, array, n);
 
@@ -491,7 +491,7 @@ vert_connect_string_res_charpp_int(
 
     n = fp(vp->res, names, max);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     VERT_COPY_STRING(list, names, n);
 

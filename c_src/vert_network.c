@@ -261,7 +261,7 @@ vert_network_int_res(
     VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
 
     n = fp(np->res);
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return enif_make_tuple2(env,
         atom_ok,

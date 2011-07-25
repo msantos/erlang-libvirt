@@ -204,7 +204,7 @@ vert_interface_int_res(
 
     n = fp(ifp->res);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return enif_make_tuple2(env,
         atom_ok,
@@ -228,7 +228,7 @@ vert_interface_int_res_int(
 
     n = fp(ifp->res, (unsigned int)flags);
 
-    VERTERR(n == -1);
+    VERTERR(n < 0);
 
     return enif_make_tuple2(env,
         atom_ok,
