@@ -136,7 +136,7 @@ vert_cleanup(ErlNifEnv *env, void *obj)
         case VERT_RES_STORAGEPOOL:
             (void)virStoragePoolFree(vp->res);
             break;
-#if THIS_VERSION_SUPPORTS_FILTER
+#if VIRNWFILTERFREE
         case VERT_RES_FILTER:
             (void)virNWFilterFree(vp->res);
             break;

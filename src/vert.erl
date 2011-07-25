@@ -89,7 +89,6 @@
         virDomainCreate/2,
         virConnectOpen/1,
         virConnectOpenReadOnly/1,
-        virConnectClose/1,
         virConnectNumOfStoragePools/1,
         virConnectNumOfSecrets/1,
         virConnectNumOfNetworks/1,
@@ -572,9 +571,6 @@ virConnectOpenReadOnly(Name) when is_list(Name) ->
 
 %virConnectOpenAuth(Name, Auth, Flags) ->
 
-virConnectClose(#resource{type = connect, res = Res}) ->
-    call(virConnectClose, [Res]).
-
 virConnectNumOfStoragePools(#resource{type = connect, res = Res}) ->
     call(virConnectNumOfStoragePools, [Res]).
 
@@ -746,6 +742,9 @@ virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
 %#%virDomainFree(#resource{type = domain, res = Res})
 %#%virConnectRef(Conn)
 %#%virDomainCreateLinux(Conn, XmlDesc, Flags)
+
+% Called by virConnectPtr dtor
+%#%virConnectClose(#resource{type = connect, res = Res})
 
 
 %%-------------------------------------------------------------------------

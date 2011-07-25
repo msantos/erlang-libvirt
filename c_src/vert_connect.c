@@ -52,12 +52,6 @@ vert_virConnectOpenReadOnly(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
     ERL_NIF_TERM
-vert_virConnectClose(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_int_res(env, argv, virConnectClose);
-}
-
-    ERL_NIF_TERM
 vert_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     return vert_connect_charp_res(env, argv, virConnectGetCapabilities);

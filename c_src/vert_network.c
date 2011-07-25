@@ -161,12 +161,7 @@ vert_virNetworkCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virNetworkDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    ERL_NIF_TERM res = {0};
-
-    res = vert_network_int_res(env, argv, virNetworkDestroy);
-    (void)vert_network_int_res(env, argv, virNetworkFree);
-
-    return res;
+    return vert_network_int_res(env, argv, virNetworkDestroy);
 }
 
 /*

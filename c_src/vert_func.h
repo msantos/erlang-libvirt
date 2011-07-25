@@ -34,7 +34,6 @@ ErlNifFunc vert_funcs[] = {
     /* connect */
     {"virConnectOpen", 1, vert_virConnectOpen},
     {"virConnectOpenReadOnly", 1, vert_virConnectOpenReadOnly},
-    {"virConnectClose", 1, vert_virConnectClose},
     {"virConnectGetCapabilities", 1, vert_virConnectGetCapabilities},
     {"virConnectGetHostname", 1, vert_virConnectGetHostname},
     {"virConnectGetLibVersion", 1, vert_virConnectGetLibVersion},

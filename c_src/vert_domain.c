@@ -543,13 +543,7 @@ vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virDomainDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    ERL_NIF_TERM res = {0};
-
-
-    res = vert_domain_int_res(env, argv, virDomainDestroy);
-    (void)vert_domain_int_res(env, argv, virDomainFree);
-
-    return res;
+    return vert_domain_int_res(env, argv, virDomainDestroy);
 }
 
 
