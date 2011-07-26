@@ -166,7 +166,7 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     VERT_RESOURCE *vp = NULL; \
     const char *p = NULL; \
  \
-    VERT_GET_RESOURCE(0, vp, VERT_RES_INTERFACE); \
+    VERT_GET_RESOURCE(0, vp, type); \
  \
     p = fun(vp->res); \
  \
@@ -174,4 +174,27 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
  \
     return  enif_make_tuple2(env, atom_ok, \
         enif_make_string(env, p, ERL_NIF_LATIN1)); \
+}
+
+#define VERT_FUN_CHARP_RES(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    char *p = NULL; \
+ \
+    ERL_NIF_TERM term = {0}; \
+ \
+    VERT_GET_RESOURCE(0, vp, type); \
+ \
+    p = fun(vp->res); \
+ \
+    VERTERR(p == NULL); \
+ \
+    term = enif_make_tuple2(env, atom_ok, \
+    enif_make_string(env, p, ERL_NIF_LATIN1)); \
+ \
+    free(p); \
+ \
+    return term; \
 }

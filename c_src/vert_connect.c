@@ -55,7 +55,11 @@ vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 }
 #endif
 
-VERT_FUN_CCHARP_RES(virConnectGetType, VERT_RES_CONNECT);
+VERT_FUN_CCHARP_RES(virConnectGetType, VERT_RES_CONNECT)
+
+VERT_FUN_CHARP_RES(virConnectGetCapabilities, VERT_RES_CONNNECT)
+VERT_FUN_CHARP_RES(virConnectGetHostname, VERT_RES_CONNNECT)
+VERT_FUN_CHARP_RES(virConnectGetURI, VERT_RES_CONNNECT)
 
 
 /* If the string is truncated, return badarg
@@ -73,18 +77,6 @@ vert_virConnectOpen(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 vert_virConnectOpenReadOnly(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     return vert_connect_res_charp(env, argv, virConnectOpenReadOnly);
-}
-
-    ERL_NIF_TERM
-vert_virConnectGetCapabilities(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_charp_res(env, argv, virConnectGetCapabilities);
-}
-
-    ERL_NIF_TERM
-vert_virConnectGetHostname(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_charp_res(env, argv, virConnectGetCapabilities);
 }
 
     ERL_NIF_TERM
@@ -177,12 +169,6 @@ vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
     return enif_make_tuple2(env,
         atom_ok,
         list);
-}
-
-    ERL_NIF_TERM
-vert_virConnectGetURI(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_charp_res(env, argv, virConnectGetURI);
 }
 
     ERL_NIF_TERM
@@ -293,29 +279,6 @@ vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr 
     virConnSetErrorFunc(vp->res, NULL, NULL);
 
     return vert_make_resource(env, vp, atom_connect);
-}
-
-    ERL_NIF_TERM
-vert_connect_charp_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], char *(*fp)(virConnectPtr))
-{
-    VERT_RESOURCE *vp = NULL;
-    char *p = NULL;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-
-    p = fp(vp->res);
-
-    VERTERR(p == NULL);
-
-    term = enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
-
-    free(p);
-
-    return term;
 }
 
     ERL_NIF_TERM
