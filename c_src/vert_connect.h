@@ -68,7 +68,6 @@ ERL_NIF_TERM vert_virConnectListDefinedStoragePools(ErlNifEnv *env, int argc, co
 /* Internal functions */
 ERL_NIF_TERM vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr (*fp)(const char *));
 ERL_NIF_TERM vert_connect_charp_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], char *(*fp)(virConnectPtr));
-ERL_NIF_TERM vert_connect_ccharp_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], const char *(*fp)(virConnectPtr));
 ERL_NIF_TERM vert_connect_ulong_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], int (*fp)(virConnectPtr, unsigned long *));
 ERL_NIF_TERM vert_connect_list_res_intp_int(ErlNifEnv *env, const ERL_NIF_TERM argv[], int (*fp)(virConnectPtr, int *, int));
 ERL_NIF_TERM vert_connect_string_res_charpp_int(ErlNifEnv *env, const ERL_NIF_TERM argv[], int (*fp)(virConnectPtr, char **, int));

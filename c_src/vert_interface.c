@@ -36,6 +36,9 @@
 
 VERT_FUN_INT_RES(virInterfaceUndefine, VERT_RES_INTERFACE)
 
+VERT_FUN_CCHARP_RES(virInterfaceGetName, VERT_RES_INTERFACE)
+VERT_FUN_CCHARP_RES(virInterfaceGetMACString, VERT_RES_INTERFACE)
+
 
     ERL_NIF_TERM
 vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -47,18 +50,6 @@ vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     return vert_interface_res_res_ccharp(env, argv, virInterfaceLookupByMACString);
-}
-
-    ERL_NIF_TERM
-vert_virInterfaceGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_interface_ccharp_res(env, argv, virInterfaceGetName);
-}
-
-    ERL_NIF_TERM
-vert_virInterfaceGetMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_interface_ccharp_res(env, argv, virInterfaceGetMACString);
 }
 
     ERL_NIF_TERM
@@ -97,13 +88,13 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     ERL_NIF_TERM
 vert_virInterfaceCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_interface_int_res_int(env, argv, virInterfaceCreate);
+    return vert_interface_int_res_uint(env, argv, virInterfaceCreate);
 }
 
     ERL_NIF_TERM
 vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-    return vert_interface_int_res_int(env, argv, virInterfaceDestroy);
+    return vert_interface_int_res_uint(env, argv, virInterfaceDestroy);
 }
 
 /*
@@ -145,26 +136,6 @@ vert_interface_res_res_ccharp(
 }
 
     ERL_NIF_TERM
-vert_interface_ccharp_res(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        const char *(*fp)(virInterfacePtr))
-{
-    VERT_RESOURCE *vp = NULL;
-    const char *p = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_INTERFACE);
-
-    p = fp(vp->res);
-
-    VERTERR(p == NULL);
-
-    return  enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
-}
-
-    ERL_NIF_TERM
 vert_interface_ccharp_res_uint(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
@@ -189,7 +160,7 @@ vert_interface_ccharp_res_uint(
 }
 
     ERL_NIF_TERM
-vert_interface_int_res_int(
+vert_interface_int_res_uint(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
         int (*fp)(virInterfacePtr, unsigned int))

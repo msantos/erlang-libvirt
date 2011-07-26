@@ -44,16 +44,11 @@ ERL_NIF_TERM vert_interface_res_res_ccharp(
         const ERL_NIF_TERM argv[],
         virInterfacePtr (*fp)(virConnectPtr, const char *)
         );
-ERL_NIF_TERM vert_interface_ccharp_res(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        const char *(*fp)(virInterfacePtr)
-        );
 ERL_NIF_TERM vert_interface_ccharp_res_uint(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
         char *(*fp)(virInterfacePtr, unsigned int)); 
-ERL_NIF_TERM vert_interface_int_res_int(
+ERL_NIF_TERM vert_interface_int_res_uint(
         ErlNifEnv *env,
         const ERL_NIF_TERM argv[],
         int (*fp)(virInterfacePtr, unsigned int)

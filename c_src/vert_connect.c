@@ -55,6 +55,9 @@ vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[
 }
 #endif
 
+VERT_FUN_CCHARP_RES(virConnectGetType, VERT_RES_CONNECT);
+
+
 /* If the string is truncated, return badarg
  * If the string is empty or has the wrong encoding, consider it to be NULL
  *  This assumes that enif_get_string() does not modify the buffer
@@ -174,12 +177,6 @@ vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
     return enif_make_tuple2(env,
         atom_ok,
         list);
-}
-
-    ERL_NIF_TERM
-vert_virConnectGetType(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_connect_ccharp_res(env, argv, virConnectGetType);
 }
 
     ERL_NIF_TERM
@@ -317,27 +314,6 @@ vert_connect_charp_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], char *(*fp)(vi
         enif_make_string(env, p, ERL_NIF_LATIN1));
 
     free(p);
-
-    return term;
-}
-
-    ERL_NIF_TERM
-vert_connect_ccharp_res(ErlNifEnv *env, const ERL_NIF_TERM argv[], const char *(*fp)(virConnectPtr))
-{
-    VERT_RESOURCE *vp = NULL;
-    const char *p = NULL;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-
-    p = fp(vp->res);
-
-    VERTERR(p == NULL);
-
-    term = enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, p, ERL_NIF_LATIN1));
 
     return term;
 }
