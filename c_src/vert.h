@@ -245,3 +245,10 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     return enif_make_tuple2(env, \
         atom_ok, list); \
 }
+
+#define VERT_FUN_UNSUPPORTED(fun) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    return error_tuple(env, atom_unsupported); \
+}

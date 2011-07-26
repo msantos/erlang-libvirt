@@ -48,11 +48,7 @@ VERT_FUN_INT_RES(virConnectNumOfDefinedStoragePools, VERT_RES_CONNECT)
 #ifdef HAVE_VIRCONNECTNUMOFNWFILTERS
 VERT_FUN_INT_RES(virConnectNumOfNWFilters, VERT_RES_CONNECT)
 #else
-    ERL_NIF_TERM
-vert_virConnectNumOfNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return error_tuple(env, atom_unsupported);
-}
+VERT_FUN_UNSUPPORTED(virConnectNumOfNWFilters)
 #endif
 
 VERT_FUN_CCHARP_RES(virConnectGetType, VERT_RES_CONNECT)
@@ -76,11 +72,7 @@ VERT_FUN_INT_RES_CHARPP_INT(virConnectListDefinedStoragePools, VERT_RES_CONNECT)
 #if HAVE_VIRCONNECTLISTNWFILTERS
 VERT_FUN_INT_RES_CHARPP_INT(virConnectListNWFilters, VERT_RES_CONNECT)
 #else
-    ERL_NIF_TERM
-vert_virConnectListNWFilters(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return error_tuple(env, atom_unsupported);
-}
+VERT_FUN_UNSUPPORTED(virConnectListNWFilters)
 #endif
 
 

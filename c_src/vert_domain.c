@@ -134,10 +134,10 @@ vert_virDomainGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return (autostart ? atom_true : atom_false);
 }
 
+#ifdef HAVE_VIRDOMAINGETBLOCKINFO
     ERL_NIF_TERM
 vert_virDomainGetBlockInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-#ifdef HAVE_VIRDOMAINGETBLOCKINFO
     VERT_RESOURCE *dp = NULL;
     char path[MAXPATHLEN];
     virDomainInfo info = {0};
@@ -152,10 +152,10 @@ vert_virDomainGetBlockInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     BINCOPY(buf, &info, sizeof(virDomainInfo));
 
     return enif_make_tuple2(env, atom_ok, buf);
-#else
-    return error_tuple(env, atom_unsupported);
-#endif
 }
+#else
+VERT_FUN_UNSUPPORTED(virDomainGetBlockInfo)
+#endif
 
     ERL_NIF_TERM
 vert_virDomainGetID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
