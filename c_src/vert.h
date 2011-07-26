@@ -102,11 +102,6 @@ enum {
         return enif_make_badarg(env); \
 } while (0)
 
-#define VERT_GET_STRING(index, var, size) do { \
-    if (enif_get_string(env, argv[(index)], var, size, ERL_NIF_LATIN1) < 1) \
-        return enif_make_badarg(env); \
-} while (0)
-
 #define VERT_GET_INT(index, var) do { \
     if (enif_get_int(env, argv[(index)], &var) < 0) \
         return enif_make_badarg(env); \

@@ -97,14 +97,17 @@ vert_virConnectOpenReadOnly(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 vert_virConnectGetMaxVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
-    char type[1024] = {0};
+    ErlNifBinary buf = {0};
     int max = -1;
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, type, sizeof(type));
+    VERT_GET_IOLIST(1, buf);
 
-    max = virConnectGetMaxVcpus(vp->res, (type[0] == '\0' ? NULL : type));
+    VERT_BIN_APPEND_NULL(buf);
+
+    max = virConnectGetMaxVcpus(vp->res,
+            (buf.data[0] == '\0' ? NULL : (char *)buf.data));
     VERTERR(max < 0);
 
     return enif_make_tuple2(env,
@@ -227,18 +230,23 @@ vert_virConnectListDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
  * Internal functions
  */
     ERL_NIF_TERM
-vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr (*fp)(const char *))
+vert_connect_res_charp(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        virConnectPtr (*fp)(const char *))
 {
-    char name[HOST_NAME_MAX] = {0};
+    ErlNifBinary buf = {0};
 
     VERT_RESOURCE *vp = NULL;
 
 
-    VERT_GET_STRING(0, name, sizeof(name));
+    VERT_GET_IOLIST(0, buf);
+
+    VERT_BIN_APPEND_NULL(buf);
 
     RESOURCE_ALLOC(vp, VERT_RES_CONNECT, NULL);
 
-    vp->res = fp( (name[0] == '\0' ? NULL : name));
+    vp->res = fp( (buf.data[0] == '\0' ? NULL : (char *)buf.data));
 
     if (vp->res == NULL) {
         enif_release_resource(vp);

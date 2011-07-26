@@ -81,15 +81,17 @@ vert_virDomainLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_RESOURCE *vp = NULL;
     VERT_RESOURCE *dp = NULL;
-    char name[HOST_NAME_MAX];
+    ErlNifBinary buf = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, name, sizeof(name));
+    VERT_GET_IOLIST(1, buf);
+
+    VERT_BIN_APPEND_NULL(buf);
 
     RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
-    dp->res = virDomainLookupByName(vp->res, name);
+    dp->res = virDomainLookupByName(vp->res, (char *)buf.data);
 
     if (dp->res == NULL) {
         enif_release_resource(dp);
@@ -104,13 +106,15 @@ vert_virDomainLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
     VERT_RESOURCE *dp = NULL;
-    char uuid[VIR_UUID_BUFLEN];
+    ErlNifBinary buf = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_STRING(1, uuid, sizeof(uuid));
+    VERT_GET_IOLIST(1, buf);
 
-    dp->res = virDomainLookupByUUID(vp->res, (const unsigned char *)uuid);
+    VERT_BIN_APPEND_NULL(buf);
+
+    dp->res = virDomainLookupByUUID(vp->res, buf.data);
 
     if (dp->res == NULL) {
         enif_release_resource(dp);
@@ -139,15 +143,17 @@ vert_virDomainGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 vert_virDomainGetBlockInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *dp = NULL;
-    char path[MAXPATHLEN];
+    ErlNifBinary path = {0};
     virDomainInfo info = {0};
     ERL_NIF_TERM buf = {0};
 
 
     VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-    VERT_GET_STRING(1, path, sizeof(path));
+    VERT_GET_IOLIST(1, buf);
 
-    VERTERR(virDomainGetBlockInfo(dp->res, path, &info, 0) < 0);
+    VERT_BIN_APPEND_NULL(buf);
+
+    VERTERR(virDomainGetBlockInfo(dp->res, path.data, &info, 0) < 0);
 
     BINCOPY(buf, &info, sizeof(virDomainInfo));
 

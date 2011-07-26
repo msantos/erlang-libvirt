@@ -328,7 +328,7 @@ virNetworkLookupByUUID(#resource{type = connect, res = Res}, Uuid) when is_binar
     is_list(Uuid) ->
     call(virNetworkLookupByUUID, [Res, Uuid]).
 
-virNetworkLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+virNetworkLookupByName(#resource{type = connect, res = Res}, Name) ->
     call(virNetworkLookupByName, [Res, Name]).
 
 virNetworkIsPersistent(#resource{type = network, res = Res}) ->
@@ -450,10 +450,16 @@ virDomainRestore(#resource{type = connect, res = Res}, From) ->
 %virDomainMemoryPeek(#resource{type = domain, res = Res}, Start, Size, Buffer, Flags) ->
 %virDomainLookupByUUIDString(#resource{type = connect, res = Res}) ->
 
-virDomainLookupByUUID(#resource{type = connect, res = Res}, Uuid) when is_list(Uuid) ->
+virDomainLookupByUUID(Res, Uuid) when is_list(Uuid) ->
+    virDomainLookupByUUID(Res, list_to_binary(Uuid));
+virDomainLookupByUUID(#resource{type = connect, res = Res}, Uuid)
+    when byte_size(Uuid) == ?VIR_UUID_BUFLEN  ->
     call(virDomainLookupByUUID, [Res, Uuid]).
 
-virDomainLookupByName(#resource{type = connect, res = Res}, Name) when is_list(Name) ->
+virDomainLookupByName(Res, Name) when is_list(Name) ->
+    virDomainLookupByName(Res, list_to_binary(Name));
+virDomainLookupByName(#resource{type = connect, res = Res}, Name)
+    when byte_size(Name) < ?HOST_NAME_MAX ->
     call(virDomainLookupByName, [Res, Name]).
 
 virDomainLookupByID(#resource{type = connect, res = Res}, Id) when is_integer(Id) ->
@@ -534,7 +540,10 @@ virDomainGetJobInfo(#resource{type = domain, res = Res}) ->
 
 %virDomainGetConnect(#resource{type = domain, res = Res}) ->
 
-virDomainGetBlockInfo(#resource{type = domain, res = Res}, Path) ->
+virDomainGetBlockInfo(Res, Path) when is_list(Path) ->
+    virDomainGetBlockInfo(Res, list_to_binary(Path));
+virDomainGetBlockInfo(#resource{type = domain, res = Res}, Path)
+    when byte_size(Path) < ?MAXPATHLEN ->
     call(virDomainGetBlockInfo, [Res, Path]).
 
 virDomainGetAutostart(#resource{type = domain, res = Res}) ->
@@ -564,9 +573,13 @@ virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flag
 %%-------------------------------------------------------------------------
 
 virConnectOpen(Name) when is_list(Name) ->
+    virConnectOpen(list_to_binary(Name));
+virConnectOpen(Name) when byte_size(Name) < ?HOST_NAME_MAX ->
     call(virConnectOpen, [Name]).
 
 virConnectOpenReadOnly(Name) when is_list(Name) ->
+    call(virConnectOpenReadOnly, [Name]);
+virConnectOpenReadOnly(Name) when byte_size(Name) < ?HOST_NAME_MAX ->
     call(virConnectOpenReadOnly, [Name]).
 
 %virConnectOpenAuth(Name, Auth, Flags) ->
@@ -681,7 +694,10 @@ virConnectGetURI(#resource{type = connect, res = Res}) ->
 virConnectGetType(#resource{type = connect, res = Res}) ->
     call(virConnectGetType, [Res]).
 
-virConnectGetMaxVcpus(#resource{type = connect, res = Res}, Type) ->
+virConnectGetMaxVcpus(Res, Type) when is_list(Type) ->
+    virConnectGetMaxVcpus(Res, list_to_binary(Type));
+virConnectGetMaxVcpus(#resource{type = connect, res = Res}, Type)
+    when byte_size(Type) < 1024 ->
     call(virConnectGetMaxVcpus, [Res, Type]).
 
 virConnectGetLibVersion(#resource{type = connect, res = Res}) ->

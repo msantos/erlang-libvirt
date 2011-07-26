@@ -119,3 +119,7 @@
 -define(VIR_DOMAIN_SHUTDOWN, 4).    % the domain is being shut down
 -define(VIR_DOMAIN_SHUTOFF, 5).     % the domain is shut off
 -define(VIR_DOMAIN_CRASHED, 6).     % the domain is crashed
+
+-define(VIR_UUID_BUFLEN, 16).
+-define(HOST_NAME_MAX, 255).
+-define(MAXPATHLEN, 1024).
