@@ -198,3 +198,50 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
  \
     return term; \
 }
+
+#define VERT_FUN_ULONG_RES(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    unsigned long ul = -1; \
+ \
+    VERT_GET_RESOURCE(0, vp, type); \
+ \
+    VERTERR(fun(vp->res, &ul) < 0); \
+ \
+    return enif_make_tuple2(env, \
+        atom_ok, enif_make_ulong(env, ul)); \
+}
+
+#define VERT_FUN_INT_RES_CHARPP_INT(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    int max = 0; \
+    char **names = NULL; \
+ \
+    int n = -1; \
+    ERL_NIF_TERM list = {0}; \
+ \
+    VERT_GET_RESOURCE(0, vp, type); \
+    VERT_GET_INT(1, max); \
+ \
+    if (max <= 0) \
+        return enif_make_badarg(env); \
+ \
+    names = calloc(max, sizeof(char *)); \
+    ISNULL(names); \
+ \
+    n = fun(vp->res, names, max); \
+ \
+    VERTERR(n < 0); \
+ \
+    VERT_COPY_STRING(list, names, n); \
+ \
+    free(names); \
+ \
+    return enif_make_tuple2(env, \
+        atom_ok, list); \
+}
