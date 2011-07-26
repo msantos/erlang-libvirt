@@ -48,8 +48,3 @@ ERL_NIF_TERM vert_network_res_res_ccharp(
     const ERL_NIF_TERM argv[],
     virNetworkPtr (*fp)(virConnectPtr, const char *)
     );   
-ERL_NIF_TERM vert_network_int_res(
-    ErlNifEnv *env,
-    const ERL_NIF_TERM argv[],
-    int (*fp)(virNetworkPtr)
-    );
