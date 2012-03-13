@@ -155,14 +155,14 @@ vert_virNodeGetCellsFreeMemory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
 {
     VERT_RESOURCE *vp = NULL;
     int max = 0;
-    u_int64_t *mem = NULL;
+    unsigned long long *mem = NULL;
     ERL_NIF_TERM list = {0};
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, max);
 
-    mem = calloc(max, sizeof(u_int64_t));
+    mem = calloc(max, sizeof(unsigned long long));
     ISNULL(mem);
 
     VERTERR(virNodeGetCellsFreeMemory(vp->res, mem, 0, max) < 0);
