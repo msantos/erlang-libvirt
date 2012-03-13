@@ -138,3 +138,17 @@ running domains. The example is taken from:
 * Carefully check the code. There are many copy/paste defects.
 
 * Allow the caller to kill the background thread if it is blocked
+
+* Figure out how to deal with backwards compatibility (functions
+  unsupported in older versions of libvirt)
+
+* Generate as much of the code as possible automatically from the libvirt
+  XML documentation file (another rewrite!)
+
+* Reduce macro usage, many of them obscure the logic (returning from
+  functions, setting variables, ...). Rename macros to show intent, e.g.,
+  VERTERR() should be something like RETURN\_ERR\_IF\_FALSE(), ISNULL()
+  should be RETURN\_ERR\_IF\_NULL().
+
+* Modify the resource structure to hold function pointers based on
+  resource type, e.g., freeing the resource, etc.
