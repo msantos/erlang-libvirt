@@ -198,13 +198,11 @@ ERR:
 vert_cast(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_STATE *state = NULL;
-    VERT_CAST cmd;
+    VERT_CAST cmd = {{0}};
     ERL_NIF_TERM res = {0};
 
 
     state = enif_priv_data(env);
-
-    (void)memset(&cmd, '\0', sizeof(cmd));
 
     if (!enif_get_atom(env, argv[0], cmd.name, sizeof(cmd.name), ERL_NIF_LATIN1))
         return enif_make_badarg(env);
