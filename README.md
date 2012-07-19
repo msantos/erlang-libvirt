@@ -66,6 +66,29 @@ To call the same functions in Erlang:
         ok = vert:virDomainDestroy(Domain),
         ok = vert:virConnectClose(Connect).
 
+### DUMPING XML CONFIGURATION
+
+This example dumps the XML of a defined (not running) domain.
+
+    1> {ok, Connect}  = vert:virConnectOpen("qemu:///system"),
+    {ok,{resource,connect,#Ref<0.0.0.30>,<<>>}}
+
+    2> {ok, [Host|_]} = vert:virConnectListDefinedDomains(Connect).
+    {ok, ["vm1"]}
+
+    3> {ok, Domain} = vert:virDomainLookupByName(Connect, Host).
+    {ok,{resource,domain,#Ref<0.0.0.56>,<<>>}}
+
+    4> {ok, XML} = vert:virDomainGetXMLDesc(Domain, 0).
+
+    5> {Doc, _} = xmerl_scan:string(XML).
+
+    6> rr(xmerl).
+
+    7> [Memory|_] = xmerl_xpath:string("/domain/memory/text()", Doc).
+
+    8> Memory#xmlText.value.
+    "1048576"
 
 ### SUSPENDING AND RESUMING A DOMAIN
 
