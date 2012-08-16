@@ -41,6 +41,7 @@
 ERL_NIF_TERM atom_error;
 ERL_NIF_TERM atom_undefined;
 ERL_NIF_TERM atom_unsupported;
+ERL_NIF_TERM atom_eagain;
 ERL_NIF_TERM atom_enomem;
 ERL_NIF_TERM atom_ok;
 ERL_NIF_TERM atom_resource;
@@ -106,6 +107,11 @@ enum {
 
 #define VERT_GET_INT(index, var) do { \
     if (enif_get_int(env, argv[(index)], &var) < 0) \
+        return enif_make_badarg(env); \
+} while (0)
+
+#define VERT_GET_ULONG(index, var) do { \
+    if (enif_get_ulong(env, argv[(index)], &var) < 0) \
         return enif_make_badarg(env); \
 } while (0)
 

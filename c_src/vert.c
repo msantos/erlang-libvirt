@@ -82,6 +82,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_undefined = enif_make_atom(env, "undefined");
     atom_unsupported = enif_make_atom(env, "unsupported");
     atom_enomem = enif_make_atom(env, "enomem");
+    atom_eagain = enif_make_atom(env, "eagain");
     atom_resource = enif_make_atom(env, "resource");
     atom_connect = enif_make_atom(env, "connect");
     atom_domain = enif_make_atom(env, "domain");

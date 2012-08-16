@@ -87,7 +87,7 @@
         virDomainDestroy/1,
         virDomainDefineXML/2,
         virDomainCreate/2,
-        virDomainOpenConsole/3,
+        virDomainOpenConsole/2, virDomainOpenConsole/3,
         virConnectOpen/1,
         virConnectOpenReadOnly/1,
         virConnectNumOfStoragePools/1,
@@ -121,7 +121,9 @@
         virConnectGetCapabilities/1,
         virStreamNew/1,
         virStreamFinish/1,
-        virStreamAbort/1
+        virStreamAbort/1,
+        virStreamSend/2,
+        virStreamRecv/2
     ]).
 %-export([
 %        cast/2, cast/3, cast/4,
@@ -144,9 +146,11 @@ on_load() ->
 %%-------------------------------------------------------------------------
 
 %virStreamSendAll(Stream, Handler, Opaque) ->
-%virStreamSend(Stream, Data, Nbytes) ->
+virStreamSend(#resource{type = stream, res = Res}, Data) ->
+    call(virStreamSend, [Res, Data]).
 %virStreamRecvAll(Stream, Handler, Opaque) ->
-%virStreamRecv(Stream, Data, Nbytes) ->
+virStreamRecv(#resource{type = stream, res = Res}, Nbytes) ->
+    call(virStreamRecv, [Res, Nbytes]).
 
 virStreamNew(#resource{type = connect, res = Res}) ->
     call(virStreamNew, [Res]).
@@ -577,8 +581,11 @@ virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flag
 %virDomainBlockPeek(#resource{type = domain, res = Res}, Path, Offset, Size, Buffer, Flags) ->
 %virDomainAttachDevice(#resource{type = domain, res = Res}, Xml) ->
 
-virDomainOpenConsole(#resource{type = domain, res = Res}, #resource{type = stream, res = Stream}, Flags) when is_integer(Flags) ->
-    call(virDomainOpenConsole, [Res, Stream, Flags]).
+virDomainOpenConsole(Domain, Stream) ->
+    virDomainOpenConsole(Domain, <<>>, Stream).
+virDomainOpenConsole(#resource{type = domain, res = Res}, Devname,
+                     #resource{type = stream, res = Stream}) ->
+    call(virDomainOpenConsole, [Res, Devname, Stream]).
 
 %%-------------------------------------------------------------------------
 %%% Connect

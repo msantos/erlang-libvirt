@@ -91,6 +91,7 @@ ErlNifFunc vert_funcs[] = {
     {"virDomainLookupByID", 2, vert_virDomainLookupByID},
     {"virDomainLookupByName", 2, vert_virDomainLookupByName},
     {"virDomainLookupByUUID", 2, vert_virDomainLookupByUUID},
+    {"virDomainOpenConsole", 3, vert_virDomainOpenConsole},
     {"virDomainRestore", 2, vert_virDomainRestore},
     {"virDomainResume", 1, vert_virDomainResume},
     {"virDomainSave", 2, vert_virDomainSave},
@@ -130,6 +131,8 @@ ErlNifFunc vert_funcs[] = {
     {"virStreamAbort", 1, vert_virStreamAbort},
     {"virStreamFinish", 1, vert_virStreamFinish},
     {"virStreamNew", 1, vert_virStreamNew},
+    {"virStreamSend", 2, vert_virStreamSend},
+    {"virStreamRecv", 2, vert_virStreamRecv},
 
     {NULL, 0, NULL}
 };

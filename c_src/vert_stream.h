@@ -32,3 +32,5 @@
 ERL_NIF_TERM vert_virStreamAbort(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virStreamNew(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virStreamFinish(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_virStreamSend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_virStreamRecv(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);

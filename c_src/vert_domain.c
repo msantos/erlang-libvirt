@@ -530,6 +530,31 @@ vert_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return vert_domain_int_res_int(env, argv, virDomainSetAutostart);
 }
 
+    ERL_NIF_TERM
+vert_virDomainOpenConsole(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+    VERT_RESOURCE *sp = NULL;
+    ErlNifBinary devname = {0};
+
+    int n = -1;
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+    VERT_GET_IOLIST(1, devname);
+    VERT_GET_RESOURCE(2, sp, VERT_RES_STREAM);
+
+    if (devname.size > 0)
+        VERT_BIN_APPEND_NULL(devname);
+
+    n = virDomainOpenConsole(dp->res,
+            (devname.size == 0 ? NULL : (char *)devname.data), sp->res, 0);
+
+    VERTERR(n < 0);
+
+    return atom_ok;
+}
+
 
 /*
  * Internal functions

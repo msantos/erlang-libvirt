@@ -56,3 +56,61 @@ vert_virStreamNew(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     return vert_make_resource(env, sp, atom_stream);
 }
+
+    ERL_NIF_TERM
+vert_virStreamSend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *sp = NULL;
+    ErlNifBinary buf = {0};
+
+    int rv = 0;
+
+    VERT_GET_RESOURCE(0, sp, VERT_RES_STREAM);
+    VERT_GET_IOLIST(1, buf);
+
+    rv = virStreamSend(sp->res, (char *)buf.data, buf.size);
+
+    switch (rv) {
+        case -1:
+            return verterr(env);
+
+        case -2:
+            return error_tuple(env, atom_eagain);
+
+        default:
+            return enif_make_tuple2(env, atom_ok, enif_make_int(env, rv));
+    }
+}
+
+    ERL_NIF_TERM
+vert_virStreamRecv(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *sp = NULL;
+    size_t nbytes = 0;
+
+    ErlNifBinary buf = {0};
+    int rv = 0;
+
+
+    VERT_GET_RESOURCE(0, sp, VERT_RES_STREAM);
+    VERT_GET_ULONG(1, nbytes);
+
+    if (!enif_alloc_binary(nbytes, &buf))
+        return error_tuple(env, atom_enomem);
+
+    rv = virStreamRecv(sp->res, (char *)buf.data, buf.size);
+
+    switch (rv) {
+        case -1:
+            return verterr(env);
+
+        case -2:
+            return error_tuple(env, atom_eagain);
+
+        default:
+            if (!enif_realloc_binary(&buf, rv))
+                return error_tuple(env, atom_enomem);
+
+            return enif_make_tuple2(env, atom_ok, enif_make_binary(env, &buf));
+    }
+}
