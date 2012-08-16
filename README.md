@@ -55,7 +55,7 @@ To call the same functions in Erlang:
         {ok, Connect} = vert:virConnectOpen("qemu:///system"),
         {ok, XML} = file:read_file(Path),
         {ok, Domain} = vert:virDomainDefineXML(Connect, XML),
-        ok = vert:virDomainCreate(Domain, 0),
+        ok = vert:virDomainCreate(Domain),
 
         Active = vert:virConnectNumOfDomains(Connect),
         io:format("Active Domains: ~p~n", [Active]),

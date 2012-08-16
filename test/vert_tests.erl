@@ -62,7 +62,7 @@ create_test() ->
     {ok, XML} = file:read_file(Path),
 
     {ok, Domain} = vert:virDomainDefineXML(Connect, XML),
-    ok = vert:virDomainCreate(Domain, 0),
+    ok = vert:virDomainCreate(Domain),
 
     Active = vert:virConnectNumOfDomains(Connect),
 

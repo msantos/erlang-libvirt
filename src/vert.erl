@@ -86,7 +86,7 @@
         virDomainGetAutostart/1,
         virDomainDestroy/1,
         virDomainDefineXML/2,
-        virDomainCreate/2,
+        virDomainCreate/1, virDomainCreate/2,
         virDomainOpenConsole/2, virDomainOpenConsole/3,
         virConnectOpen/1,
         virConnectOpenReadOnly/1,
@@ -573,6 +573,8 @@ virDomainDefineXML(#resource{type = connect, res = Res}, Xml) when is_binary(Xml
 
 %virDomainCreateXML(Conn, XmlDesc, Flags) ->
 
+virDomainCreate(Domain) ->
+    virDomainCreate(Domain, 0).
 virDomainCreate(#resource{type = domain, res = Res}, Flags) when is_integer(Flags) ->
     ok(call(virDomainCreate, [Res, Flags])).
 
