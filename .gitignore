@@ -1,3 +1,9 @@
 *.[oa]
 *.beam
 *.swp
+ebin
+deps
+*.xml
+*.gz
+*.img
+*.so
