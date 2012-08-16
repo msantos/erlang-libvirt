@@ -48,6 +48,7 @@ ERL_NIF_TERM atom_connect;
 ERL_NIF_TERM atom_domain;
 ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_network;
+ERL_NIF_TERM atom_stream;
 ERL_NIF_TERM atom_true;
 ERL_NIF_TERM atom_false;
 ERL_NIF_TERM atom_vert;
@@ -86,6 +87,7 @@ enum {
     VERT_RES_STORAGEPOOL,
     VERT_RES_FILTER,
     VERT_RES_SECRET,
+    VERT_RES_STREAM,
 };
 
 #define RESOURCE_ALLOC(var,vtype,initial) do { \

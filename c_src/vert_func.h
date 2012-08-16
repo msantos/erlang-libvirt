@@ -126,5 +126,10 @@ ErlNifFunc vert_funcs[] = {
     {"virNetworkLookupByUUIDString", 2, vert_virNetworkLookupByUUIDString},
     {"virNetworkUndefine", 1, vert_virNetworkUndefine},
 
+    /* stream */
+    {"virStreamAbort", 1, vert_virStreamAbort},
+    {"virStreamFinish", 1, vert_virStreamFinish},
+    {"virStreamNew", 1, vert_virStreamNew},
+
     {NULL, 0, NULL}
 };
