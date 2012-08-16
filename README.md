@@ -60,11 +60,10 @@ To call the same functions in Erlang:
         Active = vert:virConnectNumOfDomains(Connect),
         io:format("Active Domains: ~p~n", [Active]),
 
-        {ok, Connect, Domain}.
+        {ok, Domain}.
 
-    halt(Connect, Domain) ->
-        ok = vert:virDomainDestroy(Domain),
-        ok = vert:virConnectClose(Connect).
+    halt(Domain) ->
+        ok = vert:virDomainDestroy(Domain).
 
 ### DUMPING XML CONFIGURATION
 
