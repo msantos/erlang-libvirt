@@ -1,0 +1,37 @@
+<domain type='qemu'>
+  <name>testvm</name>
+  <uuid>98da79eb-5b19-7be8-cb76-a1acff00e4d3</uuid>
+  <memory>219136</memory>
+  <currentMemory>219136</currentMemory>
+  <vcpu>1</vcpu>
+  <os>
+    <type arch='i686' machine='pc'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <disk type='file' device='disk'>
+        <driver name='qemu' type='raw'/>
+        <source file='/home/msantos/src/erlang/erlang-libvirt/priv/openwrt-x86-generic-combined-ext2.img' />
+        <target dev='hda' bus='ide'/>
+        <address type='drive' controller='0' bus='0' unit='0'/>
+    </disk>
+    <interface type='bridge'>
+                <mac address='52:54:00:34:F6:89'/>
+                <source bridge='br0'/>
+                <model type='virtio'/>
+                <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+            </interface>
+    <serial type='pty'>
+        <target port='0'/>
+    </serial>
+    <console type='pty'>
+        <target type='serial' port='0'/>
+    </console>
+    <graphics type='vnc' port='-1'/>
+  </devices>
+</domain>

@@ -1,4 +1,3 @@
-
 REBAR=$(shell which rebar || echo ./rebar)
 
 all: compile
@@ -15,3 +14,5 @@ compile: $(REBAR)
 clean: $(REBAR)
 	@$(REBAR) clean
 
+test: $(REBAR) compile
+	@$(REBAR) eunit
