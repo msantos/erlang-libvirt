@@ -854,13 +854,23 @@ bool(Error) -> Error.
 ok({ok, _}) -> ok;
 ok(Error) -> Error.
 
-privdir(File) ->
+progname_ebin() ->
     filename:join([
         filename:dirname(code:which(?MODULE)),
-        "..",
-        "priv",
-        File
+        "..", "priv", ?MODULE
     ]).
 
+progname_priv() ->
+    case application:get_env(?MODULE, port_executable) of
+        {ok, Executable} -> Executable;
+        undefined -> filename:join([
+                        code:priv_dir(?MODULE),
+                        ?MODULE
+                     ])
+    end.
+
 niflib() ->
-    privdir(?MODULE).
+    case code:priv_dir(?MODULE) of
+        {error, bad_name} -> progname_ebin();
+        _ -> progname_priv()
+    end.
