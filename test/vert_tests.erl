@@ -38,9 +38,13 @@
 connect_test() ->
     {ok, Connect} = vert:virConnectOpen("qemu:///system"),
 
-    {ok, _Cap} = vert:virConnectGetCapabilities(Connect),
+    {ok, Cap} = vert:virConnectGetCapabilities(Connect),
 
-    {ok, #node_info{}} = vert:virNodeGetInfo(Connect),
+    error_logger:info_report([{capabilities, Cap}]),
+
+    {ok, #node_info{} = Info} = vert:virNodeGetInfo(Connect),
+
+    error_logger:info_report([{node_info, Info}]),
 
     ok.
 
@@ -66,9 +70,13 @@ create_test() ->
 
     Active = vert:virConnectNumOfDomains(Connect),
 
+    error_logger:info_report([{active_domains, Active}]),
+
     true = Active > 0, 
 
-    {ok, _DomainIDs} = vert:virConnectListDomains(Connect),
+    {ok, DomainIDs} = vert:virConnectListDomains(Connect),
+
+    error_logger:info_report([{domains, DomainIDs}]),
 
     Info = info(Domain),
 
@@ -76,9 +84,15 @@ create_test() ->
 
     ok = vert:virDomainSuspend(Domain),
 
+    error_logger:info_report({domain, suspended}),
+
     ok = vert:virDomainResume(Domain),
 
+    error_logger:info_report({domain, resumed}),
+
     ok = vert:virDomainDestroy(Domain),
+
+    error_logger:info_report({domain, destroyed}),
 
     {error,"Domain not found: no domain with matching id 31337"} =
         vert:virDomainLookupByID(Connect, 31337).
