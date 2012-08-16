@@ -72,6 +72,12 @@
         res
     }).
 
+%% virStreamPtr resource
+-record(stream, {
+        ref,
+        res
+    }).
+
 %% virNodeInfo
 -record(node_info, {
         model = <<>>,
