@@ -31,6 +31,22 @@ Unix socket.
     sudo apt-get install libvirt-dev libvirt-bin
     make
 
+## CREATING A TEST VM
+
+    If you don't have a VM ready to test, you can download a test image
+    by running:
+
+        bin/get_image.escript
+
+    The script will download an OpenWRT image and set up the configuration
+    in priv/example.xml. By default, it will set up the VM to run under
+    KVM using user mode networking.
+
+    You can manually modify the configuration afterwards or set these
+    environment variables before running the script:
+
+        VERT_QEMU_BIN : path to the qemu binary (default: /usr/bin/kvm)
+        VERT_BRIDGE_INTERFACE : bridge interface (default: user networking)
 
 ## HOW TO USE IT
 
@@ -149,8 +165,6 @@ running domains. The example is taken from:
 
 
 ## TODO
-
-* tests: use the libvirt test driver and make a set of tests
 
 * review the Erlang interface
     * find examples of code in other languages using libvirt and discover
