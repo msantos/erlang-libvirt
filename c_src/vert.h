@@ -39,6 +39,7 @@
 
 
 ERL_NIF_TERM atom_error;
+ERL_NIF_TERM atom_badarg;
 ERL_NIF_TERM atom_undefined;
 ERL_NIF_TERM atom_unsupported;
 ERL_NIF_TERM atom_eagain;
@@ -102,22 +103,22 @@ enum {
 #define VERT_GET_RESOURCE(index, var, vtype) do { \
     if (!enif_get_resource(env, argv[index], NIF_VERT_RESOURCE, (void **)&var) || \
         ((var)->type != (vtype))) \
-        return enif_make_badarg(env); \
+        return error_tuple(env, atom_badarg); \
 } while (0)
 
 #define VERT_GET_INT(index, var) do { \
     if (enif_get_int(env, argv[(index)], &var) < 0) \
-        return enif_make_badarg(env); \
+        return error_tuple(env, atom_badarg); \
 } while (0)
 
 #define VERT_GET_ULONG(index, var) do { \
     if (enif_get_ulong(env, argv[(index)], &var) < 0) \
-        return enif_make_badarg(env); \
+        return error_tuple(env, atom_badarg); \
 } while (0)
 
 #define VERT_GET_IOLIST(index, var) do { \
     if (!enif_inspect_iolist_as_binary(env, argv[(index)], &var)) \
-        return enif_make_badarg(env); \
+        return error_tuple(env, atom_badarg); \
 } while (0)
 
 #define VERT_COPY_LIST(dst, src, size) do { \
