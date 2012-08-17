@@ -145,7 +145,6 @@ vert_cleanup(ErlNifEnv *env, void *obj)
             (void)virSecretFree(vp->res);
             break;
         case VERT_RES_STREAM:
-            (void)virStreamAbort(vp->res);
             (void)virStreamFree(vp->res);
             break;
         default:
