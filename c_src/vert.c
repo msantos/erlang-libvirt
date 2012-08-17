@@ -139,7 +139,7 @@ vert_loop(void *arg)
     ErlNifEnv *env = NULL;
 
     fd_set rfds;
-    ssize_t n = 0;
+    int n = 0;
     ERL_NIF_TERM res = {0};
 
     ErlNifFunc *fp = NULL;
@@ -165,7 +165,7 @@ vert_loop(void *arg)
             }
         }
 
-        if (read(state->fd[VERT_READ], &cmd, sizeof(cmd)) < 0)
+        if (read(state->fd[VERT_READ], &cmd, sizeof(cmd)) != sizeof(cmd))
             goto ERR;
 
         for (fp = vert_funcs; fp->name != NULL; fp++) {
