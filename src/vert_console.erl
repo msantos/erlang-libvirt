@@ -161,13 +161,7 @@ init([Pid, Host,
         pid = Pid
     },
 
-    Self = self(),
-    
-    {ok, Tref} = timer:apply_interval(
-        Opt#state.recv_timeout,
-        ?MODULE,
-        poll,
-        [Self, State]),
+    {ok, Tref} = poll_init(State),
 
     {ok, State#state{tref = Tref}}.
 
@@ -199,7 +193,11 @@ handle_info(Info, State) ->
     error_logger:error_report([wtf, Info]),
     {noreply, State}.
 
-terminate(_Reason, #state{stream = Stream}) ->
+terminate(_Reason, #state{stream = Stream, tref = Tref}) ->
+    case Tref of
+        undefined -> ok;
+        _ -> timer:cancel(Tref)
+    end,
     vert:virStreamFinish(Stream),
     ok.
 
@@ -212,6 +210,16 @@ code_change(_OldVsn, State, _Extra) ->
 options(Opt) ->
     Fun = ?PROPLIST_TO_RECORD(state),
     Fun(Opt).
+
+poll_init(#state{recv_timeout = 0}) ->
+    {ok, undefined};
+poll_init(#state{recv_timeout = Timeout} = State) ->
+    Self = self(),
+    timer:apply_interval(
+        Timeout,
+        ?MODULE,
+        poll,
+        [Self, State]).
 
 poll(Pid, #state{
                 stream = Stream,
