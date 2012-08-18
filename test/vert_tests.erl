@@ -48,25 +48,8 @@ connect_test() ->
 
     ok.
 
-create_test() ->
-    Cfg = os:getenv("VERT_DOMAIN_XML"),
-
-    Path = case Cfg of
-        false ->
-            filename:join([
-                filename:dirname(code:which(vert)),
-                "..",
-                "priv",
-                "example.xml"
-            ]);
-        _ -> Cfg
-    end,
-
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-    {ok, XML} = file:read_file(Path),
-
-    {ok, Domain} = vert:virDomainDefineXML(Connect, XML),
-    ok = vert:virDomainCreate(Domain),
+create_suspend_resume_destroy_test() ->
+    {ok, Connect, Domain} = create(),
 
     Active = vert:virConnectNumOfDomains(Connect),
 
@@ -97,8 +80,60 @@ create_test() ->
     {error,"Domain not found: no domain with matching id 31337"} =
         vert:virDomainLookupByID(Connect, 31337).
 
+console_test() ->
+    {ok, _Connect, Domain} = create(),
+
+    [{name, Name}, {info, _Info}] = info(Domain),
+
+    {ok, Ref} = vert_console:open(Name),
+
+    % get a prompt
+    vert_console:send(Ref, ""),
+
+    % disable prompt
+    % The OpenWRT doesn't have 'stty', so we can't disable echo
+    vert_console:mode(Ref, raw),
+
+    % flush any received messages
+    vert_console:recv(Ref, 100),
+
+    % XXX data is not returned from console in test!
+    ok = vert_console:send(Ref, "uname -a"),
+    %{ok, <<"uname -a\r\nLinux OpenWrt", _/binary>>} = vert_console:recv(Ref, 100),
+    {ok, Res} = vert_console:recv(Ref, 1000),
+
+    error_logger:info_report([{console, Res}]),
+
+    ok = vert:virDomainDestroy(Domain).
+
+
+%%--------------------------------------------------------------------
+%%% Internal functions
+%%--------------------------------------------------------------------
 info(Domain) ->
     {ok, Name} = vert:virDomainGetName(Domain),
     {ok, Info} = vert:virDomainGetInfo(Domain),
 
     [{name, Name}, {info, Info}].
+
+create() ->
+    Cfg = os:getenv("VERT_DOMAIN_XML"),
+
+    Path = case Cfg of
+        false ->
+            filename:join([
+                filename:dirname(code:which(vert)),
+                "..",
+                "priv",
+                "example.xml"
+            ]);
+        _ -> Cfg
+    end,
+
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok, XML} = file:read_file(Path),
+
+    {ok, Domain} = vert:virDomainDefineXML(Connect, XML),
+    ok = vert:virDomainCreate(Domain),
+
+    {ok, Connect, Domain}.
