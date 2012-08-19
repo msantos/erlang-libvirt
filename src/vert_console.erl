@@ -112,7 +112,7 @@ write(Ref, Data) when is_pid(Ref), is_binary(Data) ->
     gen_server:call(Ref, {write, Data}).
 
 send(Ref, Data) when is_pid(Ref), is_list(Data) ->
-    send(Ref, list_to_binary(Data));
+    send(Ref, iolist_to_binary(Data));
 send(Ref, Data) when is_pid(Ref), is_binary(Data) ->
     write(Ref, <<Data/binary, $\n>>).
 

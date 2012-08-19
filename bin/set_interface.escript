@@ -9,23 +9,21 @@ main([]) ->
     main([["testvm"]]);
 main(Hosts) ->
     Commands = [
+        "uci batch <<-EOF",
         "delete network.lan",
         "set network.wan=interface",
         "set network.wan.ifname=eth0",
-        "set network.wan.proto=dhcp"
+        "set network.wan.proto=dhcp",
+        "commit network",
+        "EOF"
     ],
-    [ batch(Host, Commands) || Host <- Hosts ].
-
-batch(Host, Commands) ->
-    Cmd = "uci batch <<-EOF\r\n" ++
-            string:join(Commands, "\r\n") ++
-            "\r\ncommit network\r\nEOF\r\n",
-
-    error_logger:info_report([{cmd, Host, Cmd}]),
-
-    send(Host, Cmd).
+    [ send(Host, Commands) || Host <- Hosts ].
 
 send(Host, Cmd) ->
     {ok, Ref} = vert_console:open(Host),
-    ok = vert_console:send(Ref, Cmd),
+    lists:foreach(fun(C) ->
+            error_logger:info_report([{cmd, Host, C}]),
+            ok = vert_console:send(Ref, C)
+            end,
+            Cmd),
     vert_console:close(Ref).
