@@ -55,7 +55,7 @@ create_suspend_resume_destroy_test() ->
 
     error_logger:info_report([{active_domains, Active}]),
 
-    true = Active > 0, 
+    true = Active > 0,
 
     {ok, DomainIDs} = vert:virConnectListDomains(Connect),
 
@@ -80,26 +80,31 @@ create_suspend_resume_destroy_test() ->
     {error,"Domain not found: no domain with matching id 31337"} =
         vert:virDomainLookupByID(Connect, 31337).
 
-console_test() ->
-    {ok, _Connect, Domain} = create(),
+console_test_() ->
+    {timeout, 60, [{?LINE, fun() -> console_input_output() end}]}.
+
+console_input_output() ->
+    % use testvm
+    {ok, _Connect, Domain} = create(false),
 
     [{name, Name}, {info, _Info}] = info(Domain),
 
     {ok, Ref} = vert_console:open(Name),
 
-    % get a prompt
+    error_logger:info_report([{boot, waiting_for_keypress}]),
+
+    {ok, <<"\rPress", _/binary>>} = vert_console:read(Ref),
+
+    error_logger:info_report([{boot, got_keypress}]),
+
+    % Choose this console
     vert_console:send(Ref, ""),
 
-    % disable prompt
-    % The OpenWRT doesn't have 'stty', so we can't disable echo
-    vert_console:mode(Ref, raw),
+    error_logger:info_report([{boot, sent_keypress}]),
 
-    % flush any received messages
-    vert_console:recv(Ref, 100),
+    wait_for_prompt(Ref),
 
-    % XXX data is not returned from console in test!
     ok = vert_console:send(Ref, "uname -a"),
-    %{ok, <<"uname -a\r\nLinux OpenWrt", _/binary>>} = vert_console:recv(Ref, 100),
     {ok, Res} = vert_console:recv(Ref, 1000),
 
     error_logger:info_report([{console, Res}]),
@@ -118,7 +123,9 @@ info(Domain) ->
 
 create() ->
     Cfg = os:getenv("VERT_DOMAIN_XML"),
+    create(Cfg).
 
+create(Cfg) ->
     Path = case Cfg of
         false ->
             filename:join([
@@ -137,3 +144,28 @@ create() ->
     ok = vert:virDomainCreate(Domain),
 
     {ok, Connect, Domain}.
+
+wait_for_prompt(Ref) ->
+    {ok, Out} = vert_console:read(Ref),
+    error_logger:info_report([{dmesg, Out}]),
+
+    case binary:match(Out, [<<"press">>]) of
+        nomatch ->
+            wait_for_prompt(Ref);
+        _ ->
+            error_logger:info_report([{pressing, enter_key}]),
+            % wildly pound the enter key like an overcaffeinated sysadmin
+            ok = vert_console:write(Ref, <<"\r\n\r\n">>),
+            wait_for_prompt_1(Ref)
+    end.
+
+wait_for_prompt_1(Ref) ->
+    {ok, Out} = vert_console:read(Ref),
+    error_logger:info_report([{dmesg, Out}]),
+
+    case binary:match(Out, [<<"# ">>]) of
+        nomatch -> wait_for_prompt_1(Ref);
+        _ ->
+            error_logger:info_report([{got, prompt}]),
+            ok
+    end.
