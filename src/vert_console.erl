@@ -121,7 +121,10 @@ recv(Ref, Timeout) when is_pid(Ref), Timeout > 0 ->
 recv_loop(Ref, Timeout, Data) ->
     receive
         {vert_console, Ref, Buf} ->
-            recv_loop(Ref, Timeout, [Buf|Data])
+            recv_loop(Ref, Timeout, [Buf|Data]);
+        {vert_console_error, Ref, Error} ->
+            % XXX throw away any data
+            Error
     after
         Timeout ->
             {ok, list_to_binary(lists:reverse(Data))}
@@ -188,6 +191,11 @@ handle_info({vert_console, Data}, #state{pid = Pid} = State) ->
     Pid ! {vert_console, self(), Data},
     {noreply, State};
 
+handle_info({vert_console_error, Error}, #state{pid = Pid} = State) ->
+    error_logger:error_report([wtf, Error]),
+    Pid ! {vert_console_error, self(), Error},
+    {stop, normal, State};
+
 % WTF?
 handle_info(Info, State) ->
     error_logger:error_report([wtf, Info]),
@@ -228,13 +236,20 @@ poll(Pid, #state{
                 }) ->
         case vert:virStreamRecv(Stream, N) of
             {error, eagain} ->
-                flush_tty(Stream, Flush);
+                case flush_tty(Stream, Flush) of
+                    ok -> ok;
+                    Error -> Pid ! {vert_console_error, Error}
+                end;
             {ok, Buf} ->
-                Pid ! {vert_console, Buf}
+                Pid ! {vert_console, Buf};
+            Error ->
+                Pid ! {vert_console_error, Error}
         end.
 
 flush_tty(_Stream, <<>>) ->
     ok;
 flush_tty(Stream, Flush) ->
-    {ok, _} = vert:virStreamSend(Stream, Flush),
-    ok.
+    case vert:virStreamSend(Stream, Flush) of
+        {ok, _} -> ok;
+        Error -> Error
+    end.
