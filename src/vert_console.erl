@@ -58,6 +58,7 @@
         close/1,
 
         write/2,
+        read/1, read/2,
         send/2,
         recv/2,
         flush/1,
@@ -114,6 +115,19 @@ send(Ref, Data) when is_pid(Ref), is_list(Data) ->
     send(Ref, list_to_binary(Data));
 send(Ref, Data) when is_pid(Ref), is_binary(Data) ->
     write(Ref, <<Data/binary, $\n>>).
+
+read(Ref) ->
+    read(Ref, infinity).
+read(Ref, Timeout) ->
+    receive
+        {vert_console, Ref, Buf} ->
+            {ok, Buf};
+        {vert_console_error, Ref, Error} ->
+            Error
+    after
+        Timeout ->
+            {error, timeout}
+    end.
 
 recv(Ref, Timeout) when is_pid(Ref), Timeout > 0 ->
     recv_loop(Ref, Timeout, []).
@@ -192,7 +206,6 @@ handle_info({vert_console, Data}, #state{pid = Pid} = State) ->
     {noreply, State};
 
 handle_info({vert_console_error, Error}, #state{pid = Pid} = State) ->
-    error_logger:error_report([wtf, Error]),
     Pid ! {vert_console_error, self(), Error},
     {stop, normal, State};
 
