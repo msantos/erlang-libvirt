@@ -84,7 +84,7 @@ interface(Bridge) ->
             "<interface type='bridge'>
                 <mac address='~s'/>
                 <source bridge='~s'/>
-                <model type='virtio'/>
+                <model type='e1000'/>
                 <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
             </interface>", [macaddr(), Bridge]
     ).
