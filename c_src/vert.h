@@ -61,13 +61,14 @@ ERL_NIF_TERM atom_vert;
 } while (0)
 
 #define ISNULL(x) do { \
-    if ((x) == NULL) return atom_enomem; \
+    if ((x) == NULL) \
+        return error_tuple(env, atom_enomem); \
 } while (0)
 
 #define BINCOPY(dst, src, size) do { \
     dst = bincopy(env, src, size); \
     if ((dst) == atom_enomem) \
-        return atom_enomem; \
+        return error_tuple(env, atom_enomem); \
 } while (0)
 
 
