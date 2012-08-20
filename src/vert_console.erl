@@ -126,7 +126,7 @@ read(Ref, Timeout) ->
             Error
     after
         Timeout ->
-            {error, timeout}
+            {error, eagain}
     end.
 
 recv(Ref, Timeout) when is_pid(Ref), Timeout > 0 ->
