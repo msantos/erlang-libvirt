@@ -1,0 +1,91 @@
+#!/usr/bin/env escript
+%%! -pa ebin -pa deps/srly/ebin -pa ../srly/ebin
+
+%%%
+%%% Command line interface to libvirt
+%%%
+
+main(["console", Host]) ->
+    io:setopts(standard_io, [binary]),
+
+    {ok, FD} = serctl:open({fd, 0}),
+    ok = serctl:tcsetattr(FD, tcsanow, serctl:mode(raw)),
+
+    {ok, Ref} = vert_console:open(Host),
+    spawn_link(fun() -> console_output(Ref) end),
+    console_input(Ref);
+
+main(["create", Host]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+
+    {ok, Domain} = case file:read_file(Host) of
+        {ok, XML} ->
+            vert:virDomainDefineXML(Connect, XML);
+        {error, enoent} ->
+            vert:virDomainLookupByName(Connect, Host)
+    end,
+            
+    rp(vert:virDomainCreate(Domain));
+
+main(["destroy", Host]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+    rp(vert:virDomainDestroy(Domain));
+
+main(["list"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    Res = domains(Connect, running),
+    rp(Res);
+
+main(["list", "--all"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok, Shutoff} = vert:virConnectListDefinedDomains(Connect),
+    {ok, Running} = domains(Connect, running),
+    rp({ok, [{running, Running}, {shutoff, Shutoff}]});
+
+main(["shutdown", Host]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+    rp(vert:virDomainShutdown(Domain));
+
+main(_) ->
+    Help = [
+        "console",
+        "create",
+        "destroy",
+        "list",
+        "list --all",
+        "shutdown"
+    ],
+    rp(Help),
+    halt(1).
+
+console_output(Ref) ->
+    {ok, Buf} = vert_console:read(Ref),
+    io:fwrite(Buf),
+    console_output(Ref).
+
+console_input(Ref) ->
+    Buf = io:get_chars("", 1),
+%    error_logger:info_report([{in, Buf}]),
+    ok = vert_console:write(Ref, Buf),
+    console_input(Ref).
+
+rp(Term) ->
+    io:format("~p~n", [Term]).
+
+
+domains(Connect, running) ->
+    case vert:virConnectListDomains(Connect) of
+        {ok, Domains} -> {ok, id_to_name(Connect, Domains)};
+        % 0 domains
+        {error, badarg} -> {ok, []};
+        Error -> Error
+    end.
+
+id_to_name(Connect, Ids) when is_list(Ids) ->
+    [ begin
+        {ok, Domain} = vert:virDomainLookupByID(Connect, Id),
+        {ok, Name} = vert:virDomainGetName(Domain),
+        Name
+      end || Id <- Ids ].
