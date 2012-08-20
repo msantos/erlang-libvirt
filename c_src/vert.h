@@ -233,7 +233,7 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     VERT_GET_INT(1, max); \
  \
     if (max <= 0) \
-        return enif_make_badarg(env); \
+        return error_tuple(env, atom_badarg); \
  \
     names = calloc(max, sizeof(char *)); \
     ISNULL(names); \

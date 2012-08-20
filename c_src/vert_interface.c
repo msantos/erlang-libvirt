@@ -115,7 +115,7 @@ vert_interface_res_res_ccharp(
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
 
     if (enif_get_string(env, argv[1], (char *)name, sizeof(name), ERL_NIF_LATIN1) < 1)
-        return enif_make_badarg(env);
+        return error_tuple(env, atom_badarg);
 
     ifp = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE));
 
