@@ -43,6 +43,35 @@ main(["list", "--all"]) ->
     {ok, Running} = domains(Connect, running),
     rp({ok, [{running, Running}, {shutoff, Shutoff}]});
 
+main(["read", Host, Timeout0]) ->
+    Timeout = case Timeout0 of
+        "infinity" -> infinity;
+        _ -> list_to_integer(Timeout0)
+    end,
+    {ok, Ref} = vert_console:open(Host),
+    Res = vert_console:read(Ref, Timeout),
+    vert_console:close(Ref),
+    rp(Res);
+
+main(["read", Host]) ->
+    main(["read", Host, "infinity"]);
+
+main(["recv", Host, Timeout0]) ->
+    Timeout = list_to_integer(Timeout0),
+    {ok, Ref} = vert_console:open(Host),
+    Res = vert_console:recv(Ref, Timeout),
+    vert_console:close(Ref),
+    rp(Res);
+
+main(["send", Host | Commands]) ->
+    {ok, Ref} = vert_console:open(Host, [{recv_timeout, 0}]),
+    lists:foreach(fun(C) ->
+            error_logger:info_report([{cmd, Host, C}]),
+            ok = vert_console:send(Ref, C)
+        end,
+        Commands),
+    rp(vert_console:close(Ref));
+
 main(["shutdown", Host]) ->
     {ok, Connect} = vert:virConnectOpen("qemu:///system"),
     {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
@@ -55,6 +84,9 @@ main(_) ->
         "destroy",
         "list",
         "list --all",
+        "read",
+        "recv",
+        "send",
         "shutdown"
     ],
     rp(Help),

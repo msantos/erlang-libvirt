@@ -185,6 +185,3 @@ running domains. The example is taken from:
   functions, setting variables, ...). Rename macros to show intent, e.g.,
   VERTERR() should be something like RETURN\_ERR\_IF\_FALSE(), ISNULL()
   should be RETURN\_ERR\_IF\_NULL().
-
-* Modify the resource structure to hold function pointers based on
-  resource type, e.g., freeing the resource, etc.
