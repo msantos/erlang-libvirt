@@ -45,7 +45,7 @@ vert_virStreamNew(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
 
-    RESOURCE_ALLOC(sp, VERT_RES_STREAM, vp->res);
+    VERT_RES_ALLOC(sp, VERT_RES_STREAM, vp->res);
 
     sp->res = virStreamNew(vp->res,  VIR_STREAM_NONBLOCK);
 

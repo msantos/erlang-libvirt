@@ -58,7 +58,7 @@ vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_IOLIST(1, buf);
 
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
     np->res = virNetworkLookupByUUID(vp->res, buf.data);
 
@@ -187,7 +187,7 @@ vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_BIN_APPEND_NULL(cfg);
 
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
     np->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
 
@@ -219,7 +219,7 @@ vert_network_res_res_ccharp(
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_IOLIST(1, buf);
 
-    RESOURCE_ALLOC(np, VERT_RES_NETWORK, vp->res);
+    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
 
     np->res = fp(vp->res, (char *)buf.data);
 

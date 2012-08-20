@@ -72,7 +72,7 @@ vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_BIN_APPEND_NULL(cfg);
 
-    RESOURCE_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
+    VERT_RES_ALLOC(ifp, VERT_RES_INTERFACE, vp->res);
 
     ifp->res = virInterfaceDefineXML(vp->res, (char *)cfg.data, 0);
 

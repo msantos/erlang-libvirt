@@ -244,7 +244,7 @@ vert_connect_res_charp(
 
     VERT_BIN_APPEND_NULL(buf);
 
-    RESOURCE_ALLOC(vp, VERT_RES_CONNECT, NULL);
+    VERT_RES_ALLOC(vp, VERT_RES_CONNECT, NULL);
 
     vp->res = fp( (buf.data[0] == '\0' ? NULL : (char *)buf.data));
 

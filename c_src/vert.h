@@ -92,7 +92,7 @@ enum {
     VERT_RES_STREAM,
 };
 
-#define RESOURCE_ALLOC(var,vtype,initial) do { \
+#define VERT_RES_ALLOC(var,vtype,initial) do { \
     var = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE)); \
     ISNULL(var); \
     (var)->type = vtype; \
