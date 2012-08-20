@@ -63,7 +63,7 @@ vert_virDomainLookupByID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
     VERT_GET_INT(1, id);
 
-    RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     dp->res = virDomainLookupByID(vp->res, id);
 
@@ -89,7 +89,7 @@ vert_virDomainLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_BIN_APPEND_NULL(buf);
 
-    RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     dp->res = virDomainLookupByName(vp->res, (char *)buf.data);
 
@@ -512,7 +512,7 @@ vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_BIN_APPEND_NULL(cfg);
 
-    RESOURCE_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
 
     dp->res = virDomainDefineXML(vp->res, (const char *)cfg.data);
 
