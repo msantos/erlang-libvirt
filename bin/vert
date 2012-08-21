@@ -110,8 +110,6 @@ rp(Term) ->
 domains(Connect, running) ->
     case vert:virConnectListDomains(Connect) of
         {ok, Domains} -> {ok, id_to_name(Connect, Domains)};
-        % 0 domains
-        {error, badarg} -> {ok, []};
         Error -> Error
     end.
 
