@@ -5,6 +5,10 @@
 %%% Command line interface to libvirt
 %%%
 
+main(["capabilities"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    rp(vert:virConnectGetCapabilities(Connect));
+
 main(["console", Host]) ->
     io:setopts(standard_io, [binary]),
 
@@ -31,6 +35,14 @@ main(["destroy", Host]) ->
     {ok, Connect} = vert:virConnectOpen("qemu:///system"),
     {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
     rp(vert:virDomainDestroy(Domain));
+
+main(["freecell"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    rp(vert:virNodeGetFreeMemory(Connect));
+
+main(["hostname"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    rp(vert:virConnectGetHostname(Connect));
 
 main(["list"]) ->
     {ok, Connect} = vert:virConnectOpen("qemu:///system"),
@@ -77,17 +89,25 @@ main(["shutdown", Host]) ->
     {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
     rp(vert:virDomainShutdown(Domain));
 
+main(["uri"]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    rp(vert:virConnectGetURI(Connect));
+
 main(_) ->
     Help = [
+        "capabilties",
         "console",
         "create",
         "destroy",
+        "freecell",
+        "hostname",
         "list",
         "list --all",
         "read",
         "recv",
         "send",
-        "shutdown"
+        "shutdown",
+        "uri"
     ],
     rp(Help),
     halt(1).
