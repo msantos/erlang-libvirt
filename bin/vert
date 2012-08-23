@@ -5,8 +5,9 @@
 %%% Command line interface to libvirt
 %%%
 
-main(["capabilities"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["capabilities" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetCapabilities(Connect));
 
 main(["console", Host]) ->
@@ -19,46 +20,50 @@ main(["console", Host]) ->
     spawn_link(fun() -> console_output(Ref) end),
     console_input(Ref);
 
-main(["create", Host]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["create", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
 
     {ok, Domain} = case file:read_file(Host) of
         {ok, XML} ->
             vert:virDomainDefineXML(Connect, XML);
         {error, enoent} ->
-            vert:virDomainLookupByName(Connect, Host)
+            domain(Connect, Host)
     end,
-            
+
     rp(vert:virDomainCreate(Domain));
 
-main(["ctl-alt-del", Host]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
-    rp(vert:virDomainSendKey(Domain, linux, 0, [29, 56, 111]));
+main(["ctl-alt-del", Host | Arg]) ->
+    main(["send-key", Host, "29 56 111" | Arg]);
 
-main(["destroy", Host]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+main(["destroy", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainDestroy(Domain));
 
-main(["freecell"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["freecell" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
     rp(vert:virNodeGetFreeMemory(Connect));
 
-main(["hostname"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["hostname" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetHostname(Connect));
 
-main(["list"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-    Res = domains(Connect, running),
-    rp(Res);
-
-main(["list", "--all"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["list", "--all" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
     {ok, Shutoff} = vert:virConnectListDefinedDomains(Connect),
     {ok, Running} = domains(Connect, running),
     rp({ok, [{running, Running}, {shutoff, Shutoff}]});
+
+main(["list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = domains(Connect, running),
+    rp(Res);
 
 main(["read", Host, Timeout0]) ->
     Timeout = case Timeout0 of
@@ -80,6 +85,25 @@ main(["recv", Host, Timeout0]) ->
     vert_console:close(Ref),
     rp(Res);
 
+main(["screenshot", Host | Arg]) ->
+    Opt = getopt(Arg),
+    Screen = proplists:get_value("screen", Opt, 0),
+    File = proplists:get_value("file", Opt,
+            Host ++ "_" ++ os:getpid() ++ ".screen"),
+
+    error_logger:info_report([{opt, Opt}]),
+
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
+    {ok, Stream} = vert:virStreamNew(Connect),
+    {ok, Mime} = vert:virDomainScreenshot(Domain, Stream, Screen),
+
+    error_logger:info_report([{mime, Mime}]),
+
+    screenshot(Stream, File),
+
+    {ok, Mime};
+
 main(["send", Host | Commands]) ->
     {ok, Ref} = vert_console:open(Host, [{recv_timeout, 0}]),
     lists:foreach(fun(C) ->
@@ -89,13 +113,36 @@ main(["send", Host | Commands]) ->
         Commands),
     rp(vert_console:close(Ref));
 
-main(["shutdown", Host]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
-    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+main(["send-key", Host, Keycode | Arg]) ->
+    Opt = getopt(Arg),
+    Codeset0 = proplists:get_value("codeset", Opt, "linux"),
+    Holdtime = list_to_integer(proplists:get_value("holdtime", Opt, "0")),
+
+    Codeset = try list_to_integer(Codeset0)
+              catch
+                _:_ -> list_to_atom(Codeset0)
+              end,
+
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
+
+    rp(vert:virDomainSendKey(
+                Domain,
+                Codeset,
+                Holdtime,
+                [ list_to_integer(N) ||
+                    N <- string:tokens(Keycode, " ") ]
+                ));
+
+main(["shutdown", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainShutdown(Domain));
 
-main(["uri"]) ->
-    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+main(["uri" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetURI(Connect));
 
 main(_) ->
@@ -118,6 +165,47 @@ main(_) ->
     rp(Help),
     halt(1).
 
+
+%%-------------------------------------------------------------------------
+%%% Internal functions
+%%-------------------------------------------------------------------------
+rp(Term) ->
+    io:format("~p~n", [Term]).
+
+getopt(Opts) ->
+    getopt(Opts, []).
+getopt([], Acc) ->
+    lists:reverse(Acc);
+getopt(["--" ++ Key, "--" ++ _ = Val | Rest], Acc) ->
+    getopt([Val|Rest], [{Key, true}|Acc]);
+getopt(["--" ++ Key, Val | Rest], Acc) ->
+    getopt([Val|Rest], [{Key, true}|Acc]).
+
+connect(Opt) ->
+    URI = proplists:get_value("uri", Opt, "qemu:///system"),
+    vert:virConnectOpen(URI).
+
+domain(Connect, Host) ->
+    Fun = [ fun() -> vert:virDomainLookupById(Connect, list_to_integer(Host)) end,
+            fun() -> vert:virDomainLookupByUUIDString(Connect, Host) end,
+            fun() -> vert:virDomainLookupByName(Connect, Host) end ],
+    domain_1(Fun).
+
+domain_1(Fun)  ->
+    domain_1(Fun, []).
+domain_1([], [{error, Error}|_]) ->
+    {error, Error};
+domain_1([Fun|Tail], Acc) ->
+    try Fun() of
+        {ok, Domain} ->
+            {ok, Domain};
+        {error, Error} ->
+            domain_1(Tail, [{error, Error}|Acc])
+    catch
+        _:_ ->
+            domain_1(Tail, Acc)
+    end.
+
 console_output(Ref) ->
     {ok, Buf} = vert_console:read(Ref),
     io:fwrite(Buf),
@@ -128,10 +216,6 @@ console_input(Ref) ->
 %    error_logger:info_report([{in, Buf}]),
     ok = vert_console:write(Ref, Buf),
     console_input(Ref).
-
-rp(Term) ->
-    io:format("~p~n", [Term]).
-
 
 domains(Connect, running) ->
     case vert:virConnectListDomains(Connect) of
@@ -145,3 +229,17 @@ id_to_name(Connect, Ids) when is_list(Ids) ->
         {ok, Name} = vert:virDomainGetName(Domain),
         Name
       end || Id <- Ids ].
+
+screenshot(Stream, File) ->
+    screenshot(Stream, File, []).
+screenshot(Stream, File, Acc) ->
+    case vert:virStreamRecv(Stream, 16#FFFF) of
+        {error, eagain} ->
+            timer:sleep(100),
+            screenshot(Stream, File, Acc);
+        {ok, <<>>} ->
+            ok = file:write_file(File, lists:reverse(Acc));
+        {ok, Bytes} ->
+            error_logger:info_report([{got, File, byte_size(Bytes)}]),
+            screenshot(Stream, File, [Bytes|Acc])
+        end.
