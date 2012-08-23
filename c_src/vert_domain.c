@@ -114,7 +114,34 @@ vert_virDomainLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     VERT_BIN_APPEND_NULL(buf);
 
+    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+
     dp->res = virDomainLookupByUUID(vp->res, buf.data);
+
+    if (dp->res == NULL) {
+        enif_release_resource(dp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, dp, atom_domain);
+}
+
+    ERL_NIF_TERM
+vert_virDomainLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    VERT_RESOURCE *dp = NULL;
+    ErlNifBinary buf = {0};
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, buf);
+
+    VERT_BIN_APPEND_NULL(buf);
+
+    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
+
+    dp->res = virDomainLookupByUUIDString(vp->res, (char *)buf.data);
 
     if (dp->res == NULL) {
         enif_release_resource(dp);

@@ -91,6 +91,7 @@ ErlNifFunc vert_funcs[] = {
     {"virDomainLookupByID", 2, vert_virDomainLookupByID},
     {"virDomainLookupByName", 2, vert_virDomainLookupByName},
     {"virDomainLookupByUUID", 2, vert_virDomainLookupByUUID},
+    {"virDomainLookupByUUIDString", 2, vert_virDomainLookupByUUIDString},
     {"virDomainOpenConsole", 3, vert_virDomainOpenConsole},
     {"virDomainRestore", 2, vert_virDomainRestore},
     {"virDomainResume", 1, vert_virDomainResume},

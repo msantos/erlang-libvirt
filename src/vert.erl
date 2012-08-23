@@ -1,21 +1,21 @@
 %% Copyright (c) 2010-2012, Michael Santos <michael.santos@gmail.com>
 %% All rights reserved.
-%% 
+%%
 %% Redistribution and use in source and binary forms, with or without
 %% modification, are permitted provided that the following conditions
 %% are met:
-%% 
+%%
 %% Redistributions of source code must retain the above copyright
 %% notice, this list of conditions and the following disclaimer.
-%% 
+%%
 %% Redistributions in binary form must reproduce the above copyright
 %% notice, this list of conditions and the following disclaimer in the
 %% documentation and/or other materials provided with the distribution.
-%% 
+%%
 %% Neither the name of the author nor the names of its contributors
 %% may be used to endorse or promote products derived from this software
 %% without specific prior written permission.
-%% 
+%%
 %% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 %% "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 %% LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -68,6 +68,7 @@
         virDomainResume/1,
         virDomainRestore/2,
         virDomainLookupByUUID/2,
+        virDomainLookupByUUIDString/2,
         virDomainLookupByName/2,
         virDomainLookupByID/2,
         virDomainGetXMLDesc/2,
@@ -464,7 +465,9 @@ virDomainRestore(#resource{type = connect, res = Res}, From) ->
 %virDomainMigrate(#resource{type = domain, res = Res}, Dconn, Flags, Dname, Uri, Bandwidth) ->
 %virDomainMemoryStats(#resource{type = domain, res = Res}, Stats, Nr_stats, Flags) ->
 %virDomainMemoryPeek(#resource{type = domain, res = Res}, Start, Size, Buffer, Flags) ->
-%virDomainLookupByUUIDString(#resource{type = connect, res = Res}) ->
+
+virDomainLookupByUUIDString(#resource{type = connect, res = Res}, UUID) ->
+    call(virDomainLookupByUUIDString, [Res, UUID]).
 
 virDomainLookupByUUID(Res, Uuid) when is_list(Uuid) ->
     virDomainLookupByUUID(Res, list_to_binary(Uuid));
@@ -525,7 +528,7 @@ virDomainGetMaxMemory(#resource{type = domain, res = Res}) ->
 %%     unsigned long   maxMem (Kb)
 %%     unsigned long   memory (Kb)
 %%     unsigned short  nrVirtCpu
-%%     unsigned long long  cpuTime (nanoseconds) 
+%%     unsigned long long  cpuTime (nanoseconds)
 %% }
 virDomainGetInfo(#resource{type = domain, res = Res}) ->
     Long = erlang:system_info({wordsize, external}),

@@ -52,6 +52,7 @@ ERL_NIF_TERM vert_virDomainGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TE
 ERL_NIF_TERM vert_virDomainLookupByID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_virDomainLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainOpenConsole(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainResume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
