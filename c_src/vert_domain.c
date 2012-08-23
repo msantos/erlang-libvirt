@@ -604,10 +604,10 @@ vert_virDomainSendKey(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     tail = argv[3];
     if (!enif_get_list_length(env, tail, &nkeycodes))
-        return enif_make_badarg(env);
+        return error_tuple(env, atom_badarg);
 
     if (!nkeycodes || nkeycodes >= VIR_DOMAIN_SEND_KEY_MAX_KEYS)
-        return enif_make_badarg(env);
+        return error_tuple(env, atom_badarg);
 
     VERT_GET_UINT(4, flags);
 
@@ -616,7 +616,7 @@ vert_virDomainSendKey(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         u_int32_t code = 0;
 
         if (!enif_get_uint(env, head, &code))
-            return enif_make_badarg(env);
+            return error_tuple(env, atom_badarg);
 
         keycodes[nkeycodes++] = code;
     }
