@@ -580,9 +580,54 @@ vert_virDomainScreenshot(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
     free(mime_type);
 
-    return  enif_make_tuple2(env, atom_ok, res);
+    return enif_make_tuple2(env, atom_ok, res);
 }
 
+    ERL_NIF_TERM
+vert_virDomainSendKey(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+    u_int32_t codeset = 0;
+    u_int32_t holdtime = 0;
+    unsigned int keycodes[VIR_DOMAIN_SEND_KEY_MAX_KEYS] = {0};
+    u_int32_t nkeycodes = 0;
+    u_int32_t flags = 0;
+
+    ERL_NIF_TERM head = {0};
+    ERL_NIF_TERM tail = {0};
+    int rv = 0;
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+    VERT_GET_UINT(1, codeset);
+    VERT_GET_UINT(2, holdtime);
+
+    tail = argv[3];
+    if (!enif_get_list_length(env, tail, &nkeycodes))
+        return enif_make_badarg(env);
+
+    if (!nkeycodes || nkeycodes >= VIR_DOMAIN_SEND_KEY_MAX_KEYS)
+        return enif_make_badarg(env);
+
+    VERT_GET_UINT(4, flags);
+
+    nkeycodes = 0;
+    while (enif_get_list_cell(env, tail, &head, &tail)) {
+        u_int32_t code = 0;
+
+        if (!enif_get_uint(env, head, &code))
+            return enif_make_badarg(env);
+
+        keycodes[nkeycodes++] = code;
+    }
+
+    rv = virDomainSendKey(dp->res, codeset, holdtime,
+            keycodes, nkeycodes, flags);
+
+    VERTERR(rv < 0);
+
+    return atom_ok;
+}
 
 /*
  * Internal functions

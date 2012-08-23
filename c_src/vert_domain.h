@@ -57,6 +57,7 @@ ERL_NIF_TERM vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 ERL_NIF_TERM vert_virDomainResume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainScreenshot(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_virDomainSendKey(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainShutdown(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virDomainSuspend(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);

@@ -238,6 +238,7 @@ static ErlNifFunc nif_funcs[] = {
     {"cast", 3, vert_cast},
     {"cast", 4, vert_cast},
     {"cast", 5, vert_cast},
+    {"cast", 6, vert_cast},
 };
 
 ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)

@@ -96,6 +96,7 @@ ErlNifFunc vert_funcs[] = {
     {"virDomainResume", 1, vert_virDomainResume},
     {"virDomainSave", 2, vert_virDomainSave},
     {"virDomainScreenshot", 4, vert_virDomainScreenshot},
+    {"virDomainSendKey", 5, vert_virDomainSendKey},
     {"virDomainSetAutostart", 2, vert_virDomainSetAutostart},
     {"virDomainShutdown", 1, vert_virDomainShutdown},
     {"virDomainSuspend", 1, vert_virDomainSuspend},

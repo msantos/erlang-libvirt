@@ -129,3 +129,16 @@
 -define(VIR_UUID_BUFLEN, 16).
 -define(HOST_NAME_MAX, 255).
 -define(MAXPATHLEN, 1024).
+
+% virKeycodeSet
+-define(VIR_KEYCODE_SET_LINUX, 0).
+-define(VIR_KEYCODE_SET_XT, 1).
+-define(VIR_KEYCODE_SET_ATSET1, 2).
+-define(VIR_KEYCODE_SET_ATSET2, 3).
+-define(VIR_KEYCODE_SET_ATSET3, 4).
+-define(VIR_KEYCODE_SET_OSX, 5).
+-define(VIR_KEYCODE_SET_XT_KBD, 6).
+-define(VIR_KEYCODE_SET_USB, 7).
+-define(VIR_KEYCODE_SET_WIN32, 8).
+-define(VIR_KEYCODE_SET_RFB, 9).
+-define(VIR_KEYCODE_SET_LAST, 10).

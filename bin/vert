@@ -31,6 +31,11 @@ main(["create", Host]) ->
             
     rp(vert:virDomainCreate(Domain));
 
+main(["ctl-alt-del", Host]) ->
+    {ok, Connect} = vert:virConnectOpen("qemu:///system"),
+    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+    rp(vert:virDomainSendKey(Domain, linux, 0, [29, 56, 111]));
+
 main(["destroy", Host]) ->
     {ok, Connect} = vert:virConnectOpen("qemu:///system"),
     {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
@@ -96,6 +101,7 @@ main(["uri"]) ->
 main(_) ->
     Help = [
         "capabilties",
+        "ctl-alt-del",
         "console",
         "create",
         "destroy",

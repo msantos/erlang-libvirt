@@ -64,6 +64,7 @@
         virDomainSetAutostart/2,
         virDomainSave/2,
         virDomainScreenshot/3, virDomainScreenshot/4,
+        virDomainSendKey/4, virDomainSendKey/5,
         virDomainResume/1,
         virDomainRestore/2,
         virDomainLookupByUUID/2,
@@ -596,6 +597,14 @@ virDomainScreenshot(#resource{type = domain, res = Res},
                     #resource{type = stream, res = Stream}, Screen, Flags) ->
     call(virDomainScreenshot, [Res, Stream, Screen, Flags]).
 
+virDomainSendKey(Domain, Codeset, Holdtime, Keycodes) ->
+    virDomainSendKey(Domain, Codeset, Holdtime, Keycodes, 0).
+virDomainSendKey(Domain, Codeset, Holdtime, Keycodes, Flags) when is_atom(Codeset) ->
+    virDomainSendKey(Domain, keycode(Codeset), Holdtime, Keycodes, Flags);
+virDomainSendKey(#resource{type = domain, res = Res}, Codeset,
+                    Holdtime, Keycodes, Flags) when is_integer(Codeset), is_list(Keycodes) ->
+    call(virDomainSendKey, [Res, Codeset, Holdtime, Keycodes, Flags]).
+
 %%-------------------------------------------------------------------------
 %%% Connect
 %%-------------------------------------------------------------------------
@@ -821,7 +830,9 @@ cast_2(Fun, [Arg1, Arg2]) ->
 cast_2(Fun, [Arg1, Arg2, Arg3]) ->
     cast(Fun, Arg1, Arg2, Arg3);
 cast_2(Fun, [Arg1, Arg2, Arg3, Arg4]) ->
-    cast(Fun, Arg1, Arg2, Arg3, Arg4).
+    cast(Fun, Arg1, Arg2, Arg3, Arg4);
+cast_2(Fun, [Arg1, Arg2, Arg3, Arg4, Arg5]) ->
+    cast(Fun, Arg1, Arg2, Arg3, Arg4, Arg5).
 
 cast(_,_) ->
     erlang:error(not_implemented).
@@ -830,6 +841,8 @@ cast(_,_,_) ->
 cast(_,_,_,_) ->
     erlang:error(not_implemented).
 cast(_,_,_,_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_,_,_,_) ->
     erlang:error(not_implemented).
 
 %%-------------------------------------------------------------------------
@@ -877,6 +890,18 @@ state({domain, paused}) -> ?VIR_DOMAIN_PAUSED;
 state({domain, shutdown}) -> ?VIR_DOMAIN_SHUTDOWN;
 state({domain, shutoff}) -> ?VIR_DOMAIN_SHUTOFF;
 state({domain, crashed}) -> ?VIR_DOMAIN_CRASHED.
+
+keycode(linux) -> ?VIR_KEYCODE_SET_LINUX;
+keycode(xt) -> ?VIR_KEYCODE_SET_XT;
+keycode(atset1) -> ?VIR_KEYCODE_SET_ATSET1;
+keycode(atset2) -> ?VIR_KEYCODE_SET_ATSET2;
+keycode(atset3) -> ?VIR_KEYCODE_SET_ATSET3;
+keycode(osx) -> ?VIR_KEYCODE_SET_OSX;
+keycode(xt_kbd) -> ?VIR_KEYCODE_SET_XT_KBD;
+keycode(usb) -> ?VIR_KEYCODE_SET_USB;
+keycode(win32) -> ?VIR_KEYCODE_SET_WIN32;
+keycode(rfb) -> ?VIR_KEYCODE_SET_RFB;
+keycode(last) -> ?VIR_KEYCODE_SET_LAST.
 
 bool({ok, 0}) -> false;
 bool({ok, 1}) -> true;
