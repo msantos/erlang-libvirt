@@ -14,7 +14,7 @@ main(_) ->
     ssl:start(),
 
     URI = "http://downloads.openwrt.org/backfire/10.03.1/x86_generic/openwrt-x86-generic-combined-ext2.img.gz",
-    File = "priv/" ++ filename:rootname(filename:basename(URI)), 
+    File = "priv/" ++ filename:rootname(filename:basename(URI)),
 
     Cfg = "priv/example.xml",
 
