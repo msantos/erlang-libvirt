@@ -63,6 +63,7 @@
         virDomainShutdown/1,
         virDomainSetAutostart/2,
         virDomainSave/2,
+        virDomainScreenshot/3, virDomainScreenshot/4,
         virDomainResume/1,
         virDomainRestore/2,
         virDomainLookupByUUID/2,
@@ -589,6 +590,12 @@ virDomainOpenConsole(#resource{type = domain, res = Res}, Devname,
                      #resource{type = stream, res = Stream}) ->
     call(virDomainOpenConsole, [Res, Devname, Stream]).
 
+virDomainScreenshot(Domain, Stream, Screen) ->
+    virDomainScreenshot(Domain, Stream, Screen, 0).
+virDomainScreenshot(#resource{type = domain, res = Res},
+                    #resource{type = stream, res = Stream}, Screen, Flags) ->
+    call(virDomainScreenshot, [Res, Stream, Screen, Flags]).
+
 %%-------------------------------------------------------------------------
 %%% Connect
 %%-------------------------------------------------------------------------
@@ -812,13 +819,17 @@ cast_2(Fun, [Arg1]) ->
 cast_2(Fun, [Arg1, Arg2]) ->
     cast(Fun, Arg1, Arg2);
 cast_2(Fun, [Arg1, Arg2, Arg3]) ->
-    cast(Fun, Arg1, Arg2, Arg3).
+    cast(Fun, Arg1, Arg2, Arg3);
+cast_2(Fun, [Arg1, Arg2, Arg3, Arg4]) ->
+    cast(Fun, Arg1, Arg2, Arg3, Arg4).
 
 cast(_,_) ->
     erlang:error(not_implemented).
 cast(_,_,_) ->
     erlang:error(not_implemented).
 cast(_,_,_,_) ->
+    erlang:error(not_implemented).
+cast(_,_,_,_,_) ->
     erlang:error(not_implemented).
 
 %%-------------------------------------------------------------------------

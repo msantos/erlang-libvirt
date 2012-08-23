@@ -555,6 +555,34 @@ vert_virDomainOpenConsole(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     return atom_ok;
 }
 
+    ERL_NIF_TERM
+vert_virDomainScreenshot(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *dp = NULL;
+    VERT_RESOURCE *sp = NULL;
+    u_int32_t screen = 0;
+    u_int32_t flags = 0;
+
+    char *mime_type = NULL;
+    ERL_NIF_TERM res = {0};
+
+
+    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
+    VERT_GET_RESOURCE(1, sp, VERT_RES_STREAM);
+    VERT_GET_UINT(2, screen);
+    VERT_GET_UINT(3, flags);
+
+    mime_type = virDomainScreenshot(dp->res, sp->res, screen, flags);
+
+    VERTERR(mime_type == NULL);
+
+    res = enif_make_string(env, mime_type, ERL_NIF_LATIN1);
+
+    free(mime_type);
+
+    return  enif_make_tuple2(env, atom_ok, res);
+}
+
 
 /*
  * Internal functions

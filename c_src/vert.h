@@ -112,6 +112,11 @@ enum {
         return error_tuple(env, atom_badarg); \
 } while (0)
 
+#define VERT_GET_UINT(index, var) do { \
+    if (enif_get_uint(env, argv[(index)], &var) < 0) \
+        return error_tuple(env, atom_badarg); \
+} while (0)
+
 #define VERT_GET_ULONG(index, var) do { \
     if (enif_get_ulong(env, argv[(index)], &var) < 0) \
         return error_tuple(env, atom_badarg); \
