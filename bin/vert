@@ -187,7 +187,7 @@ connect(Opt) ->
     vert:virConnectOpen(URI).
 
 domain(Connect, Host) ->
-    Fun = [ fun() -> vert:virDomainLookupById(Connect, list_to_integer(Host)) end,
+    Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Host)) end,
             fun() -> vert:virDomainLookupByUUIDString(Connect, Host) end,
             fun() -> vert:virDomainLookupByName(Connect, Host) end ],
     domain_1(Fun).
