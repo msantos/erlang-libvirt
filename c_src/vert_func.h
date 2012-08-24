@@ -133,7 +133,7 @@ ErlNifFunc vert_funcs[] = {
     /* stream */
     {"virStreamAbort", 1, vert_virStreamAbort},
     {"virStreamFinish", 1, vert_virStreamFinish},
-    {"virStreamNew", 1, vert_virStreamNew},
+    {"virStreamNew", 2, vert_virStreamNew},
     {"virStreamSend", 2, vert_virStreamSend},
     {"virStreamRecv", 2, vert_virStreamRecv},
 

@@ -40,14 +40,16 @@ VERT_FUN_INT_RES(virStreamFinish, VERT_RES_STREAM);
 vert_virStreamNew(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *vp = NULL;
+    int flags = VIR_STREAM_NONBLOCK;
     VERT_RESOURCE *sp = NULL;
 
 
     VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_INT(1, flags);
 
     VERT_RES_ALLOC(sp, VERT_RES_STREAM, vp->res);
 
-    sp->res = virStreamNew(vp->res,  VIR_STREAM_NONBLOCK);
+    sp->res = virStreamNew(vp->res, flags);
 
     if (sp->res == NULL) {
         enif_release_resource(sp);

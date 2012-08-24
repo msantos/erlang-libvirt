@@ -95,7 +95,9 @@ main(["screenshot", Host | Arg]) ->
 
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Host),
-    {ok, Stream} = vert:virStreamNew(Connect),
+    % XXX Put the stream in blocking mode. Seems to be the only way to
+    % XXX read from a stream.
+    {ok, Stream} = vert:virStreamNew(Connect, 0),
     {ok, Mime} = vert:virDomainScreenshot(Domain, Stream, Screen),
 
     error_logger:info_report([{mime, Mime}]),

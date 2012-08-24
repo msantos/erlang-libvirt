@@ -122,7 +122,7 @@
         virConnectGetLibVersion/1,
         virConnectGetHostname/1,
         virConnectGetCapabilities/1,
-        virStreamNew/1,
+        virStreamNew/1, virStreamNew/2,
         virStreamFinish/1,
         virStreamAbort/1,
         virStreamSend/2,
@@ -156,7 +156,9 @@ virStreamRecv(#resource{type = stream, res = Res}, Nbytes) ->
     call(virStreamRecv, [Res, Nbytes]).
 
 virStreamNew(#resource{type = connect, res = Res}) ->
-    call(virStreamNew, [Res]).
+    call(virStreamNew, [Res, ?VIR_STREAM_NONBLOCK]).
+virStreamNew(#resource{type = connect, res = Res}, Flags) ->
+    call(virStreamNew, [Res, Flags]).
 
 virStreamFinish(#resource{type = stream, res = Res}) ->
     call(virStreamFinish, [Res]).

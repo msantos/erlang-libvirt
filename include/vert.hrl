@@ -142,3 +142,5 @@
 -define(VIR_KEYCODE_SET_WIN32, 8).
 -define(VIR_KEYCODE_SET_RFB, 9).
 -define(VIR_KEYCODE_SET_LAST, 10).
+
+-define(VIR_STREAM_NONBLOCK, 1).
