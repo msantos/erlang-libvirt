@@ -87,11 +87,10 @@ main(["recv", Host, Timeout0]) ->
 
 main(["screenshot", Host | Arg]) ->
     Opt = getopt(Arg),
+    error_logger:info_report([{opt, Opt}]),
     Screen = proplists:get_value("screen", Opt, 0),
     File = proplists:get_value("file", Opt,
             Host ++ "_" ++ os:getpid() ++ ".screen"),
-
-    error_logger:info_report([{opt, Opt}]),
 
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Host),
@@ -181,7 +180,7 @@ getopt([], Acc) ->
 getopt(["--" ++ Key, "--" ++ _ = Val | Rest], Acc) ->
     getopt([Val|Rest], [{Key, true}|Acc]);
 getopt(["--" ++ Key, Val | Rest], Acc) ->
-    getopt([Val|Rest], [{Key, true}|Acc]).
+    getopt(Rest, [{Key, Val}|Acc]).
 
 connect(Opt) ->
     URI = proplists:get_value("uri", Opt, "qemu:///system"),
