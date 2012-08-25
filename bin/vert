@@ -14,6 +14,18 @@ main(Opt) ->
 
     call(Opt).
 
+call(["autostart", Host | Arg]) ->
+    Opt = getopt(Arg),
+
+    Autostart = case proplists:get_value("disable", Opt) of
+        undefined -> 1;
+        _ -> 0
+    end,
+
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
+    rp(vert:virDomainSetAutostart(Domain, Autostart));
+
 call(["capabilities" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
@@ -174,6 +186,7 @@ call(["uri" | Arg]) ->
 
 call(_) ->
     Help = [
+        "autostart",
         "capabilties",
         "ctl-alt-del",
         "console",

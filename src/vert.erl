@@ -449,7 +449,11 @@ virDomainShutdown(#resource{type = domain, res = Res}) ->
 %virDomainSetMemory(#resource{type = domain, res = Res}, Memory) ->
 %virDomainSetMaxMemory(#resource{type = domain, res = Res}, Memory) ->
 
-virDomainSetAutostart(#resource{type = domain, res = Res}, Autostart) ->
+virDomainSetAutostart(Res, Autostart) when Autostart =:= true ->
+    virDomainSetAutostart(Res, 1);
+virDomainSetAutostart(Res, Autostart) when Autostart =:= false ->
+    virDomainSetAutostart(Res, 0);
+virDomainSetAutostart(#resource{type = domain, res = Res}, Autostart) when is_integer(Autostart) ->
     call(virDomainSetAutostart, [Res, Autostart]).
 
 virDomainSave(#resource{type = domain, res = Res}, To) when is_list(To) ->
