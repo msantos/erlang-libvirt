@@ -36,6 +36,17 @@ main(["create", Host | Arg]) ->
 main(["ctl-alt-del", Host | Arg]) ->
     main(["send-key", Host, "29 56 111" | Arg]);
 
+main(["define", File | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(File) of
+        {ok, XML} ->
+            vert:virDomainDefineXML(Connect, XML);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
 main(["destroy", Host | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
@@ -141,6 +152,12 @@ main(["shutdown", Host | Arg]) ->
     {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainShutdown(Domain));
 
+main(["undefine", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
+    rp(vert:virDomainUndefine(Domain));
+
 main(["uri" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
@@ -152,6 +169,7 @@ main(_) ->
         "ctl-alt-del",
         "console",
         "create",
+        "define",
         "destroy",
         "freecell",
         "hostname",
@@ -161,6 +179,7 @@ main(_) ->
         "recv",
         "send",
         "shutdown",
+        "undefine",
         "uri"
     ],
     rp(Help),
