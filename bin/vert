@@ -1,16 +1,20 @@
 #!/usr/bin/env escript
-%%! -pa ebin -pa deps/srly/ebin -pa ../srly/ebin
 
 %%%
 %%% Command line interface to libvirt
 %%%
+main(Opt) ->
+    % load vert
+    true = code:add_pathz(filename:dirname(escript:script_name())
+        ++ "/../ebin"),
+    call(Opt).
 
-main(["capabilities" | Arg]) ->
+call(["capabilities" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetCapabilities(Connect));
 
-main(["console", Host]) ->
+call(["console", Host]) ->
     io:setopts(standard_io, [binary]),
 
     {ok, FD} = serctl:open({fd, 0}),
@@ -20,7 +24,7 @@ main(["console", Host]) ->
     spawn_link(fun() -> console_output(Ref) end),
     console_input(Ref);
 
-main(["create", Host | Arg]) ->
+call(["create", Host | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
 
@@ -33,10 +37,10 @@ main(["create", Host | Arg]) ->
 
     rp(vert:virDomainCreate(Domain));
 
-main(["ctl-alt-del", Host | Arg]) ->
-    main(["send-key", Host, "29 56 111" | Arg]);
+call(["ctl-alt-del", Host | Arg]) ->
+    call(["send-key", Host, "29 56 111" | Arg]);
 
-main(["define", File | Arg]) ->
+call(["define", File | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     Res = case file:read_file(File) of
@@ -47,36 +51,36 @@ main(["define", File | Arg]) ->
     end,
     rp(Res);
 
-main(["destroy", Host | Arg]) ->
+call(["destroy", Host | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainDestroy(Domain));
 
-main(["freecell" | Arg]) ->
+call(["freecell" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     rp(vert:virNodeGetFreeMemory(Connect));
 
-main(["hostname" | Arg]) ->
+call(["hostname" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetHostname(Connect));
 
-main(["list", "--all" | Arg]) ->
+call(["list", "--all" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     {ok, Shutoff} = vert:virConnectListDefinedDomains(Connect),
     {ok, Running} = domains(Connect, running),
     rp({ok, [{running, Running}, {shutoff, Shutoff}]});
 
-main(["list" | Arg]) ->
+call(["list" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     Res = domains(Connect, running),
     rp(Res);
 
-main(["read", Host, Timeout0]) ->
+call(["read", Host, Timeout0]) ->
     Timeout = case Timeout0 of
         "infinity" -> infinity;
         _ -> list_to_integer(Timeout0)
@@ -86,17 +90,17 @@ main(["read", Host, Timeout0]) ->
     vert_console:close(Ref),
     rp(Res);
 
-main(["read", Host]) ->
-    main(["read", Host, "infinity"]);
+call(["read", Host]) ->
+    call(["read", Host, "infinity"]);
 
-main(["recv", Host, Timeout0]) ->
+call(["recv", Host, Timeout0]) ->
     Timeout = list_to_integer(Timeout0),
     {ok, Ref} = vert_console:open(Host),
     Res = vert_console:recv(Ref, Timeout),
     vert_console:close(Ref),
     rp(Res);
 
-main(["screenshot", Host | Arg]) ->
+call(["screenshot", Host | Arg]) ->
     Opt = getopt(Arg),
     error_logger:info_report([{opt, Opt}]),
     Screen = proplists:get_value("screen", Opt, 0),
@@ -116,7 +120,7 @@ main(["screenshot", Host | Arg]) ->
 
     {ok, Mime};
 
-main(["send", Host | Commands]) ->
+call(["send", Host | Commands]) ->
     {ok, Ref} = vert_console:open(Host, [{recv_timeout, 0}]),
     lists:foreach(fun(C) ->
             error_logger:info_report([{cmd, Host, C}]),
@@ -125,7 +129,7 @@ main(["send", Host | Commands]) ->
         Commands),
     rp(vert_console:close(Ref));
 
-main(["send-key", Host, Keycode | Arg]) ->
+call(["send-key", Host, Keycode | Arg]) ->
     Opt = getopt(Arg),
     Codeset0 = proplists:get_value("codeset", Opt, "linux"),
     Holdtime = list_to_integer(proplists:get_value("holdtime", Opt, "0")),
@@ -146,24 +150,24 @@ main(["send-key", Host, Keycode | Arg]) ->
                     N <- string:tokens(Keycode, " ") ]
                 ));
 
-main(["shutdown", Host | Arg]) ->
+call(["shutdown", Host | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainShutdown(Domain));
 
-main(["undefine", Host | Arg]) ->
+call(["undefine", Host | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainUndefine(Domain));
 
-main(["uri" | Arg]) ->
+call(["uri" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetURI(Connect));
 
-main(_) ->
+call(_) ->
     Help = [
         "capabilties",
         "ctl-alt-del",
