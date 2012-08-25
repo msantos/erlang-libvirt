@@ -74,6 +74,13 @@ call(["destroy", Host | Arg]) ->
     {ok, Domain} = domain(Connect, Host),
     rp(vert:virDomainDestroy(Domain));
 
+call(["dumpxml", Host | Arg]) ->
+    Opt = getopt(Arg),
+    Flags = proplists:get_value("flags", Opt, 0),
+    {ok, Connect} = connect(Opt),
+    {ok, Domain} = domain(Connect, Host),
+    rp(vert:virDomainGetXMLDesc(Domain, Flags));
+
 call(["freecell" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
@@ -193,6 +200,7 @@ call(_) ->
         "create",
         "define",
         "destroy",
+        "dumpxml",
         "freecell",
         "hostname",
         "list",
