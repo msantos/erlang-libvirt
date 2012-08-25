@@ -202,6 +202,8 @@ getopt([], Acc) ->
     lists:reverse(Acc);
 getopt(["--" ++ Key, "--" ++ _ = Val | Rest], Acc) ->
     getopt([Val|Rest], [{Key, true}|Acc]);
+getopt(["--" ++ Key], Acc) ->
+    getopt([], [{Key, true}|Acc]);
 getopt(["--" ++ Key, Val | Rest], Acc) ->
     getopt(Rest, [{Key, Val}|Acc]).
 
