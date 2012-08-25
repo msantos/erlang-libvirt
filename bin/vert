@@ -7,6 +7,11 @@ main(Opt) ->
     % load vert
     true = code:add_pathz(filename:dirname(escript:script_name())
         ++ "/../ebin"),
+
+    % load srly for tcsetattr (optional)
+    code:add_pathz(filename:dirname(escript:script_name())
+        ++ "/../deps/srly/ebin"),
+
     call(Opt).
 
 call(["capabilities" | Arg]) ->
