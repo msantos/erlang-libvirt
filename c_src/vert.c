@@ -121,13 +121,6 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     return 0;
 }
 
-
-    void
-unload(ErlNifEnv *env, void *priv_data)
-{
-}
-
-
     void *
 vert_loop(void *arg)
 {
@@ -238,4 +231,4 @@ static ErlNifFunc nif_funcs[] = {
     {"cast", 6, vert_cast},
 };
 
-ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, unload)
+ERL_NIF_INIT(vert, nif_funcs, load, NULL, NULL, NULL)
