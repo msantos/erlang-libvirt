@@ -276,8 +276,7 @@ domain(Connect, Host) ->
     lookup(Fun).
 
 nwfilter(Connect, Host) ->
-    Fun = [ fun() -> vert:virNWFilterLookupByID(Connect, list_to_integer(Host)) end,
-            fun() -> vert:virNWFilterLookupByUUIDString(Connect, Host) end,
+    Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Host) end,
             fun() -> vert:virNWFilterLookupByName(Connect, Host) end ],
     lookup(Fun).
 
