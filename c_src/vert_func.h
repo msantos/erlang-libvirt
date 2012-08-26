@@ -123,6 +123,7 @@ ErlNifFunc vert_funcs[] = {
     {"virNetworkGetBridgeName", 1, vert_virNetworkGetBridgeName},
     {"virNetworkGetName", 1, vert_virNetworkGetName},
     {"virNetworkGetUUID", 1, vert_virNetworkGetUUID},
+    {"virNetworkGetUUIDString", 1, vert_virNetworkGetUUIDString},
     {"virNetworkGetXMLDesc", 2, vert_virNetworkGetXMLDesc},
     {"virNetworkIsPersistent", 1, vert_virNetworkIsPersistent},
     {"virNetworkLookupByName", 2, vert_virNetworkLookupByName},

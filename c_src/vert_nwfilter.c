@@ -37,47 +37,8 @@
 VERT_FUN_INT_RES(virNWFilterUndefine, VERT_RES_NWFILTER)
 VERT_FUN_DEFINEXML(virNWFilterDefineXML, VERT_RES_NWFILTER, atom_nwfilter)
 VERT_FUN_GETNAME(virNWFilterGetName, VERT_RES_NWFILTER)
-
-    ERL_NIF_TERM
-vert_virNWFilterGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    ErlNifBinary uuid = {0};
-    int rv = 0;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NWFILTER);
-
-    if (!enif_alloc_binary(VIR_UUID_BUFLEN, &uuid))
-        return error_tuple(env, atom_enomem);
-
-    rv = virNWFilterGetUUID(np->res, uuid.data);
-
-    VERTERR(rv < 0);
-
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_binary(env, &uuid));
-}
-
-    ERL_NIF_TERM
-vert_virNWFilterGetUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    char buf[VIR_UUID_STRING_BUFLEN] = {0};
-    int rv = 0;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NWFILTER);
-
-    rv = virNWFilterGetUUIDString(np->res, buf);
-
-    VERTERR(rv < 0);
-
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_string(env, buf, ERL_NIF_LATIN1));
-}
+VERT_FUN_GETUUID(virNWFilterGetUUID, VERT_RES_NWFILTER)
+VERT_FUN_GETUUIDSTRING(virNWFilterGetUUIDString, VERT_RES_NWFILTER)
 
     ERL_NIF_TERM
 vert_virNWFilterGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

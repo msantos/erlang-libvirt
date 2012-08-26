@@ -43,6 +43,8 @@ VERT_FUN_INT_RES(virDomainUndefine, VERT_RES_DOMAIN)
 
 VERT_FUN_DEFINEXML(virDomainDefineXML, VERT_RES_DOMAIN, atom_domain)
 VERT_FUN_GETNAME(virDomainGetName, VERT_RES_DOMAIN)
+VERT_FUN_GETUUID(virDomainGetUUID, VERT_RES_DOMAIN)
+VERT_FUN_GETUUIDSTRING(virDomainGetUUIDString, VERT_RES_DOMAIN)
 
 #if HAVE_VIRDOMAINCREATEWITHFLAGS
     ERL_NIF_TERM
@@ -398,37 +400,6 @@ vert_virDomainGetSecurityLabel(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv
     BINCOPY(buf, &label, sizeof(virSecurityLabel));
 
     return enif_make_tuple2(env, atom_ok, buf);
-}
-
-    ERL_NIF_TERM
-vert_virDomainGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *dp = NULL;
-    unsigned char uuid[VIR_UUID_BUFLEN];
-    ERL_NIF_TERM buf = {0};
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    VERTERR(virDomainGetUUID(dp->res, uuid) < 0);
-    BINCOPY(buf, &uuid, sizeof(VIR_UUID_BUFLEN));
-
-    return enif_make_tuple2(env, atom_ok, buf);
-}
-
-    ERL_NIF_TERM
-vert_virDomainGetUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *dp = NULL;
-    char uuid[VIR_UUID_STRING_BUFLEN];
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    VERTERR(virDomainGetUUIDString(dp->res, uuid) < 0);
-
-    return enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, uuid, ERL_NIF_LATIN1));
 }
 
 #ifdef HAVE_VIRDOMAINGETVCPUS

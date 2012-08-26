@@ -285,6 +285,41 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
             enif_make_string(env, name, ERL_NIF_LATIN1)); \
 }
 
+#define VERT_FUN_GETUUID(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    ErlNifBinary uuid = {0}; \
+ \
+    VERT_GET_RESOURCE(0, rp, type); \
+ \
+    if (!enif_alloc_binary(VIR_UUID_BUFLEN, &uuid)) \
+        return error_tuple(env, atom_enomem); \
+ \
+    VERTERR(fun(rp->res, uuid.data) < 0); \
+ \
+    return enif_make_tuple2(env, \
+            atom_ok, \
+            enif_make_binary(env, &uuid)); \
+}
+
+#define VERT_FUN_GETUUIDSTRING(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    char buf[VIR_UUID_STRING_BUFLEN] = {0}; \
+ \
+    VERT_GET_RESOURCE(0, rp, VERT_RES_NWFILTER); \
+ \
+    VERTERR(fun(rp->res, buf) < 0); \
+ \
+    return enif_make_tuple2(env, \
+            atom_ok, \
+            enif_make_string(env, buf, ERL_NIF_LATIN1)); \
+}
+
 #define VERT_FUN_UNSUPPORTED(fun) \
     ERL_NIF_TERM \
 vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
