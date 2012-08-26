@@ -49,6 +49,17 @@
         virNetworkDestroy/1,
         virNetworkDefineXML/2,
         virNetworkCreate/1,
+
+        virNWFilterDefineXML/2,
+        virNWFilterGetName/1,
+        virNWFilterGetUUID/1,
+        virNWFilterGetUUIDString/1,
+        virNWFilterGetXMLDesc/1, virNWFilterGetXMLDesc/2,
+        virNWFilterLookupByName/2,
+        virNWFilterLookupByUUID/2,
+        virNWFilterLookupByUUIDString/2,
+        virNWFilterUndefine/1,
+
         virInterfaceUndefine/1,
         virInterfaceLookupByName/2,
         virInterfaceLookupByMACString/2,
@@ -387,6 +398,39 @@ virNetworkDefineXML(#resource{type = connect, res = Res}, Xml) ->
 virNetworkCreate(#resource{type = network, res = Res}) ->
     call(virNetworkCreate, [Res]).
 
+%%-------------------------------------------------------------------------
+%%% NWFilter
+%%-------------------------------------------------------------------------
+virNWFilterUndefine(#resource{type = nwfilter, res = Res}) ->
+    ok(call(virNWFilterUndefine, [Res])).
+
+virNWFilterLookupByUUIDString(#resource{type = connect, res = Res}, Uuidstr)
+    when is_binary(Uuidstr); is_list(Uuidstr) ->
+    call(virNWFilterLookupByUUIDString, [Res, Uuidstr]).
+
+virNWFilterLookupByUUID(#resource{type = connect, res = Res}, Uuid) ->
+    call(virNWFilterLookupByUUID, [Res, Uuid]).
+
+virNWFilterLookupByName(#resource{type = connect, res = Res}, Name) ->
+    call(virNWFilterLookupByName, [Res, Name]).
+
+virNWFilterGetXMLDesc(#resource{type = nwfilter, res = Res}) ->
+    call(virNWFilterGetXMLDesc, [Res, 0]).
+virNWFilterGetXMLDesc(#resource{type = nwfilter, res = Res}, Flags) ->
+    call(virNWFilterGetXMLDesc, [Res, Flags]).
+
+virNWFilterGetUUIDString(#resource{type = nwfilter, res = Res}) ->
+    call(virNWFilterGetUUIDString, [Res]).
+
+virNWFilterGetUUID(#resource{type = nwfilter, res = Res}) ->
+    call(virNWFilterGetUUID, [Res]).
+
+virNWFilterGetName(#resource{type = nwfilter, res = Res}) ->
+    call(virNWFilterGetName, [Res]).
+
+virNWFilterDefineXML(#resource{type = connect, res = Res}, Xml) ->
+    call(virNWFilterDefineXML, [Res, Xml]).
+
 
 %%-------------------------------------------------------------------------
 %%% Interface
@@ -685,7 +729,7 @@ virConnectListNetworks(#resource{type = connect, res = Res}, Maxnames) when is_i
     call(virConnectListNetworks, [Res, Maxnames]).
 
 virConnectListNWFilters(Res) ->
-    {ok, Maxnames} = virConnectListNWFilters(Res),
+    {ok, Maxnames} = virConnectNumOfNWFilters(Res),
     virConnectListNWFilters(Res, Maxnames).
 virConnectListNWFilters(_, 0) ->
     {ok, []};

@@ -50,6 +50,7 @@ ERL_NIF_TERM atom_connect;
 ERL_NIF_TERM atom_domain;
 ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_network;
+ERL_NIF_TERM atom_nwfilter;
 ERL_NIF_TERM atom_stream;
 ERL_NIF_TERM atom_true;
 ERL_NIF_TERM atom_false;
@@ -87,6 +88,7 @@ enum {
     VERT_RES_DOMAIN,
     VERT_RES_INTERFACE,
     VERT_RES_NETWORK,
+    VERT_RES_NWFILTER,
     VERT_RES_STORAGEPOOL,
     VERT_RES_FILTER,
     VERT_RES_SECRET,
@@ -146,7 +148,7 @@ enum {
 
 #define VERT_BIN_APPEND_NULL(bin) do { \
     if (!enif_realloc_binary(&bin, bin.size+1)) \
-        return atom_enomem; \
+        return error_tuple(env, atom_enomem); \
     bin.data[bin.size-1] = '\0'; \
 } while (0)
 

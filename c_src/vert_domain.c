@@ -293,7 +293,7 @@ vert_virDomainGetMemoryParameters(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
     VERTERR( (virDomainGetMemoryParameters(dp->res, NULL, &n, 0) < 0) || n == 0);
 
     if (!enif_alloc_binary(sizeof(virMemoryParameter)*n, &buf))
-        return atom_enomem;
+        return error_tuple(env, atom_enomem);
 
     VERTERR(virDomainGetMemoryParameters(dp->res, buf.data, &n, 0) < 0);
 

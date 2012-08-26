@@ -35,6 +35,7 @@
 #include "vert_domain.h"
 #include "vert_interface.h"
 #include "vert_network.h"
+#include "vert_nwfilter.h"
 #include "vert_stream.h"
 #include "vert_func.h"
 
@@ -89,6 +90,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_domain = enif_make_atom(env, "domain");
     atom_interface = enif_make_atom(env, "interface");
     atom_network = enif_make_atom(env, "network");
+    atom_nwfilter = enif_make_atom(env, "nwfilter");
     atom_stream = enif_make_atom(env, "stream");
     atom_true = enif_make_atom(env, "true");
     atom_false = enif_make_atom(env, "false");

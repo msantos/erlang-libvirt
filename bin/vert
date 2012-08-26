@@ -191,6 +191,34 @@ call(["uri" | Arg]) ->
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetURI(Connect));
 
+call(["nwfilter-define", File | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(File) of
+        {ok, XML} ->
+            vert:virNWFilterDefineXML(Connect, XML);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
+call(["nwfilter-dumpxml", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Filter} = nwfilter(Connect, Host),
+    rp(vert:virNWFilterGetXMLDesc(Filter));
+
+call(["nwfilter-list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    rp(vert:virConnectListNWFilters(Connect));
+
+call(["nwfilter-undefine", Host | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Filter} = nwfilter(Connect, Host),
+    rp(vert:virNWFilterUndefine(Filter));
+
 call(_) ->
     Help = [
         "autostart",
@@ -210,7 +238,11 @@ call(_) ->
         "send",
         "shutdown",
         "undefine",
-        "uri"
+        "uri",
+        "nwfilter-define",
+        "nwfilter-dumpxml",
+        "nwfilter-list",
+        "nwfilter-undefine"
     ],
     rp(Help),
     halt(1).
@@ -241,21 +273,27 @@ domain(Connect, Host) ->
     Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Host)) end,
             fun() -> vert:virDomainLookupByUUIDString(Connect, Host) end,
             fun() -> vert:virDomainLookupByName(Connect, Host) end ],
-    domain_1(Fun).
+    lookup(Fun).
 
-domain_1(Fun)  ->
-    domain_1(Fun, []).
-domain_1([], [{error, Error}|_]) ->
+nwfilter(Connect, Host) ->
+    Fun = [ fun() -> vert:virNWFilterLookupByID(Connect, list_to_integer(Host)) end,
+            fun() -> vert:virNWFilterLookupByUUIDString(Connect, Host) end,
+            fun() -> vert:virNWFilterLookupByName(Connect, Host) end ],
+    lookup(Fun).
+
+lookup(Fun)  ->
+    lookup(Fun, []).
+lookup([], [{error, Error}|_]) ->
     {error, Error};
-domain_1([Fun|Tail], Acc) ->
+lookup([Fun|Tail], Acc) ->
     try Fun() of
         {ok, Domain} ->
             {ok, Domain};
         {error, Error} ->
-            domain_1(Tail, [{error, Error}|Acc])
+            lookup(Tail, [{error, Error}|Acc])
     catch
         _:_ ->
-            domain_1(Tail, Acc)
+            lookup(Tail, Acc)
     end.
 
 console_output(Ref) ->

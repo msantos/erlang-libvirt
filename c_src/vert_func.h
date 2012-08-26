@@ -130,6 +130,17 @@ ErlNifFunc vert_funcs[] = {
     {"virNetworkLookupByUUIDString", 2, vert_virNetworkLookupByUUIDString},
     {"virNetworkUndefine", 1, vert_virNetworkUndefine},
 
+    /* nwfilter */
+    {"virNWFilterDefineXML", 2, vert_virNWFilterDefineXML},
+    {"virNWFilterGetName", 1, vert_virNWFilterGetName},
+    {"virNWFilterGetUUID", 1, vert_virNWFilterGetUUID},
+    {"virNWFilterGetUUIDString", 1, vert_virNWFilterGetUUIDString},
+    {"virNWFilterGetXMLDesc", 2, vert_virNWFilterGetXMLDesc},
+    {"virNWFilterLookupByName", 2, vert_virNWFilterLookupByName},
+    {"virNWFilterLookupByUUID", 2, vert_virNWFilterLookupByUUID},
+    {"virNWFilterLookupByUUIDString", 2, vert_virNWFilterLookupByUUIDString},
+    {"virNWFilterUndefine", 1, vert_virNWFilterUndefine},
+
     /* stream */
     {"virStreamAbort", 1, vert_virStreamAbort},
     {"virStreamFinish", 1, vert_virStreamFinish},
