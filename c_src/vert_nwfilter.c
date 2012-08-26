@@ -35,26 +35,8 @@
 
 #ifdef HAVE_NWFILTER
 VERT_FUN_INT_RES(virNWFilterUndefine, VERT_RES_NWFILTER)
-VERT_FUN_DEFINEXML(virNWFilterDefineXML, VERT_RES_NWFILTER, atom_nwfilter);
-
-    ERL_NIF_TERM
-vert_virNWFilterGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    const char *name = NULL;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NWFILTER);
-
-    name = virNWFilterGetName(np->res);
-
-    VERTERR(name == NULL);
-
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_string(env, name, ERL_NIF_LATIN1));
-}
-
+VERT_FUN_DEFINEXML(virNWFilterDefineXML, VERT_RES_NWFILTER, atom_nwfilter)
+VERT_FUN_GETNAME(virNWFilterGetName, VERT_RES_NWFILTER)
 
     ERL_NIF_TERM
 vert_virNWFilterGetUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

@@ -42,6 +42,7 @@ VERT_FUN_INT_RES(virDomainSuspend, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainUndefine, VERT_RES_DOMAIN)
 
 VERT_FUN_DEFINEXML(virDomainDefineXML, VERT_RES_DOMAIN, atom_domain)
+VERT_FUN_GETNAME(virDomainGetName, VERT_RES_DOMAIN)
 
 #if HAVE_VIRDOMAINCREATEWITHFLAGS
     ERL_NIF_TERM
@@ -309,23 +310,6 @@ vert_virDomainGetMemoryParameters(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
 #else
     return error_tuple(env, atom_unsupported);
 #endif
-}
-
-    ERL_NIF_TERM
-vert_virDomainGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *dp = NULL;
-    const char *name = NULL;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    name = virDomainGetName(dp->res);
-    VERTERR(name == NULL);
-
-    return enif_make_tuple2(env,
-            atom_ok,
-            enif_make_string(env, name, ERL_NIF_LATIN1));
 }
 
     ERL_NIF_TERM

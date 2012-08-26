@@ -171,23 +171,6 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
             enif_make_int(env, n)); \
 }
 
-#define VERT_FUN_CCHARP_RES(fun, type) \
-    ERL_NIF_TERM \
-vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
-{ \
-    VERT_RESOURCE *vp = NULL; \
-    const char *p = NULL; \
- \
-    VERT_GET_RESOURCE(0, vp, type); \
- \
-    p = fun(vp->res); \
- \
-    VERTERR(p == NULL); \
- \
-    return  enif_make_tuple2(env, atom_ok, \
-        enif_make_string(env, p, ERL_NIF_LATIN1)); \
-}
-
 #define VERT_FUN_CHARP_RES(fun, type) \
     ERL_NIF_TERM \
 vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
@@ -282,6 +265,24 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     } \
  \
     return vert_make_resource(env, rp, tag); \
+}
+
+#define VERT_FUN_GETNAME(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    const char *name = NULL; \
+ \
+    VERT_GET_RESOURCE(0, rp, type); \
+ \
+    name = fun(rp->res); \
+ \
+    VERTERR(name == NULL); \
+ \
+    return enif_make_tuple2(env, \
+            atom_ok, \
+            enif_make_string(env, name, ERL_NIF_LATIN1)); \
 }
 
 #define VERT_FUN_UNSUPPORTED(fun) \
