@@ -34,11 +34,12 @@
 #include "vert_network.h"
 
 
-VERT_FUN_INT_RES(virNetworkIsPersistent, VERT_RES_NETWORK)
-VERT_FUN_INT_RES(virNetworkUndefine, VERT_RES_NETWORK)
 VERT_FUN_INT_RES(virNetworkCreate, VERT_RES_NETWORK)
 VERT_FUN_INT_RES(virNetworkDestroy, VERT_RES_NETWORK)
+VERT_FUN_INT_RES(virNetworkIsPersistent, VERT_RES_NETWORK)
+VERT_FUN_INT_RES(virNetworkUndefine, VERT_RES_NETWORK)
 
+VERT_FUN_DEFINEXML(virNetworkDefineXML, VERT_RES_NETWORK, atom_network)
 
     ERL_NIF_TERM
 vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -172,33 +173,6 @@ vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
         atom_ok,
         enif_make_string(env, desc, ERL_NIF_LATIN1));
 }
-
-    ERL_NIF_TERM
-vert_virNetworkDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary cfg;
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, cfg);
-
-    VERT_BIN_APPEND_NULL(cfg);
-
-    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = virNetworkDefineXML(vp->res, (char *)cfg.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
-}
-
 
 /*
  * Internal functions

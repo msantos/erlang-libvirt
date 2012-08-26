@@ -35,32 +35,7 @@
 
 #ifdef HAVE_NWFILTER
 VERT_FUN_INT_RES(virNWFilterUndefine, VERT_RES_NWFILTER)
-
-    ERL_NIF_TERM
-vert_virNWFilterDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary xml = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, xml);
-
-    VERT_BIN_APPEND_NULL(xml);
-
-    VERT_RES_ALLOC(np, VERT_RES_NWFILTER, vp->res);
-
-    np->res = virNWFilterDefineXML(vp->res, (const char *)xml.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_nwfilter);
-}
+VERT_FUN_DEFINEXML(virNWFilterDefineXML, VERT_RES_NWFILTER, atom_nwfilter);
 
     ERL_NIF_TERM
 vert_virNWFilterGetName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

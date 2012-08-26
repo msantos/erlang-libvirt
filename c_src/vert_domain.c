@@ -34,12 +34,14 @@
 #include "vert_domain.h"
 
 
+VERT_FUN_INT_RES(virDomainDestroy, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainGetMaxVcpus, VERT_RES_DOMAIN)
+VERT_FUN_INT_RES(virDomainResume, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainShutdown, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainSuspend, VERT_RES_DOMAIN)
-VERT_FUN_INT_RES(virDomainResume, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainUndefine, VERT_RES_DOMAIN)
-VERT_FUN_INT_RES(virDomainDestroy, VERT_RES_DOMAIN)
+
+VERT_FUN_DEFINEXML(virDomainDefineXML, VERT_RES_DOMAIN, atom_domain)
 
 #if HAVE_VIRDOMAINCREATEWITHFLAGS
     ERL_NIF_TERM
@@ -523,32 +525,6 @@ vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     VERTERR(n < 0);
 
     return atom_ok;
-}
-
-    ERL_NIF_TERM
-vert_virDomainDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary cfg = {0};
-
-    VERT_RESOURCE *dp = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, cfg);
-
-    VERT_BIN_APPEND_NULL(cfg);
-
-    VERT_RES_ALLOC(dp, VERT_RES_DOMAIN, vp->res);
-
-    dp->res = virDomainDefineXML(vp->res, (const char *)cfg.data);
-
-    if (dp->res == NULL) {
-        enif_release_resource(dp);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, dp, atom_domain);
 }
 
     ERL_NIF_TERM

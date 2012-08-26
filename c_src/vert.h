@@ -258,6 +258,32 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
         atom_ok, list); \
 }
 
+#define VERT_FUN_DEFINEXML(fun, type, tag) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    ErlNifBinary xml = {0}; \
+ \
+    VERT_RESOURCE *rp = NULL; \
+ \
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT); \
+    VERT_GET_IOLIST(1, xml); \
+ \
+    VERT_BIN_APPEND_NULL(xml); \
+ \
+    VERT_RES_ALLOC(rp, type, vp->res); \
+ \
+    rp->res = fun(vp->res, (const char *)xml.data); \
+ \
+    if (rp->res == NULL) { \
+        enif_release_resource(rp); \
+        return verterr(env); \
+    } \
+ \
+    return vert_make_resource(env, rp, tag); \
+}
+
 #define VERT_FUN_UNSUPPORTED(fun) \
     ERL_NIF_TERM \
 vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
