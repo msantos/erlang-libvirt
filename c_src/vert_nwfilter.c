@@ -40,84 +40,9 @@ VERT_FUN_GETNAME(virNWFilterGetName, VERT_RES_NWFILTER)
 VERT_FUN_GETUUID(virNWFilterGetUUID, VERT_RES_NWFILTER)
 VERT_FUN_GETUUIDSTRING(virNWFilterGetUUIDString, VERT_RES_NWFILTER)
 VERT_FUN_GETXMLDESC(virNWFilterGetXMLDesc, VERT_RES_NWFILTER)
-
-    ERL_NIF_TERM
-vert_virNWFilterLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary name = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, name);
-
-    VERT_BIN_APPEND_NULL(name);
-
-    VERT_RES_ALLOC(np, VERT_RES_NWFILTER, vp->res);
-
-    np->res = virNWFilterLookupByName(vp->res, (char *)name.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_nwfilter);
-}
-
-    ERL_NIF_TERM
-vert_virNWFilterLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary uuid = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, uuid);
-
-    VERT_BIN_APPEND_NULL(uuid);
-
-    VERT_RES_ALLOC(np, VERT_RES_NWFILTER, vp->res);
-
-    np->res = virNWFilterLookupByUUID(vp->res, uuid.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_nwfilter);
-}
-
-    ERL_NIF_TERM
-vert_virNWFilterLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary uuid = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, uuid);
-
-    VERT_BIN_APPEND_NULL(uuid);
-
-    VERT_RES_ALLOC(np, VERT_RES_NWFILTER, vp->res);
-
-    np->res = virNWFilterLookupByUUIDString(vp->res, (char *)uuid.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_nwfilter);
-}
+VERT_FUN_LOOKUPBYNAME(virNWFilterLookupByName, VERT_RES_NWFILTER, atom_nwfilter)
+VERT_FUN_LOOKUPBYNAME(virNWFilterLookupByUUIDString, VERT_RES_NWFILTER, atom_nwfilter)
+VERT_FUN_LOOKUPBYUUID(virNWFilterLookupByUUID, VERT_RES_NWFILTER, atom_nwfilter)
 #else
 VERT_FUN_UNSUPPORTED(virNWFilterUndefine)
 VERT_FUN_UNSUPPORTED(virNWFilterGetXMLDesc)

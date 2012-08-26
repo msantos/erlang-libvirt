@@ -45,42 +45,9 @@ VERT_FUN_GETNAME(virNetworkGetName, VERT_RES_NETWORK)
 VERT_FUN_GETUUID(virNetworkGetUUID, VERT_RES_NETWORK)
 VERT_FUN_GETUUIDSTRING(virNetworkGetUUIDString, VERT_RES_NETWORK)
 VERT_FUN_GETXMLDESC(virNetworkGetXMLDesc, VERT_RES_NETWORK)
-
-    ERL_NIF_TERM
-vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_network_res_res_ccharp(env, argv, virNetworkLookupByName);
-}
-
-    ERL_NIF_TERM
-vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary buf = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, buf);
-
-    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = virNetworkLookupByUUID(vp->res, buf.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
-}
-
-    ERL_NIF_TERM
-vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_network_res_res_ccharp(env, argv, virNetworkLookupByUUIDString);
-}
+VERT_FUN_LOOKUPBYNAME(virNetworkLookupByName, VERT_RES_NETWORK, atom_network)
+VERT_FUN_LOOKUPBYNAME(virNetworkLookupByUUIDString, VERT_RES_NETWORK, atom_network)
+VERT_FUN_LOOKUPBYUUID(virNetworkLookupByUUID, VERT_RES_NETWORK, atom_network)
 
     ERL_NIF_TERM
 vert_virNetworkGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -116,35 +83,4 @@ vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
     return enif_make_tuple2(env,
         atom_ok,
         term);
-}
-
-/*
- * Internal functions
- */
-    ERL_NIF_TERM
-vert_network_res_res_ccharp(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        virNetworkPtr (*fp)(virConnectPtr, const char *)
-        )
-{
-    VERT_RESOURCE *vp = NULL;
-    ErlNifBinary buf = {0};
-
-    VERT_RESOURCE *np = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-    VERT_GET_IOLIST(1, buf);
-
-    VERT_RES_ALLOC(np, VERT_RES_NETWORK, vp->res);
-
-    np->res = fp(vp->res, (char *)buf.data);
-
-    if (np->res == NULL) {
-        enif_release_resource(np);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, np, atom_network);
 }

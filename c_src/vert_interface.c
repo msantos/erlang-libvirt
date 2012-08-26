@@ -39,19 +39,8 @@ VERT_FUN_INT_RES(virInterfaceUndefine, VERT_RES_INTERFACE)
 VERT_FUN_GETNAME(virInterfaceGetMACString, VERT_RES_INTERFACE)
 VERT_FUN_GETNAME(virInterfaceGetName, VERT_RES_INTERFACE)
 VERT_FUN_GETXMLDESC(virInterfaceGetXMLDesc, VERT_RES_INTERFACE)
-
-
-    ERL_NIF_TERM
-vert_virInterfaceLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_interface_res_res_ccharp(env, argv, virInterfaceLookupByName);
-}
-
-    ERL_NIF_TERM
-vert_virInterfaceLookupByMACString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_interface_res_res_ccharp(env, argv, virInterfaceLookupByMACString);
-}
+VERT_FUN_LOOKUPBYNAME(virInterfaceLookupByName, VERT_RES_INTERFACE, atom_interface)
+VERT_FUN_LOOKUPBYNAME(virInterfaceLookupByMACString, VERT_RES_INTERFACE, atom_interface)
 
     ERL_NIF_TERM
 vert_virInterfaceDefineXML(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -95,41 +84,6 @@ vert_virInterfaceDestroy(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 /*
  * Internal functions
  */
-    ERL_NIF_TERM
-vert_interface_res_res_ccharp(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        virInterfacePtr (*fp)(virConnectPtr, const char *))
-{
-    VERT_RESOURCE *vp = NULL;
-    const char name[256];
-
-    VERT_RESOURCE *ifp = NULL;
-
-
-    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
-
-    if (enif_get_string(env, argv[1], (char *)name, sizeof(name), ERL_NIF_LATIN1) < 1)
-        return error_tuple(env, atom_badarg);
-
-    ifp = enif_alloc_resource(NIF_VERT_RESOURCE, sizeof(VERT_RESOURCE));
-
-    if (ifp == NULL)
-        return atom_enomem;
-
-    ifp->type = VERT_RES_INTERFACE;
-    ifp->conn = vp->res;
-
-    ifp->res = fp(vp->res, name);
-
-    if (ifp->res == NULL) {
-        enif_release_resource(ifp);
-        return verterr(env);
-    }
-
-    return vert_make_resource(env, ifp, atom_interface);
-}
-
     ERL_NIF_TERM
 vert_interface_int_res_uint(
         ErlNifEnv *env,

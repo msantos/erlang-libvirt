@@ -345,6 +345,59 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     return term; \
 }
 
+/* *LookupByName and LookupByUUIDString */
+#define VERT_FUN_LOOKUPBYNAME(fun, type, tag) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    ErlNifBinary name = {0}; \
+ \
+    VERT_RESOURCE *rp = NULL; \
+ \
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT); \
+    VERT_GET_IOLIST(1, name); \
+ \
+    VERT_BIN_APPEND_NULL(name); \
+ \
+    VERT_RES_ALLOC(rp, type, vp->res); \
+ \
+    rp->res = fun(vp->res, (char *)name.data); \
+ \
+    if (rp->res == NULL) { \
+        enif_release_resource(rp); \
+        return verterr(env); \
+    } \
+ \
+    return vert_make_resource(env, rp, tag); \
+}
+
+#define VERT_FUN_LOOKUPBYUUID(fun, type, tag) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *vp = NULL; \
+    ErlNifBinary uuid = {0}; \
+ \
+    VERT_RESOURCE *rp = NULL; \
+ \
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT); \
+    VERT_GET_IOLIST(1, uuid); \
+ \
+    VERT_BIN_APPEND_NULL(uuid); \
+ \
+    VERT_RES_ALLOC(rp, type, vp->res); \
+ \
+    rp->res = fun(vp->res, uuid.data); \
+ \
+    if (rp->res == NULL) { \
+        enif_release_resource(rp); \
+        return verterr(env); \
+    } \
+ \
+    return vert_make_resource(env, rp, tag); \
+}
+
 #define VERT_FUN_UNSUPPORTED(fun) \
     ERL_NIF_TERM \
 vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
