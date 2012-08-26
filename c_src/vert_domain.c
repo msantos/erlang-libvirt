@@ -42,6 +42,7 @@ VERT_FUN_INT_RES(virDomainSuspend, VERT_RES_DOMAIN)
 VERT_FUN_INT_RES(virDomainUndefine, VERT_RES_DOMAIN)
 
 VERT_FUN_DEFINEXML(virDomainDefineXML, VERT_RES_DOMAIN, atom_domain)
+VERT_FUN_GETAUTOSTART(virDomainGetAutostart, VERT_RES_DOMAIN)
 VERT_FUN_GETNAME(virDomainGetName, VERT_RES_DOMAIN)
 VERT_FUN_GETUUID(virDomainGetUUID, VERT_RES_DOMAIN)
 VERT_FUN_GETUUIDSTRING(virDomainGetUUIDString, VERT_RES_DOMAIN)
@@ -49,13 +50,9 @@ VERT_FUN_GETXMLDESC(virDomainGetXMLDesc, VERT_RES_DOMAIN)
 VERT_FUN_LOOKUPBYNAME(virDomainLookupByName, VERT_RES_DOMAIN, atom_domain)
 VERT_FUN_LOOKUPBYNAME(virDomainLookupByUUIDString, VERT_RES_DOMAIN, atom_domain)
 VERT_FUN_LOOKUPBYUUID(virDomainLookupByUUID, VERT_RES_DOMAIN, atom_domain)
-
+VERT_FUN_SETFLAG(virDomainSetAutostart, VERT_RES_DOMAIN)
 #if HAVE_VIRDOMAINCREATEWITHFLAGS
-    ERL_NIF_TERM
-vert_virDomainCreate(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_domain_int_res_int(env, argv, virDomainCreateWithFlags);
-}
+VERT_FUN_SETFLAG(virDomainCreateWithFlags, VERT_RES_DOMAIN)
 #else
 VERT_FUN_INT_RES(virDomainCreate, VERT_RES_DOMAIN)
 #endif
@@ -82,20 +79,6 @@ vert_virDomainLookupByID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     }
 
     return vert_make_resource(env, dp, atom_domain);
-}
-
-    ERL_NIF_TERM
-vert_virDomainGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *dp = NULL;
-    int autostart = 0;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-
-    VERTERR(virDomainGetAutostart(dp->res, &autostart) < 0);
-
-    return (autostart ? atom_true : atom_false);
 }
 
 #ifdef HAVE_VIRDOMAINGETBLOCKINFO
@@ -386,12 +369,6 @@ vert_virDomainRestore(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 
     ERL_NIF_TERM
-vert_virDomainSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    return vert_domain_int_res_int(env, argv, virDomainSetAutostart);
-}
-
-    ERL_NIF_TERM
 vert_virDomainOpenConsole(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     VERT_RESOURCE *dp = NULL;
@@ -486,31 +463,6 @@ vert_virDomainSendKey(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             keycodes, nkeycodes, flags);
 
     VERTERR(rv < 0);
-
-    return atom_ok;
-}
-
-/*
- * Internal functions
- */
-    ERL_NIF_TERM
-vert_domain_int_res_int(
-        ErlNifEnv *env,
-        const ERL_NIF_TERM argv[],
-        int (*fp)(virDomainPtr, int))
-{
-    VERT_RESOURCE *dp = NULL;
-    int flags = 0;
-
-    int n = -1;
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-    VERT_GET_INT(1, flags);
-
-    n = fp(dp->res, flags);
-
-    VERTERR(n < 0);
 
     return atom_ok;
 }

@@ -398,6 +398,36 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     return vert_make_resource(env, rp, tag); \
 }
 
+#define VERT_FUN_GETAUTOSTART(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    int autostart = 0; \
+ \
+ \
+    VERT_GET_RESOURCE(0, rp, type); \
+ \
+    VERTERR(virDomainGetAutostart(rp->res, &autostart) < 0); \
+ \
+    return (autostart ? atom_true : atom_false); \
+}
+
+#define VERT_FUN_SETFLAG(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    int flags = 0; \
+ \
+    VERT_GET_RESOURCE(0, rp, type); \
+    VERT_GET_INT(1, flags); \
+ \
+    VERTERR(fun(rp->res, flags) < 0); \
+ \
+    return atom_ok; \
+}
+
 #define VERT_FUN_UNSUPPORTED(fun) \
     ERL_NIF_TERM \
 vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \

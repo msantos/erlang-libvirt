@@ -41,6 +41,7 @@ VERT_FUN_INT_RES(virNetworkUndefine, VERT_RES_NETWORK)
 
 VERT_FUN_DEFINEXML(virNetworkDefineXML, VERT_RES_NETWORK, atom_network)
 
+VERT_FUN_GETAUTOSTART(virNetworkGetAutostart, VERT_RES_NETWORK)
 VERT_FUN_GETNAME(virNetworkGetName, VERT_RES_NETWORK)
 VERT_FUN_GETUUID(virNetworkGetUUID, VERT_RES_NETWORK)
 VERT_FUN_GETUUIDSTRING(virNetworkGetUUIDString, VERT_RES_NETWORK)
@@ -48,20 +49,7 @@ VERT_FUN_GETXMLDESC(virNetworkGetXMLDesc, VERT_RES_NETWORK)
 VERT_FUN_LOOKUPBYNAME(virNetworkLookupByName, VERT_RES_NETWORK, atom_network)
 VERT_FUN_LOOKUPBYNAME(virNetworkLookupByUUIDString, VERT_RES_NETWORK, atom_network)
 VERT_FUN_LOOKUPBYUUID(virNetworkLookupByUUID, VERT_RES_NETWORK, atom_network)
-
-    ERL_NIF_TERM
-vert_virNetworkGetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    int autostart = 0;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-
-    VERTERR(virNetworkGetAutostart(np->res, &autostart) < 0);
-
-    return (autostart ? atom_true : atom_false);
-}
+VERT_FUN_SETFLAG(virNetworkSetAutostart, VERT_RES_NETWORK)
 
     ERL_NIF_TERM
 vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

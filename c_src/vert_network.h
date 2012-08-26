@@ -42,6 +42,7 @@ ERL_NIF_TERM vert_virNetworkIsPersistent(ErlNifEnv *env, int argc, const ERL_NIF
 ERL_NIF_TERM vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virNetworkLookupByUUID(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virNetworkLookupByUUIDString(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM vert_virNetworkSetAutostart(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM vert_virNetworkUndefine(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 
 ERL_NIF_TERM vert_network_res_res_ccharp(

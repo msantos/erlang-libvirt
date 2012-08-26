@@ -129,6 +129,7 @@ ErlNifFunc vert_funcs[] = {
     {"virNetworkLookupByName", 2, vert_virNetworkLookupByName},
     {"virNetworkLookupByUUID", 2, vert_virNetworkLookupByUUID},
     {"virNetworkLookupByUUIDString", 2, vert_virNetworkLookupByUUIDString},
+    {"virNetworkSetAutostart", 2, vert_virNetworkSetAutostart},
     {"virNetworkUndefine", 1, vert_virNetworkUndefine},
 
     /* nwfilter */
