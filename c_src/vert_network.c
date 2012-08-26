@@ -44,6 +44,7 @@ VERT_FUN_DEFINEXML(virNetworkDefineXML, VERT_RES_NETWORK, atom_network)
 VERT_FUN_GETNAME(virNetworkGetName, VERT_RES_NETWORK)
 VERT_FUN_GETUUID(virNetworkGetUUID, VERT_RES_NETWORK)
 VERT_FUN_GETUUIDSTRING(virNetworkGetUUIDString, VERT_RES_NETWORK)
+VERT_FUN_GETXMLDESC(virNetworkGetXMLDesc, VERT_RES_NETWORK)
 
     ERL_NIF_TERM
 vert_virNetworkLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -115,26 +116,6 @@ vert_virNetworkGetBridgeName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
     return enif_make_tuple2(env,
         atom_ok,
         term);
-}
-
-    ERL_NIF_TERM
-vert_virNetworkGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    int flags = 0;
-
-    char *desc = NULL;
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NETWORK);
-    VERT_GET_INT(1, flags);
-
-    desc = virNetworkGetXMLDesc(np->res, flags);
-    VERTERR(desc == NULL);
-
-    return enif_make_tuple2(env,
-        atom_ok,
-        enif_make_string(env, desc, ERL_NIF_LATIN1));
 }
 
 /*

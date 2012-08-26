@@ -39,31 +39,7 @@ VERT_FUN_DEFINEXML(virNWFilterDefineXML, VERT_RES_NWFILTER, atom_nwfilter)
 VERT_FUN_GETNAME(virNWFilterGetName, VERT_RES_NWFILTER)
 VERT_FUN_GETUUID(virNWFilterGetUUID, VERT_RES_NWFILTER)
 VERT_FUN_GETUUIDSTRING(virNWFilterGetUUIDString, VERT_RES_NWFILTER)
-
-    ERL_NIF_TERM
-vert_virNWFilterGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *np = NULL;
-    char *desc = NULL;
-    u_int32_t flags = 0;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, np, VERT_RES_NWFILTER);
-    VERT_GET_UINT(1, flags);
-
-    desc = virNWFilterGetXMLDesc(np->res, flags);
-
-    VERTERR(desc == NULL);
-
-    term = enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, desc, ERL_NIF_LATIN1));
-
-    free(desc);
-
-    return term;
-}
+VERT_FUN_GETXMLDESC(virNWFilterGetXMLDesc, VERT_RES_NWFILTER)
 
     ERL_NIF_TERM
 vert_virNWFilterLookupByName(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

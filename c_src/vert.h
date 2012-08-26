@@ -311,13 +311,38 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
     VERT_RESOURCE *rp = NULL; \
     char buf[VIR_UUID_STRING_BUFLEN] = {0}; \
  \
-    VERT_GET_RESOURCE(0, rp, VERT_RES_NWFILTER); \
+    VERT_GET_RESOURCE(0, rp, type); \
  \
     VERTERR(fun(rp->res, buf) < 0); \
  \
     return enif_make_tuple2(env, \
             atom_ok, \
             enif_make_string(env, buf, ERL_NIF_LATIN1)); \
+}
+
+#define VERT_FUN_GETXMLDESC(fun, type) \
+    ERL_NIF_TERM \
+vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
+{ \
+    VERT_RESOURCE *rp = NULL; \
+    u_int32_t flags = 0; \
+ \
+    char *desc = NULL; \
+    ERL_NIF_TERM term = {0}; \
+ \
+    VERT_GET_RESOURCE(0, rp, type); \
+    VERT_GET_UINT(1, flags); \
+ \
+    desc = fun(rp->res, flags); \
+ \
+    VERTERR(desc == NULL); \
+ \
+    term = enif_make_tuple2(env, atom_ok, \
+        enif_make_string(env, desc, ERL_NIF_LATIN1)); \
+ \
+    free(desc); \
+ \
+    return term; \
 }
 
 #define VERT_FUN_UNSUPPORTED(fun) \

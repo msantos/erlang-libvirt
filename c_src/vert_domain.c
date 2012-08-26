@@ -45,6 +45,7 @@ VERT_FUN_DEFINEXML(virDomainDefineXML, VERT_RES_DOMAIN, atom_domain)
 VERT_FUN_GETNAME(virDomainGetName, VERT_RES_DOMAIN)
 VERT_FUN_GETUUID(virDomainGetUUID, VERT_RES_DOMAIN)
 VERT_FUN_GETUUIDSTRING(virDomainGetUUIDString, VERT_RES_DOMAIN)
+VERT_FUN_GETXMLDESC(virDomainGetXMLDesc, VERT_RES_DOMAIN)
 
 #if HAVE_VIRDOMAINCREATEWITHFLAGS
     ERL_NIF_TERM
@@ -418,31 +419,6 @@ vert_virDomainGetVcpus(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 }
 */
 #endif
-
-    ERL_NIF_TERM
-vert_virDomainGetXMLDesc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-    VERT_RESOURCE *dp = NULL;
-    char *desc = NULL;
-    int flags = 0;
-
-    ERL_NIF_TERM term = {0};
-
-
-    VERT_GET_RESOURCE(0, dp, VERT_RES_DOMAIN);
-    VERT_GET_INT(1, flags);
-
-    desc = virDomainGetXMLDesc(dp->res, flags);
-
-    VERTERR(desc == NULL);
-
-    term = enif_make_tuple2(env, atom_ok,
-        enif_make_string(env, desc, ERL_NIF_LATIN1));
-
-    free(desc);
-
-    return term;
-}
 
     ERL_NIF_TERM
 vert_virDomainSave(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
