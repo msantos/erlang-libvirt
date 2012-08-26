@@ -31,12 +31,7 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_connect.h"
-#include "vert_domain.h"
-#include "vert_interface.h"
-#include "vert_network.h"
-#include "vert_nwfilter.h"
-#include "vert_stream.h"
+#include "vert_funcs.h"
 #include "vert_func.h"
 
 #include <sys/types.h>

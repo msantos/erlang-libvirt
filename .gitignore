@@ -7,3 +7,4 @@ deps
 *.gz
 *.img
 *.so
+c_src/vert_funcs.h

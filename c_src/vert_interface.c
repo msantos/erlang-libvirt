@@ -31,8 +31,12 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_interface.h"
 
+ERL_NIF_TERM vert_interface_int_res_uint(
+        ErlNifEnv *env,
+        const ERL_NIF_TERM argv[],
+        int (*fp)(virInterfacePtr, unsigned int)
+        );
 
 VERT_FUN_INT_RES(virInterfaceUndefine, VERT_RES_INTERFACE)
 

@@ -31,7 +31,6 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_domain.h"
 
 
 VERT_FUN_INT_RES(virDomainDestroy, VERT_RES_DOMAIN)

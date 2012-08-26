@@ -31,7 +31,6 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_stream.h"
 
 VERT_FUN_INT_RES(virStreamAbort, VERT_RES_STREAM);
 VERT_FUN_INT_RES(virStreamFinish, VERT_RES_STREAM);

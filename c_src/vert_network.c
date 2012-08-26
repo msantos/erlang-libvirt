@@ -31,7 +31,6 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_network.h"
 
 
 VERT_FUN_INT_RES(virNetworkCreate, VERT_RES_NETWORK)

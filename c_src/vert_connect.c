@@ -31,8 +31,9 @@
  */
 #include "vert.h"
 #include "vert_util.h"
-#include "vert_connect.h"
 
+
+ERL_NIF_TERM vert_connect_res_charp(ErlNifEnv *env, const ERL_NIF_TERM argv[], virConnectPtr (*fp)(const char *));
 
 VERT_FUN_INT_RES(virConnectIsEncrypted, VERT_RES_CONNECT)
 VERT_FUN_INT_RES(virConnectIsSecure, VERT_RES_CONNECT)
