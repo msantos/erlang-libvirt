@@ -398,7 +398,7 @@ virNetworkGetAutostart(#resource{type = network, res = Res}) ->
     call(virNetworkGetAutostart, [Res]).
 
 virNetworkDestroy(#resource{type = network, res = Res}) ->
-    call(virNetworkDestroy, [Res]).
+    ok(call(virNetworkDestroy, [Res])).
 
 virNetworkDefineXML(#resource{type = connect, res = Res}, Xml) ->
     call(virNetworkDefineXML, [Res, Xml]).
@@ -406,7 +406,7 @@ virNetworkDefineXML(#resource{type = connect, res = Res}, Xml) ->
 %virNetworkCreateXML(Conn, XmlDesc) ->
 
 virNetworkCreate(#resource{type = network, res = Res}) ->
-    call(virNetworkCreate, [Res]).
+    ok(call(virNetworkCreate, [Res])).
 
 %%-------------------------------------------------------------------------
 %%% NWFilter
@@ -475,14 +475,14 @@ virInterfaceGetMACString(#resource{type = interface, res = Res}) ->
 %    call(virInterfaceGetConnect, [Res]).
 
 virInterfaceDestroy(#resource{type = interface, res = Res}) ->
-    bool(call(virInterfaceDestroy, [Res])).
+    ok(call(virInterfaceDestroy, [Res])).
 
 virInterfaceDefineXML(#resource{type = connect, res = Res}, Xml)
     when is_binary(Xml); is_list(Xml) ->
     call(virInterfaceDefineXML, [Res, Xml]).
 
 virInterfaceCreate(#resource{type = interface, res = Res}) ->
-    bool(call(virInterfaceCreate, [Res])).
+    ok(call(virInterfaceCreate, [Res])).
 
 
 %%-------------------------------------------------------------------------
