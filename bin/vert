@@ -14,7 +14,7 @@ main(Opt) ->
 
     call(Opt).
 
-call(["autostart", Host | Arg]) ->
+call(["autostart", Name | Arg]) ->
     Opt = getopt(Arg),
 
     Autostart = case proplists:get_value("disable", Opt) of
@@ -23,7 +23,7 @@ call(["autostart", Host | Arg]) ->
     end,
 
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     rp(vert:virDomainSetAutostart(Domain, Autostart));
 
 call(["capabilities" | Arg]) ->
@@ -31,31 +31,31 @@ call(["capabilities" | Arg]) ->
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetCapabilities(Connect));
 
-call(["console", Host]) ->
+call(["console", Name]) ->
     io:setopts(standard_io, [binary]),
 
     {ok, FD} = serctl:open({fd, 0}),
     ok = serctl:tcsetattr(FD, tcsanow, serctl:mode(raw)),
 
-    {ok, Ref} = vert_console:open(Host),
+    {ok, Ref} = vert_console:open(Name),
     spawn_link(fun() -> console_output(Ref) end),
     console_input(Ref);
 
-call(["create", Host | Arg]) ->
+call(["create", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
 
-    {ok, Domain} = case file:read_file(Host) of
+    {ok, Domain} = case file:read_file(Name) of
         {ok, XML} ->
             vert:virDomainDefineXML(Connect, XML);
         {error, enoent} ->
-            domain(Connect, Host)
+            domain(Connect, Name)
     end,
 
     rp(vert:virDomainCreate(Domain));
 
-call(["ctl-alt-del", Host | Arg]) ->
-    call(["send-key", Host, "29 56 111" | Arg]);
+call(["ctl-alt-del", Name | Arg]) ->
+    call(["send-key", Name, "29 56 111" | Arg]);
 
 call(["define", File | Arg]) ->
     Opt = getopt(Arg),
@@ -68,17 +68,17 @@ call(["define", File | Arg]) ->
     end,
     rp(Res);
 
-call(["destroy", Host | Arg]) ->
+call(["destroy", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     rp(vert:virDomainDestroy(Domain));
 
-call(["dumpxml", Host | Arg]) ->
+call(["dumpxml", Name | Arg]) ->
     Opt = getopt(Arg),
     Flags = proplists:get_value("flags", Opt, 0),
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     rp(vert:virDomainGetXMLDesc(Domain, Flags));
 
 call(["freecell" | Arg]) ->
@@ -104,35 +104,35 @@ call(["list" | Arg]) ->
     Res = domains(Connect, running),
     rp(Res);
 
-call(["read", Host, Timeout0]) ->
+call(["read", Name, Timeout0]) ->
     Timeout = case Timeout0 of
         "infinity" -> infinity;
         _ -> list_to_integer(Timeout0)
     end,
-    {ok, Ref} = vert_console:open(Host),
+    {ok, Ref} = vert_console:open(Name),
     Res = vert_console:read(Ref, Timeout),
     vert_console:close(Ref),
     rp(Res);
 
-call(["read", Host]) ->
-    call(["read", Host, "infinity"]);
+call(["read", Name]) ->
+    call(["read", Name, "infinity"]);
 
-call(["recv", Host, Timeout0]) ->
+call(["recv", Name, Timeout0]) ->
     Timeout = list_to_integer(Timeout0),
-    {ok, Ref} = vert_console:open(Host),
+    {ok, Ref} = vert_console:open(Name),
     Res = vert_console:recv(Ref, Timeout),
     vert_console:close(Ref),
     rp(Res);
 
-call(["screenshot", Host | Arg]) ->
+call(["screenshot", Name | Arg]) ->
     Opt = getopt(Arg),
     error_logger:info_report([{opt, Opt}]),
     Screen = proplists:get_value("screen", Opt, 0),
     File = proplists:get_value("file", Opt,
-            Host ++ "_" ++ os:getpid() ++ ".screen"),
+            Name ++ "_" ++ os:getpid() ++ ".screen"),
 
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     % XXX Put the stream in blocking mode. Seems to be the only way to
     % XXX read from a stream.
     {ok, Stream} = vert:virStreamNew(Connect, 0),
@@ -144,16 +144,16 @@ call(["screenshot", Host | Arg]) ->
 
     {ok, Mime};
 
-call(["send", Host | Commands]) ->
-    {ok, Ref} = vert_console:open(Host, [{recv_timeout, 0}]),
+call(["send", Name | Commands]) ->
+    {ok, Ref} = vert_console:open(Name, [{recv_timeout, 0}]),
     lists:foreach(fun(C) ->
-            error_logger:info_report([{cmd, Host, C}]),
+            error_logger:info_report([{cmd, Name, C}]),
             ok = vert_console:send(Ref, C)
         end,
         Commands),
     rp(vert_console:close(Ref));
 
-call(["send-key", Host, Keycode | Arg]) ->
+call(["send-key", Name, Keycode | Arg]) ->
     Opt = getopt(Arg),
     Codeset0 = proplists:get_value("codeset", Opt, "linux"),
     Holdtime = list_to_integer(proplists:get_value("holdtime", Opt, "0")),
@@ -164,7 +164,7 @@ call(["send-key", Host, Keycode | Arg]) ->
               end,
 
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
 
     rp(vert:virDomainSendKey(
                 Domain,
@@ -174,22 +174,110 @@ call(["send-key", Host, Keycode | Arg]) ->
                     N <- string:tokens(Keycode, " ") ]
                 ));
 
-call(["shutdown", Host | Arg]) ->
+call(["shutdown", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     rp(vert:virDomainShutdown(Domain));
 
-call(["undefine", Host | Arg]) ->
+call(["undefine", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Domain} = domain(Connect, Host),
+    {ok, Domain} = domain(Connect, Name),
     rp(vert:virDomainUndefine(Domain));
 
 call(["uri" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetURI(Connect));
+
+call(["net-autostart", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+
+    Autostart = case proplists:get_value("disable", Opt) of
+        undefined -> 1;
+        _ -> 0
+    end,
+
+    rp(vert:virNetworkSetAutostart(Network, Autostart));
+
+call(["net-create", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+
+    {ok, Network} = case file:read_file(Name) of
+        {ok, XML} ->
+            vert:virNetworkDefineXML(Connect, XML);
+        {error, enoent} ->
+            domain(Connect, Name)
+    end,
+
+    rp(vert:virNetworkCreate(Network));
+
+call(["net-define", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(Name) of
+        {ok, XML} ->
+            vert:virNetworkDefineXML(Connect, XML);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
+call(["net-destroy", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+    rp(vert:virNetworkDestroy(Network));
+
+call(["net-dumpxml", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+    rp(vert:virNetworkGetXMLDesc(Network));
+
+call(["net-info", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+
+    {ok, UUID} = vert:virNetworkGetUUIDString(Network),
+    {ok, Persistent} = vert:virNetworkIsPersistent(Network),
+    Autostart = vert:virNetworkGetAutostart(Network),
+    {ok, Bridge} = vert:virNetworkGetBridgeName(Network),
+
+    rp({ok, [
+        {uuid, UUID},
+        {persistent, bool(Persistent)},
+        {autostart, Autostart},
+        {bridgename, Bridge}
+        ]});
+
+call(["net-list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    rp(vert:virConnectListNetworks(Connect));
+
+call(["net-name", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+    rp(vert:virNetworkGetName(Network));
+
+call(["net-undefine", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = nwfilter(Connect, Name),
+    rp(vert:virNetworkUndefine(Network));
+
+call(["net-uuid", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Network} = network(Connect, Name),
+    rp(vert:virNetworkGetUUIDString(Network));
 
 call(["nwfilter-define", File | Arg]) ->
     Opt = getopt(Arg),
@@ -202,10 +290,10 @@ call(["nwfilter-define", File | Arg]) ->
     end,
     rp(Res);
 
-call(["nwfilter-dumpxml", Host | Arg]) ->
+call(["nwfilter-dumpxml", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Filter} = nwfilter(Connect, Host),
+    {ok, Filter} = nwfilter(Connect, Name),
     rp(vert:virNWFilterGetXMLDesc(Filter));
 
 call(["nwfilter-list" | Arg]) ->
@@ -213,10 +301,10 @@ call(["nwfilter-list" | Arg]) ->
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectListNWFilters(Connect));
 
-call(["nwfilter-undefine", Host | Arg]) ->
+call(["nwfilter-undefine", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Filter} = nwfilter(Connect, Host),
+    {ok, Filter} = nwfilter(Connect, Name),
     rp(vert:virNWFilterUndefine(Filter));
 
 call(_) ->
@@ -239,6 +327,19 @@ call(_) ->
         "shutdown",
         "undefine",
         "uri",
+
+        "net-autostart",
+        "net-create",
+        "net-define",
+        "net-destroy ",
+        "net-dumpxml",
+        "net-info",
+        "net-list",
+        "net-name",
+        "net-start",
+        "net-undefine",
+        "net-uuid",
+
         "nwfilter-define",
         "nwfilter-dumpxml",
         "nwfilter-list",
@@ -265,19 +366,29 @@ getopt(["--" ++ Key], Acc) ->
 getopt(["--" ++ Key, Val | Rest], Acc) ->
     getopt(Rest, [{Key, Val}|Acc]).
 
+bool(true) -> 1;
+bool(false) -> 0;
+bool(1) -> true;
+bool(0) -> false.
+
 connect(Opt) ->
     URI = proplists:get_value("uri", Opt, "qemu:///system"),
     vert:virConnectOpen(URI).
 
-domain(Connect, Host) ->
-    Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Host)) end,
-            fun() -> vert:virDomainLookupByUUIDString(Connect, Host) end,
-            fun() -> vert:virDomainLookupByName(Connect, Host) end ],
+domain(Connect, Name) ->
+    Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Name)) end,
+            fun() -> vert:virDomainLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virDomainLookupByName(Connect, Name) end ],
     lookup(Fun).
 
-nwfilter(Connect, Host) ->
-    Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Host) end,
-            fun() -> vert:virNWFilterLookupByName(Connect, Host) end ],
+network(Connect, Name) ->
+    Fun = [ fun() -> vert:virNetworkLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virNetworkLookupByName(Connect, Name) end ],
+    lookup(Fun).
+
+nwfilter(Connect, Name) ->
+    Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virNWFilterLookupByName(Connect, Name) end ],
     lookup(Fun).
 
 lookup(Fun)  ->

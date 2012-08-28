@@ -408,7 +408,7 @@ vert_##fun(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) \
  \
     VERT_GET_RESOURCE(0, rp, type); \
  \
-    VERTERR(virDomainGetAutostart(rp->res, &autostart) < 0); \
+    VERTERR(fun(rp->res, &autostart) < 0); \
  \
     return (autostart ? atom_true : atom_false); \
 }

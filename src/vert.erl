@@ -45,7 +45,7 @@
         virNetworkGetName/1,
         virNetworkGetUUID/1,
         virNetworkGetUUIDString/1,
-        virNetworkGetXMLDesc/2,
+        virNetworkGetXMLDesc/1, virNetworkGetXMLDesc/2,
         virNetworkIsPersistent/1,
         virNetworkLookupByName/2,
         virNetworkLookupByUUID/2,
@@ -374,6 +374,8 @@ virNetworkIsPersistent(#resource{type = network, res = Res}) ->
 %virNetworkIsActive(#resource{type = network, res = Res}) ->
 %    call(virNetworkIsActive, [Res]).
 
+virNetworkGetXMLDesc(Res) ->
+    virNetworkGetXMLDesc(Res, 0).
 virNetworkGetXMLDesc(#resource{type = network, res = Res}, Flags)
     when is_integer(Flags) ->
     call(virNetworkGetXMLDesc, [Res, Flags]).
