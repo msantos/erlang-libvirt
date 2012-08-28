@@ -31,13 +31,16 @@ call(["capabilities" | Arg]) ->
     {ok, Connect} = connect(Opt),
     rp(vert:virConnectGetCapabilities(Connect));
 
-call(["console", Name]) ->
+call(["console", Name | Arg]) ->
+    Opt = getopt(Arg),
+    URI = proplists:get_value("uri", Opt, "qemu:///session"),
+
     io:setopts(standard_io, [binary]),
 
     {ok, FD} = serctl:open({fd, 0}),
     ok = serctl:tcsetattr(FD, tcsanow, serctl:mode(raw)),
 
-    {ok, Ref} = vert_console:open(Name),
+    {ok, Ref} = vert_console:open(Name, [{uri, URI}]),
     spawn_link(fun() -> console_output(Ref) end),
     console_input(Ref);
 
