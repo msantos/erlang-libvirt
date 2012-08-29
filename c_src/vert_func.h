@@ -32,6 +32,7 @@
 
 ErlNifFunc vert_funcs[] = {
     /* connect */
+    {"virConnectFindStoragePoolSources", 3, vert_virConnectFindStoragePoolSources},
     {"virConnectGetCapabilities", 1, vert_virConnectGetCapabilities},
     {"virConnectGetHostname", 1, vert_virConnectGetHostname},
     {"virConnectGetLibVersion", 1, vert_virConnectGetLibVersion},
@@ -142,6 +143,30 @@ ErlNifFunc vert_funcs[] = {
     {"virNWFilterLookupByUUID", 2, vert_virNWFilterLookupByUUID},
     {"virNWFilterLookupByUUIDString", 2, vert_virNWFilterLookupByUUIDString},
     {"virNWFilterUndefine", 1, vert_virNWFilterUndefine},
+
+    /* storagepool */
+    {"virStoragePoolBuild", 2, vert_virStoragePoolBuild},
+    {"virStoragePoolCreate", 2, vert_virStoragePoolCreate},
+    {"virStoragePoolCreateXML", 3, vert_virStoragePoolCreateXML},
+    {"virStoragePoolDefineXML", 3, vert_virStoragePoolDefineXML},
+    {"virStoragePoolDelete", 2, vert_virStoragePoolDelete},
+    {"virStoragePoolDestroy", 1, vert_virStoragePoolDestroy},
+    {"virStoragePoolGetAutostart", 1, vert_virStoragePoolGetAutostart},
+    {"virStoragePoolGetInfo", 1, vert_virStoragePoolGetInfo},
+    {"virStoragePoolGetName", 1, vert_virStoragePoolGetName},
+    {"virStoragePoolGetUUID", 1, vert_virStoragePoolGetUUID},
+    {"virStoragePoolGetUUIDString", 1, vert_virStoragePoolGetUUIDString},
+    {"virStoragePoolGetXMLDesc", 2, vert_virStoragePoolGetXMLDesc},
+    {"virStoragePoolIsActive", 1, vert_virStoragePoolIsActive},
+    {"virStoragePoolIsPersistent", 1, vert_virStoragePoolIsPersistent},
+    {"virStoragePoolListVolumes", 2, vert_virStoragePoolListVolumes},
+    {"virStoragePoolLookupByName", 2, vert_virStoragePoolLookupByName},
+    {"virStoragePoolLookupByUUID", 2, vert_virStoragePoolLookupByUUID},
+    {"virStoragePoolLookupByUUIDString", 2, vert_virStoragePoolLookupByUUIDString},
+    {"virStoragePoolNumOfVolumes", 1, vert_virStoragePoolNumOfVolumes},
+    {"virStoragePoolRefresh", 2, vert_virStoragePoolRefresh},
+    {"virStoragePoolSetAutostart", 2, vert_virStoragePoolSetAutostart},
+    {"virStoragePoolUndefine", 1, vert_virStoragePoolUndefine},
 
     /* stream */
     {"virStreamAbort", 1, vert_virStreamAbort},

@@ -226,6 +226,36 @@ vert_virConnectListDomains(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             list);
 }
 
+    ERL_NIF_TERM
+vert_virConnectFindStoragePoolSources(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    ErlNifBinary type = {0};
+    ErlNifBinary srcSpec = {0};
+    u_int32_t flags = 0;
+
+    char *buf = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_CONNECT);
+    VERT_GET_IOLIST(1, type);
+    VERT_GET_IOLIST(2, srcSpec);
+
+    VERT_BIN_APPEND_NULL(type);
+    VERT_BIN_APPEND_NULL(srcSpec);
+
+    buf = virConnectFindStoragePoolSources(vp->res,
+            type.size == 0 ? NULL : (char *)type.data,
+            srcSpec.size == 0 ? NULL : (char *)srcSpec.data,
+            flags);
+
+    VERTERR(buf == NULL);
+
+    return enif_make_tuple2(env,
+        atom_ok,
+        enif_make_string(env, buf, ERL_NIF_LATIN1));
+}
+
 
 /*
  * Internal functions

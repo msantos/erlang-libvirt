@@ -86,6 +86,7 @@ load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info)
     atom_interface = enif_make_atom(env, "interface");
     atom_network = enif_make_atom(env, "network");
     atom_nwfilter = enif_make_atom(env, "nwfilter");
+    atom_storagepool = enif_make_atom(env, "storagepool");
     atom_stream = enif_make_atom(env, "stream");
     atom_true = enif_make_atom(env, "true");
     atom_false = enif_make_atom(env, "false");

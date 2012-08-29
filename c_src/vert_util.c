@@ -133,9 +133,6 @@ vert_cleanup(ErlNifEnv *env, void *obj)
         case VERT_RES_NETWORK:
             (void)virNetworkFree(vp->res);
             break;
-        case VERT_RES_STORAGEPOOL:
-            (void)virStoragePoolFree(vp->res);
-            break;
 #if HAVE_NWFILTER
         case VERT_RES_NWFILTER:
             (void)virNWFilterFree(vp->res);
@@ -143,6 +140,9 @@ vert_cleanup(ErlNifEnv *env, void *obj)
 #endif
         case VERT_RES_SECRET:
             (void)virSecretFree(vp->res);
+            break;
+        case VERT_RES_STORAGEPOOL:
+            (void)virStoragePoolFree(vp->res);
             break;
         case VERT_RES_STREAM:
             (void)virStreamFree(vp->res);

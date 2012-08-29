@@ -31,6 +31,14 @@
 -module(vert).
 -include("vert.hrl").
 
+-define(UINT16(N), N:2/native-unsigned-integer-unit:8).
+-define(UINT32(N), N:4/native-unsigned-integer-unit:8).
+-define(UINT64(N), N:8/native-unsigned-integer-unit:8).
+
+-define(INT16(N), N:2/native-integer-unit:8).
+-define(INT32(N), N:4/native-integer-unit:8).
+-define(INT64(N), N:8/native-integer-unit:8).
+
 -export([
         virNodeGetCellsFreeMemory/2,
         virNodeGetFreeMemory/1,
@@ -107,6 +115,7 @@
         virDomainSuspend/1,
         virDomainUndefine/1,
 
+        virConnectFindStoragePoolSources/3, virConnectFindStoragePoolSources/4,
         virConnectGetCapabilities/1,
         virConnectGetHostname/1,
         virConnectGetLibVersion/1,
@@ -138,6 +147,29 @@
         virConnectNumOfStoragePools/1,
         virConnectOpen/1,
         virConnectOpenReadOnly/1,
+
+        virStoragePoolBuild/1, virStoragePoolBuild/2,
+        virStoragePoolCreate/1, virStoragePoolCreate/2,
+        virStoragePoolCreateXML/3,
+        virStoragePoolDefineXML/2, virStoragePoolDefineXML/3,
+        virStoragePoolDelete/2,
+        virStoragePoolDestroy/1,
+        virStoragePoolGetAutostart/1,
+        virStoragePoolGetInfo/1,
+        virStoragePoolGetName/1,
+        virStoragePoolGetUUID/1,
+        virStoragePoolGetUUIDString/1,
+        virStoragePoolGetXMLDesc/2,
+        virStoragePoolIsActive/1,
+        virStoragePoolIsPersistent/1,
+        virStoragePoolListVolumes/1, virStoragePoolListVolumes/2,
+        virStoragePoolNumOfVolumes/1,
+        virStoragePoolLookupByName/2,
+        virStoragePoolLookupByUUID/2,
+        virStoragePoolLookupByUUIDString/2,
+        virStoragePoolRefresh/1, virStoragePoolRefresh/2,
+        virStoragePoolSetAutostart/2,
+        virStoragePoolUndefine/1,
 
         virStreamAbort/1,
         virStreamFinish/1,
@@ -212,31 +244,100 @@ virStreamAbort(#resource{type = stream, res = Res}) ->
 %%% Storage Pool
 %%-------------------------------------------------------------------------
 
-%virStoragePoolUndefine(Pool) ->
-%virStoragePoolSetAutostart(Pool, Autostart) ->
-%virStoragePoolRefresh(Pool, Flags) ->
-%virStoragePoolNumOfVolumes(Pool) ->
+virStoragePoolUndefine(#resource{type = storagepool, res = Res}) ->
+    ok(call(virStoragePoolUndefine, [Res])).
+
+virStoragePoolSetAutostart(#resource{type = storagepool, res = Res}, Autostart) ->
+    call(virStoragePoolSetAutostart, [Res, Autostart]).
+
+virStoragePoolRefresh(Res) ->
+    virStoragePoolRefresh(Res, 0).
+virStoragePoolRefresh(#resource{type = storagepool, res = Res}, Flags) ->
+    call(virStoragePoolRefresh, [Res, Flags]).
+
+virStoragePoolNumOfVolumes(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolNumOfVolumes, [Res]).
+
 %virStoragePoolLookupByVolume(Vol) ->
-%virStoragePoolLookupByUUIDString(Conn, Uuidstr) ->
-%virStoragePoolLookupByUUID(Conn, Uuid) ->
-%virStoragePoolLookupByName(Conn, Name) ->
-%virStoragePoolListVolumes(Pool, Names, Maxnames) ->
-%virStoragePoolIsPersistent(Pool) ->
-%virStoragePoolIsActive(Pool) ->
-%virStoragePoolGetXMLDesc(Pool, Flags) ->
-%virStoragePoolGetUUIDString(Pool, Buf) ->
-%virStoragePoolGetUUID(Pool, Uuid) ->
-%virStoragePoolGetName(Pool) ->
-%virStoragePoolGetInfo(Pool, Info) ->
-%virStoragePoolGetConnect(Pool) ->
-%virStoragePoolGetAutostart(Pool, Autostart) ->
-%virStoragePoolFree(Pool) ->
-%virStoragePoolDestroy(Pool) ->
-%virStoragePoolDelete(Pool, Flags) ->
-%virStoragePoolDefineXML(Conn, Xml, Flags) ->
-%virStoragePoolCreateXML(Conn, XmlDesc, Flags) ->
-%virStoragePoolCreate(Pool, Flags) ->
-%virStoragePoolBuild(Pool, Flags) ->
+
+virStoragePoolLookupByUUIDString(#resource{type = connect, res = Res}, UUID) ->
+    call(virStoragePoolLookupByUUIDString, [Res, UUID]).
+virStoragePoolLookupByUUID(#resource{type = connect, res = Res}, UUID) ->
+    call(virStoragePoolLookupByUUID, [Res, UUID]).
+virStoragePoolLookupByName(#resource{type = connect, res = Res}, Name) ->
+    call(virStoragePoolLookupByName, [Res, Name]).
+
+virStoragePoolListVolumes(Res) ->
+    {ok, Maxnames} = virStoragePoolNumOfVolumes(Res),
+    virStoragePoolListVolumes(Res, Maxnames).
+virStoragePoolListVolumes(#resource{type = storagepool}, 0) ->
+    {ok, []};
+virStoragePoolListVolumes(#resource{type = storagepool, res = Res}, Maxnames) ->
+    call(virStoragePoolListVolumes, [Res, Maxnames]).
+
+virStoragePoolIsPersistent(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolIsPersistent, [Res]).
+
+virStoragePoolIsActive(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolIsActive, [Res]).
+
+virStoragePoolGetXMLDesc(#resource{type = storagepool, res = Res}, Flags) ->
+    call(virStoragePoolGetXMLDesc, [Res, Flags]).
+
+virStoragePoolGetUUIDString(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolGetUUIDString, [Res]).
+
+virStoragePoolGetUUID(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolGetUUID, [Res]).
+
+virStoragePoolGetName(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolGetName, [Res]).
+
+virStoragePoolGetInfo(#resource{type = storagepool, res = Res}) ->
+    Pad = wordalign(4)*8,
+    case call(virStoragePoolGetInfo, [Res]) of
+        {ok, <<?INT32(State),       % virStoragePoolState flags
+               0:Pad,
+               ?UINT64(Capacity),   % Logical size bytes
+               ?UINT64(Allocation), % Current allocation bytes
+               ?UINT64(Available)   % Remaining free space bytes
+             >>} ->
+            {ok, #storagepool_info{
+                    state = State,
+                    capacity = Capacity,
+                    allocation = Allocation,
+                    available = Available
+                    }};
+        {error, _} = Error ->
+            Error
+    end.
+
+virStoragePoolGetAutostart(#resource{type = storagepool, res = Res}) ->
+    call(virStoragePoolGetAutostart, [Res]).
+
+virStoragePoolDestroy(#resource{type = storagepool, res = Res}) ->
+    ok(call(virStoragePoolDestroy, [Res])).
+
+virStoragePoolDelete(#resource{type = storagepool, res = Res}, Flags) ->
+    call(virStoragePoolDelete, [Res, Flags]).
+
+virStoragePoolDefineXML(Res, XML) ->
+    virStoragePoolDefineXML(Res, XML, 0).
+virStoragePoolDefineXML(#resource{type = connect, res = Res}, XML, Flags) ->
+    call(virStoragePoolDefineXML, [Res, XML, Flags]).
+
+virStoragePoolCreateXML(#resource{type = storagepool, res = Res}, XML, Flags) ->
+    call(virStoragePoolCreateXML, [Res, XML, Flags]).
+
+virStoragePoolCreate(Res) ->
+    virStoragePoolCreate(Res, 0).
+virStoragePoolCreate(#resource{type = storagepool, res = Res}, Flags) ->
+    call(virStoragePoolCreate, [Res, Flags]).
+
+virStoragePoolBuild(Res) ->
+    virStoragePoolBuild(Res, 0).
+virStoragePoolBuild(#resource{type = storagepool, res = Res}, Flags) ->
+    call(virStoragePoolBuild, [Res, Flags]).
 
 
 %%-------------------------------------------------------------------------
@@ -834,7 +935,11 @@ virConnectGetHostname(#resource{type = connect, res = Res}) ->
 virConnectGetCapabilities(#resource{type = connect, res = Res}) ->
     call(virConnectGetCapabilities, [Res]).
 
-%virConnectFindStoragePoolSources(Conn, Type, SrcSpec, Flags) ->
+virConnectFindStoragePoolSources(Conn, Type, SrcSpec) ->
+    virConnectFindStoragePoolSources(Conn, Type, SrcSpec, 0).
+virConnectFindStoragePoolSources(#resource{type = connect, res = Res}, Type, SrcSpec, Flags) ->
+    call(virConnectFindStoragePoolSources, [Res, Type, SrcSpec, Flags]).
+
 %virConnectDomainXMLToNative(Conn, NativeFormat, DomainXml, Flags) ->
 %virConnectDomainXMLFromNative(Conn, NativeFormat, NativeConfig, Flags) ->
 
@@ -993,3 +1098,8 @@ niflib() ->
         {error, bad_name} -> progname_ebin();
         _ -> progname_priv()
     end.
+
+wordalign(Offset) ->
+    wordalign(Offset, erlang:system_info({wordsize, external})).
+wordalign(Offset, Align) ->
+    (Align - (Offset rem Align)) rem Align.

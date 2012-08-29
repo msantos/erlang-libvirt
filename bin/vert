@@ -310,6 +310,117 @@ call(["nwfilter-undefine", Name | Arg]) ->
     {ok, Filter} = nwfilter(Connect, Name),
     rp(vert:virNWFilterUndefine(Filter));
 
+call(["find-storage-pool-sources", Type, File | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(File) of
+        {ok, Spec} ->
+            vert:virConnectFindStoragePoolSources(Connect, Type, Spec);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
+call(["pool-autostart", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+
+    Autostart = case proplists:get_value("disable", Opt) of
+        undefined -> 1;
+        _ -> 0
+    end,
+
+    rp(vert:virStoragePoolSetAutostart(Pool, Autostart));
+
+call(["pool-build", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolBuild(Pool));
+
+call(["pool-create", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = case file:read_file(Name) of
+        {ok, XML} ->
+            vert:virStoragePoolDefineXML(Connect, XML);
+        {error, enoent} ->
+            storagepool(Connect, Name)
+    end,
+    rp(vert:virStoragePoolCreate(Pool));
+
+call(["pool-define", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(Name) of
+        {ok, XML} ->
+            vert:virStoragePoolDefineXML(Connect, XML);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
+call(["pool-delete", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolDelete(Pool));
+
+call(["pool-destroy", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolDestroy(Pool));
+
+call(["pool-dumpxml", Name | Arg]) ->
+    Opt = getopt(Arg),
+    Flags = proplists:get_value("flags", Opt, 0),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolGetXMLDesc(Pool, Flags));
+
+call(["pool-info", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolGetInfo(Pool));
+
+call(["pool-list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pools} = vert:virConnectListStoragePools(Connect),
+    rp({ok, [ begin
+        {ok, Pool} = storagepool(Connect, Name),
+        {ok, Active} = vert:virStoragePoolIsActive(Pool),
+        Autostart = vert:virStoragePoolGetAutostart(Pool),
+        {Name, [{state, bool(Active)}, {autostart, Autostart}]}
+      end || Name <- Pools ]});
+
+call(["pool-name", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolGetName(Pool));
+
+call(["pool-refresh", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolRefresh(Pool));
+
+call(["pool-undefine", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolUndefine(Pool));
+
+call(["pool-uuid", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    rp(vert:virStoragePoolGetUUIDString(Pool));
+
 call(_) ->
     Help = [
         "autostart",
@@ -347,6 +458,22 @@ call(_) ->
         "nwfilter-dumpxml",
         "nwfilter-list",
         "nwfilter-undefine"
+
+        "find-storage-pool-sources",
+        "pool-autostart",
+        "pool-build",
+        "pool-create",
+        "pool-define",
+        "pool-delete",
+        "pool-destroy",
+        "pool-dumpxml",
+        "pool-info",
+        "pool-list",
+        "pool-name",
+        "pool-refresh",
+        "pool-undefine",
+        "pool-uuid"
+
     ],
     rp(Help),
     halt(1).
@@ -392,6 +519,11 @@ network(Connect, Name) ->
 nwfilter(Connect, Name) ->
     Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Name) end,
             fun() -> vert:virNWFilterLookupByName(Connect, Name) end ],
+    lookup(Fun).
+
+storagepool(Connect, Name) ->
+    Fun = [ fun() -> vert:virStoragePoolLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virStoragePoolLookupByName(Connect, Name) end ],
     lookup(Fun).
 
 lookup(Fun)  ->
