@@ -104,6 +104,13 @@
         available = 0
     }).
 
+%% virStorageVolInfo
+-record(storagevol_info, {
+        type = 0,
+        capacity = 0,
+        allocation = 0
+    }).
+
 %% virSecurityModel
 -define(VIR_SECURITY_MODEL_BUFLEN, (256 + 1)).
 -define(VIR_SECURITY_DOI_BUFLEN, (256 + 1)).

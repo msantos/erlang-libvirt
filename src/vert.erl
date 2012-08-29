@@ -297,7 +297,21 @@ virStorageVolGetKey(#resource{type = storagevol, res = Res}) ->
     call(virStorageVolGetKey, [Res]).
 
 virStorageVolGetInfo(#resource{type = storagevol, res = Res}) ->
-    call(virStorageVolGetInfo, [Res]).
+    Pad = wordalign(4)*8,
+    case call(virStorageVolGetInfo, [Res]) of
+        {ok, <<?INT32(Type),            % virStorageVolType flags
+               0:Pad,
+               ?UINT64(Capacity),       % Logical size bytes
+               ?UINT64(Allocation)      % Current allocation bytes
+             >>} ->
+            {ok, #storagevol_info{
+                    type = Type,
+                    capacity = Capacity,
+                    allocation = Allocation
+                    }};
+        Error ->
+            Error
+    end.
 
 virStorageVolDelete(Res) ->
     virStorageVolDelete(Res, 0).
