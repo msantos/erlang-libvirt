@@ -144,6 +144,9 @@ vert_cleanup(ErlNifEnv *env, void *obj)
         case VERT_RES_STORAGEPOOL:
             (void)virStoragePoolFree(vp->res);
             break;
+        case VERT_RES_STORAGEVOL:
+            (void)virStorageVolFree(vp->res);
+            break;
         case VERT_RES_STREAM:
             (void)virStreamFree(vp->res);
             break;

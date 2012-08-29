@@ -3,6 +3,8 @@
 %%%
 %%% Command line interface to libvirt
 %%%
+-include_lib("kernel/include/file.hrl").
+
 main(Opt) ->
     % load vert
     true = code:add_pathz(filename:dirname(escript:script_name())
@@ -133,19 +135,14 @@ call(["screenshot", Name | Arg]) ->
     Screen = proplists:get_value("screen", Opt, 0),
     File = proplists:get_value("file", Opt,
             Name ++ "_" ++ os:getpid() ++ ".screen"),
-
     {ok, Connect} = connect(Opt),
     {ok, Domain} = domain(Connect, Name),
     % XXX Put the stream in blocking mode. Seems to be the only way to
     % XXX read from a stream.
     {ok, Stream} = vert:virStreamNew(Connect, 0),
     {ok, Mime} = vert:virDomainScreenshot(Domain, Stream, Screen),
-
-    error_logger:info_report([{mime, Mime}]),
-
-    screenshot(Stream, File),
-
-    {ok, Mime};
+    read_stream(Stream, File),
+    rp({ok, Mime});
 
 call(["send", Name | Commands]) ->
     {ok, Ref} = vert_console:open(Name, [{recv_timeout, 0}]),
@@ -421,6 +418,111 @@ call(["pool-uuid", Name | Arg]) ->
     {ok, Pool} = storagepool(Connect, Name),
     rp(vert:virStoragePoolGetUUIDString(Pool));
 
+call(["vol-create-from", PName, File, VName | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, PName),
+    {ok, XML} = file:read_file(File),
+    {ok, Vol} = storagevol(Connect, VName),
+    rp(vert:virStorageVolCreateXMLFrom(Pool, XML, Vol));
+
+call(["vol-create", Name, File | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    {ok, XML} = file:read_file(File),
+    rp(vert:virStorageVolCreateXML(Pool, XML));
+
+call(["vol-delete", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolDelete(Vol));
+
+call(["vol-download", Name, File | Arg]) ->
+    Opt = getopt(Arg),
+    Offset = list_to_integer(proplists:get_value("offset", Opt, "0")),
+    Length = list_to_integer(proplists:get_value("length", Opt, "0")),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    {ok, Stream} = vert:virStreamNew(Connect, 0),
+    ok = vert:virStorageVolDownload(Vol, Stream, Offset, Length),
+    read_stream(Stream, File),
+    rp(ok);
+
+call(["vol-dumpxml", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolGetXMLDesc(Vol));
+
+call(["vol-info", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolGetInfo(Vol));
+
+call(["vol-key", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolGetKey(Vol));
+
+call(["vol-list", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Pool} = storagepool(Connect, Name),
+    {ok, Pools} = vert:virStoragePoolListVolumes(Pool),
+
+    rp({ok, [ begin
+        {ok, Vol} = vert:virStorageVolLookupByName(Pool, N),
+        {ok, Path} = vert:virStorageVolGetPath(Vol),
+        {ok, Key} = vert:virStorageVolGetKey(Vol),
+        {N, [{path, Path}, {key, Key}]}
+      end || N <- Pools ]});
+
+call(["vol-name", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolGetName(Vol));
+
+call(["vol-path", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolGetPath(Vol));
+
+call(["vol-pool", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    {ok, Pool} = vert:virStoragePoolLookupByVolume(Vol),
+    rp(vert:virStoragePoolGetName(Pool));
+
+call(["vol-upload", Name, File | Arg]) ->
+    Opt = getopt(Arg),
+    Offset = list_to_integer(proplists:get_value("offset", Opt, "0")),
+    Length = case proplists:get_value("length", Opt) of
+        undefined ->
+            {ok, #file_info{size = Size}} = file:read_file_info(File),
+            Size;
+        N ->
+            list_to_integer(N)
+    end,
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    {ok, Stream} = vert:virStreamNew(Connect),
+    ok = vert:virStorageVolUpload(Vol, Stream, Offset, Length),
+    send_stream(Stream, File),
+    rp(ok);
+
+call(["vol-wipe", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Vol} = storagevol(Connect, Name),
+    rp(vert:virStorageVolWipe(Vol));
+
 call(_) ->
     Help = [
         "autostart",
@@ -472,7 +574,21 @@ call(_) ->
         "pool-name",
         "pool-refresh",
         "pool-undefine",
-        "pool-uuid"
+        "pool-uuid",
+
+        "vol-create",
+        "vol-create-from",
+        "vol-delete",
+        "vol-download",
+        "vol-dumpxml",
+        "vol-info",
+        "vol-key",
+        "vol-list",
+        "vol-name",
+        "vol-path",
+        "vol-pool",
+        "vol-upload",
+        "vol-wipe"
 
     ],
     rp(Help),
@@ -526,6 +642,11 @@ storagepool(Connect, Name) ->
             fun() -> vert:virStoragePoolLookupByName(Connect, Name) end ],
     lookup(Fun).
 
+storagevol(Connect, Name) ->
+    Fun = [ fun() -> vert:virStorageVolLookupByKey(Connect, Name) end,
+            fun() -> vert:virStorageVolLookupByPath(Connect, Name) end ],
+    lookup(Fun).
+
 lookup(Fun)  ->
     lookup(Fun, []).
 lookup([], [{error, Error}|_]) ->
@@ -565,16 +686,32 @@ id_to_name(Connect, Ids) when is_list(Ids) ->
         Name
       end || Id <- Ids ].
 
-screenshot(Stream, File) ->
-    screenshot(Stream, File, []).
-screenshot(Stream, File, Acc) ->
+read_stream(Stream, File) ->
+    {ok, FH} = file:open(File, [write, raw, binary]),
+    read_stream(Stream, File, FH).
+read_stream(Stream, File, FH) ->
     case vert:virStreamRecv(Stream, 16#FFFF) of
         {error, eagain} ->
             timer:sleep(100),
-            screenshot(Stream, File, Acc);
+            read_stream(Stream, File, FH);
         {ok, <<>>} ->
-            ok = file:write_file(File, lists:reverse(Acc));
+            vert:virStreamFinish(Stream),
+            file:close(FH);
         {ok, Bytes} ->
             error_logger:info_report([{got, File, byte_size(Bytes)}]),
-            screenshot(Stream, File, [Bytes|Acc])
+            ok = file:write(FH, Bytes),
+            read_stream(Stream, File, FH)
         end.
+
+send_stream(Stream, File) ->
+    {ok, FH} = file:open(File, [read, raw, binary]),
+    send_stream(Stream, File, FH).
+send_stream(Stream, File, FH) ->
+    case file:read(FH, 16#FFFF) of
+        eof ->
+            vert:virStreamFinish(Stream),
+            file:close(FH);
+        {ok, Bytes} ->
+            error_logger:info_report([{sending, File, byte_size(Bytes)}]),
+            ok = vert:virStreamSend(Stream, Bytes)
+    end.

@@ -52,6 +52,7 @@ ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_network;
 ERL_NIF_TERM atom_nwfilter;
 ERL_NIF_TERM atom_storagepool;
+ERL_NIF_TERM atom_storagevol;
 ERL_NIF_TERM atom_stream;
 ERL_NIF_TERM atom_true;
 ERL_NIF_TERM atom_false;
@@ -93,6 +94,7 @@ enum {
     VERT_RES_NWFILTER,
     VERT_RES_SECRET,
     VERT_RES_STORAGEPOOL,
+    VERT_RES_STORAGEVOL,
     VERT_RES_STREAM
 };
 
@@ -122,6 +124,11 @@ enum {
 
 #define VERT_GET_ULONG(index, var) do { \
     if (enif_get_ulong(env, argv[(index)], &var) < 0) \
+        return error_tuple(env, atom_badarg); \
+} while (0)
+
+#define VERT_GET_UINT64(index, var) do { \
+    if (enif_get_uint64(env, argv[(index)], &var) < 0) \
         return error_tuple(env, atom_badarg); \
 } while (0)
 

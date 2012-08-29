@@ -75,3 +75,24 @@ vert_virStoragePoolGetInfo(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
             atom_ok,
             enif_make_binary(env, &info));
 }
+
+    ERL_NIF_TERM
+vert_virStoragePoolLookupByVolume(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    VERT_RESOURCE *vp = NULL;
+    VERT_RESOURCE *pp = NULL;
+
+
+    VERT_GET_RESOURCE(0, vp, VERT_RES_STORAGEVOL);
+
+    VERT_RES_ALLOC(pp, VERT_RES_STORAGEPOOL, vp->conn);
+
+    pp->res = virStoragePoolLookupByVolume(vp->res);
+
+    if (pp->res == NULL) {
+        enif_release_resource(pp);
+        return verterr(env);
+    }
+
+    return vert_make_resource(env, pp, atom_storagepool);
+}

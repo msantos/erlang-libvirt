@@ -167,9 +167,27 @@
         virStoragePoolLookupByName/2,
         virStoragePoolLookupByUUID/2,
         virStoragePoolLookupByUUIDString/2,
+        virStoragePoolLookupByVolume/1,
         virStoragePoolRefresh/1, virStoragePoolRefresh/2,
         virStoragePoolSetAutostart/2,
         virStoragePoolUndefine/1,
+
+        virStorageVolCreateXML/2, virStorageVolCreateXML/3,
+        virStorageVolCreateXMLFrom/3, virStorageVolCreateXMLFrom/4,
+        virStorageVolDelete/1, virStorageVolDelete/2,
+        virStorageVolDownload/4, virStorageVolDownload/5,
+        virStorageVolGetInfo/1,
+        virStorageVolGetKey/1,
+        virStorageVolGetName/1,
+        virStorageVolGetPath/1,
+        virStorageVolGetXMLDesc/1, virStorageVolGetXMLDesc/2,
+        virStorageVolLookupByKey/2,
+        virStorageVolLookupByName/2,
+        virStorageVolLookupByPath/2,
+        virStorageVolResize/2, virStorageVolResize/3,
+        virStorageVolUpload/4, virStorageVolUpload/5,
+        virStorageVolWipe/1, virStorageVolWipe/2,
+        virStorageVolWipePattern/2, virStorageVolWipePattern/3,
 
         virStreamAbort/1,
         virStreamFinish/1,
@@ -225,19 +243,77 @@ virStreamAbort(#resource{type = stream, res = Res}) ->
 %%% Storage Volume
 %%-------------------------------------------------------------------------
 
-%virStorageVolLookupByPath(Conn, Path) ->
-%virStorageVolLookupByName(Pool, Name) ->
-%virStorageVolLookupByKey(Conn, Key) ->
-%virStorageVolGetXMLDesc(Vol, Flags) ->
-%virStorageVolGetPath(Vol) ->
-%virStorageVolGetName(Vol) ->
-%virStorageVolGetKey(Vol) ->
-%virStorageVolGetInfo(Vol, Info) ->
-%virStorageVolGetConnect(Vol) ->
-%virStorageVolFree(Vol) ->
-%virStorageVolDelete(Vol, Flags) ->
-%virStorageVolCreateXMLFrom(Pool, Xmldesc, Clonevol, Flags) ->
-%virStorageVolCreateXML(Pool, Xmldesc, Flags) ->
+virStorageVolWipe(Vol) ->
+    virStorageVolWipe(Vol, 0).
+virStorageVolWipe(#resource{type = storagevol, res = Res}, Flags) ->
+    call(virStorageVolWipe, [Res, Flags]).
+
+virStorageVolWipePattern(Vol, Alg) ->
+    virStorageVolWipePattern(Vol, Alg, 0).
+virStorageVolWipePattern(#resource{type = storagevol, res = Res}, Alg, Flags) ->
+    call(virStorageVolWipePattern, [Res, Alg, Flags]).
+
+virStorageVolResize(Res, Capacity) ->
+    virStorageVolResize(Res, Capacity, 0).
+virStorageVolResize(#resource{type = storagevol, res = Res},
+                    Capacity, Flags) ->
+    call(virStorageVolResize, [Res, Capacity, Flags]).
+
+virStorageVolDownload(Res, Stream, Offset, Length) ->
+    virStorageVolDownload(Res, Stream, Offset, Length, 0).
+virStorageVolDownload(#resource{type = storagevol, res = Res},
+                    #resource{type = stream, res = Stream},
+                    Offset, Length, Flags) ->
+    call(virStorageVolDownload, [Res, Stream, Offset, Length, Flags]).
+
+virStorageVolUpload(Res, Stream, Offset, Length) ->
+    virStorageVolUpload(Res, Stream, Offset, Length, 0).
+virStorageVolUpload(#resource{type = storagevol, res = Res},
+                    #resource{type = stream, res = Stream},
+                    Offset, Length, Flags) ->
+    call(virStorageVolUpload, [Res, Stream, Offset, Length, Flags]).
+
+virStorageVolLookupByPath(#resource{type = connect, res = Res}, Path) ->
+    call(virStorageVolLookupByPath, [Res, Path]).
+
+virStorageVolLookupByName(#resource{type = storagepool, res = Res}, Name) ->
+    call(virStorageVolLookupByName, [Res, Name]).
+
+virStorageVolLookupByKey(#resource{type = connect, res = Res}, Key) ->
+    call(virStorageVolLookupByKey, [Res, Key]).
+
+virStorageVolGetXMLDesc(Vol) ->
+    virStorageVolGetXMLDesc(Vol, 0).
+virStorageVolGetXMLDesc(#resource{type = storagevol, res = Res}, Flags) ->
+    call(virStorageVolGetXMLDesc, [Res, Flags]).
+
+virStorageVolGetPath(#resource{type = storagevol, res = Res}) ->
+    call(virStorageVolGetPath, [Res]).
+
+virStorageVolGetName(#resource{type = storagevol, res = Res}) ->
+    call(virStorageVolGetName, [Res]).
+
+virStorageVolGetKey(#resource{type = storagevol, res = Res}) ->
+    call(virStorageVolGetKey, [Res]).
+
+virStorageVolGetInfo(#resource{type = storagevol, res = Res}) ->
+    call(virStorageVolGetInfo, [Res]).
+
+virStorageVolDelete(Res) ->
+    virStorageVolDelete(Res, 0).
+virStorageVolDelete(#resource{type = storagevol, res = Res}, Flags) ->
+    call(virStorageVolDelete, [Res, Flags]).
+
+virStorageVolCreateXMLFrom(Pool, XML, Clonevol) ->
+    virStorageVolCreateXMLFrom(Pool, XML, Clonevol, 0).
+virStorageVolCreateXMLFrom(#resource{type = storagepool, res = Res},
+                           XML, #resource{type = storagevol, res = Vol}, Flags) ->
+    call(virStorageVolCreateXMLFrom, [Res, XML, Vol, Flags]).
+
+virStorageVolCreateXML(Res, XML) ->
+    virStorageVolCreateXML(Res, XML, 0).
+virStorageVolCreateXML(#resource{type = storagepool, res = Res}, XML, Flags) ->
+    call(virStorageVolCreateXML, [Res, XML, Flags]).
 
 
 %%-------------------------------------------------------------------------
@@ -258,7 +334,8 @@ virStoragePoolRefresh(#resource{type = storagepool, res = Res}, Flags) ->
 virStoragePoolNumOfVolumes(#resource{type = storagepool, res = Res}) ->
     call(virStoragePoolNumOfVolumes, [Res]).
 
-%virStoragePoolLookupByVolume(Vol) ->
+virStoragePoolLookupByVolume(#resource{type = storagevol, res = Res}) ->
+    call(virStoragePoolLookupByVolume, [Res]).
 
 virStoragePoolLookupByUUIDString(#resource{type = connect, res = Res}, UUID) ->
     call(virStoragePoolLookupByUUIDString, [Res, UUID]).

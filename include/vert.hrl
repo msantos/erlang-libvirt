@@ -60,6 +60,12 @@
         res
     }).
 
+%% virStorageVolPtr resource
+-record(storagevol, {
+        ref,
+        res
+    }).
+
 %% virNWFilterPtr resource
 -record(filter, {
         ref,
