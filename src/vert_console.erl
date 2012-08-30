@@ -168,7 +168,7 @@ init([Pid, Host,
     process_flag(trap_exit, true),
 
     {ok, Connect} = vert:virConnectOpen(URI),
-    {ok, Domain} = vert:virDomainLookupByName(Connect, Host),
+    {ok, Domain} = vert:lookup(Connect, {domain, Host}),
     {ok, Stream} = vert:virStreamNew(Connect),
     ok = vert:virDomainOpenConsole(Domain, Stream),
 

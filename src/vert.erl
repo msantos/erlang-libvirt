@@ -40,6 +40,9 @@
 -define(INT64(N), N:8/native-integer-unit:8).
 
 -export([
+    lookup/2
+    ]).
+-export([
         virNodeGetCellsFreeMemory/2,
         virNodeGetFreeMemory/1,
         virNodeGetInfo/1,
@@ -1120,6 +1123,50 @@ virConnectFindStoragePoolSources(#resource{type = connect, res = Res}, Type, Src
 % Called by virConnectPtr dtor
 %#%virConnectClose(#resource{type = connect, res = Res})
 
+%%-------------------------------------------------------------------------
+%%% Utility functions
+%%-------------------------------------------------------------------------
+
+% Lookup a resource
+lookup(Connect, {domain, Name}) ->
+    Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Name)) end,
+            fun() -> vert:virDomainLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virDomainLookupByName(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {network, Name}) ->
+    Fun = [ fun() -> vert:virNetworkLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virNetworkLookupByName(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {nwfilter, Name}) ->
+    Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virNWFilterLookupByName(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {secret, Name}) ->
+    Fun = [ fun() -> vert:virSecretLookupByUUIDString(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {storagepool, Name}) ->
+    Fun = [ fun() -> vert:virStoragePoolLookupByUUIDString(Connect, Name) end,
+            fun() -> vert:virStoragePoolLookupByName(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {storagevol, Name}) ->
+    Fun = [ fun() -> vert:virStorageVolLookupByKey(Connect, Name) end,
+            fun() -> vert:virStorageVolLookupByPath(Connect, Name) end ],
+    lookup_1(Fun).
+
+lookup_1(Fun)  ->
+    lookup_1(Fun, []).
+lookup_1([], [{error, Error}|_]) ->
+    {error, Error};
+lookup_1([Fun|Tail], Acc) ->
+    try Fun() of
+        {ok, Res} ->
+            {ok, Res};
+        {error, Error} ->
+            lookup_1(Tail, [{error, Error}|Acc])
+    catch
+        _:_ ->
+            lookup_1(Tail, Acc)
+    end.
 
 %%-------------------------------------------------------------------------
 %%% NIF stubs
