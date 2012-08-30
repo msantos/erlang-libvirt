@@ -523,6 +523,52 @@ call(["vol-wipe", Name | Arg]) ->
     {ok, Vol} = storagevol(Connect, Name),
     rp(vert:virStorageVolWipe(Vol));
 
+call(["secret-define", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    Res = case file:read_file(Name) of
+        {ok, XML} ->
+            vert:virSecretDefineXML(Connect, XML);
+        Error ->
+            Error
+    end,
+    rp(Res);
+
+call(["secret-dumpxml", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Secret} = secret(Connect, Name),
+    rp(vert:virSecretGetXMLDesc(Secret));
+
+call(["secret-get-value", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Secret} = secret(Connect, Name),
+    {ok, Bin} = vert:virSecretGetValue(Secret),
+    {ok, base64:encode_to_string(Bin)};
+
+call(["secret-list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Secrets} = vert:virConnectListSecrets(Connect),
+    rp({ok, [ begin
+        {ok, Secret} = secret(Connect, UUID),
+        {ok, Type} = vert:virSecretGetUsageType(Secret),
+        {UUID, [{usagetype, Type}]}
+      end || UUID <- Secrets ]});
+
+call(["secret-set-value", Name, Val | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Secret} = secret(Connect, Name),
+    rp(vert:virSecretSetValue(Secret, base64:decode(Val)));
+
+call(["secret-undefine", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Secret} = secret(Connect, Name),
+    rp(vert:virSecretUndefine(Secret));
+
 call(_) ->
     Help = [
         "autostart",
@@ -575,6 +621,13 @@ call(_) ->
         "pool-refresh",
         "pool-undefine",
         "pool-uuid",
+
+        "secret-define",
+        "secret-dumpxml",
+        "secret-get-value",
+        "secret-list",
+        "secret-set-value",
+        "secret-undefine",
 
         "vol-create",
         "vol-create-from",
@@ -635,6 +688,10 @@ network(Connect, Name) ->
 nwfilter(Connect, Name) ->
     Fun = [ fun() -> vert:virNWFilterLookupByUUIDString(Connect, Name) end,
             fun() -> vert:virNWFilterLookupByName(Connect, Name) end ],
+    lookup(Fun).
+
+secret(Connect, Name) ->
+    Fun = [ fun() -> vert:virSecretLookupByUUIDString(Connect, Name) end ],
     lookup(Fun).
 
 storagepool(Connect, Name) ->

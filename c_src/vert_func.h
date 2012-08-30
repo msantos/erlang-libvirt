@@ -144,6 +144,20 @@ ErlNifFunc vert_funcs[] = {
     {"virNWFilterLookupByUUIDString", 2, vert_virNWFilterLookupByUUIDString},
     {"virNWFilterUndefine", 1, vert_virNWFilterUndefine},
 
+    /* secret */
+    {"virSecretDefineXML", 2, vert_virSecretDefineXML},
+    {"virSecretGetUsageID", 1, vert_virSecretGetUsageID},
+    {"virSecretGetUsageType", 1, vert_virSecretGetUsageType},
+    {"virSecretGetUUID", 1, vert_virSecretGetUUID},
+    {"virSecretGetUUIDString", 1, vert_virSecretGetUUIDString},
+    {"virSecretGetValue", 2, vert_virSecretGetValue},
+    {"virSecretGetXMLDesc", 2, vert_virSecretGetXMLDesc},
+    {"virSecretLookupByUsage", 3, vert_virSecretLookupByUsage},
+    {"virSecretLookupByUUID", 2, vert_virSecretLookupByUUID},
+    {"virSecretLookupByUUIDString", 2, vert_virSecretLookupByUUIDString},
+    {"virSecretSetValue", 2, vert_virSecretSetValue},
+    {"virSecretUndefine", 1, vert_virSecretUndefine},
+
     /* storagepool */
     {"virStoragePoolBuild", 2, vert_virStoragePoolBuild},
     {"virStoragePoolCreate", 2, vert_virStoragePoolCreate},

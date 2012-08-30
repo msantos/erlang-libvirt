@@ -148,6 +148,19 @@
         virConnectOpen/1,
         virConnectOpenReadOnly/1,
 
+        virSecretDefineXML/2,
+        virSecretGetUsageID/1,
+        virSecretGetUsageType/1,
+        virSecretGetUUID/1,
+        virSecretGetUUIDString/1,
+        virSecretGetValue/1, virSecretGetValue/2,
+        virSecretGetXMLDesc/1, virSecretGetXMLDesc/2,
+        virSecretLookupByUsage/3,
+        virSecretLookupByUUID/2,
+        virSecretLookupByUUIDString/2,
+        virSecretSetValue/2,
+        virSecretUndefine/1,
+
         virStoragePoolBuild/1, virStoragePoolBuild/2,
         virStoragePoolCreate/1, virStoragePoolCreate/2,
         virStoragePoolCreateXML/3,
@@ -435,20 +448,49 @@ virStoragePoolBuild(#resource{type = storagepool, res = Res}, Flags) ->
 %%% Secret
 %%-------------------------------------------------------------------------
 
-%virSecretUndefine(Secret) ->
-%virSecretSetValue(Secret, Value, Value_size, Flags) ->
-%virSecretLookupByUsage(Conn, UsageType, UsageID) ->
-%virSecretLookupByUUIDString(Conn, Uuidstr) ->
-%virSecretLookupByUUID(Conn, Uuid) ->
-%virSecretGetXMLDesc(Secret, Flags) ->
-%virSecretGetValue(Secret, Value_size, Flags) ->
-%virSecretGetUsageType(Secret) ->
-%virSecretGetUsageID(Secret) ->
-%virSecretGetUUIDString(Secret, Buf) ->
-%virSecretGetUUID(Secret, Uuid) ->
-%virSecretGetConnect(Secret) ->
-%virSecretFree(Secret) ->
-%virSecretDefineXML(Conn, Xml, Flags) ->
+virSecretUndefine(#resource{type = secret, res = Res}) ->
+    call(virSecretUndefine, [Res]).
+
+virSecretSetValue(Res, Value) ->
+    virSecretSetValue(Res, Value, 0).
+virSecretSetValue(#resource{type = secret, res = Res}, Value, Flags) ->
+    call(virSecretSetValue, [Res, Value, Flags]).
+
+virSecretLookupByUsage(#resource{type = connect, res = Res}, UsageType, UsageID) ->
+    call(virSecretLookupByUsage, [Res, UsageType, UsageID]).
+
+virSecretLookupByUUIDString(#resource{type = connect, res = Res}, UUID) ->
+    call(virSecretLookupByUUIDString, [Res, UUID]).
+
+virSecretLookupByUUID(#resource{type = connect, res = Res}, UUID) ->
+    call(virSecretLookupByUUID, [Res, UUID]).
+
+virSecretGetXMLDesc(Secret) ->
+    virSecretGetXMLDesc(Secret, 0).
+virSecretGetXMLDesc(#resource{type = secret, res = Res}, Flags) ->
+    call(virSecretGetXMLDesc, [Res, Flags]).
+
+virSecretGetValue(Secret) ->
+    virSecretGetValue(Secret, 0).
+virSecretGetValue(#resource{type = secret, res = Res}, Flags) ->
+    call(virSecretGetValue, [Res, Flags]).
+
+virSecretGetUsageType(#resource{type = secret, res = Res}) ->
+    call(virSecretGetUsageType, [Res]).
+
+virSecretGetUsageID(#resource{type = secret, res = Res}) ->
+    call(virSecretGetUsageID, [Res]).
+
+virSecretGetUUIDString(#resource{type = secret, res = Res}) ->
+    call(virSecretGetUUIDString, [Res]).
+
+virSecretGetUUID(#resource{type = secret, res = Res}) ->
+    call(virSecretGetUUID, [Res]).
+
+virSecretDefineXML(Res, XML) ->
+    virSecretDefineXML(Res, XML, 0).
+virSecretDefineXML(#resource{type = connect, res = Res}, XML, Flags) ->
+    call(virSecretDefineXML, [Res, XML, Flags]).
 
 
 %%-------------------------------------------------------------------------
