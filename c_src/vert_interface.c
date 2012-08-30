@@ -39,6 +39,7 @@ ERL_NIF_TERM vert_interface_int_res_uint(
         );
 
 VERT_FUN_INT_RES(virInterfaceUndefine, VERT_RES_INTERFACE)
+VERT_FUN_INT_RES(virInterfaceIsActive, VERT_RES_INTERFACE)
 
 VERT_FUN_GETNAME(virInterfaceGetMACString, VERT_RES_INTERFACE)
 VERT_FUN_GETNAME(virInterfaceGetName, VERT_RES_INTERFACE)

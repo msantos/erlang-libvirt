@@ -57,6 +57,7 @@
         virNetworkGetUUID/1,
         virNetworkGetUUIDString/1,
         virNetworkGetXMLDesc/1, virNetworkGetXMLDesc/2,
+        virNetworkIsActive/1,
         virNetworkIsPersistent/1,
         virNetworkLookupByName/2,
         virNetworkLookupByUUID/2,
@@ -80,6 +81,7 @@
         virInterfaceGetMACString/1,
         virInterfaceGetName/1,
         virInterfaceGetXMLDesc/1, virInterfaceGetXMLDesc/2,
+        virInterfaceIsActive/1,
         virInterfaceLookupByMACString/2,
         virInterfaceLookupByName/2,
         virInterfaceUndefine/1,
@@ -103,6 +105,8 @@
         virDomainGetUUID/1,
         virDomainGetUUIDString/1,
         virDomainGetXMLDesc/2,
+        virDomainIsActive/1,
+        virDomainIsPersistent/1,
         virDomainLookupByID/2,
         virDomainLookupByName/2,
         virDomainLookupByUUID/2,
@@ -383,10 +387,10 @@ virStoragePoolListVolumes(#resource{type = storagepool, res = Res}, Maxnames) ->
     call(virStoragePoolListVolumes, [Res, Maxnames]).
 
 virStoragePoolIsPersistent(#resource{type = storagepool, res = Res}) ->
-    call(virStoragePoolIsPersistent, [Res]).
+    bool(call(virStoragePoolIsPersistent, [Res])).
 
 virStoragePoolIsActive(#resource{type = storagepool, res = Res}) ->
-    call(virStoragePoolIsActive, [Res]).
+    bool(call(virStoragePoolIsActive, [Res])).
 
 virStoragePoolGetXMLDesc(#resource{type = storagepool, res = Res}, Flags) ->
     call(virStoragePoolGetXMLDesc, [Res, Flags]).
@@ -606,10 +610,10 @@ virNetworkLookupByName(#resource{type = connect, res = Res}, Name) ->
     call(virNetworkLookupByName, [Res, Name]).
 
 virNetworkIsPersistent(#resource{type = network, res = Res}) ->
-    call(virNetworkIsPersistent, [Res]).
+    bool(call(virNetworkIsPersistent, [Res])).
 
-%virNetworkIsActive(#resource{type = network, res = Res}) ->
-%    call(virNetworkIsActive, [Res]).
+virNetworkIsActive(#resource{type = network, res = Res}) ->
+    bool(call(virNetworkIsActive, [Res])).
 
 virNetworkGetXMLDesc(Res) ->
     virNetworkGetXMLDesc(Res, 0).
@@ -693,8 +697,8 @@ virInterfaceLookupByMACString(#resource{type = connect, res = Res}, Macstr)
     when is_list(Macstr); length(Macstr) =< 18 ->
     call(virInterfaceLookupByMACString, [Res, Macstr]).
 
-%virInterfaceIsActive(#resource{type = interface, res = Res}) ->
-%    call(virInterfaceIsActive, [Res]).
+virInterfaceIsActive(#resource{type = interface, res = Res}) ->
+    bool(call(virInterfaceIsActive, [Res])).
 
 virInterfaceGetXMLDesc(#resource{type = interface, res = Res}) ->
     virInterfaceGetXMLDesc(Res, 0).
@@ -781,8 +785,10 @@ virDomainLookupByName(#resource{type = connect, res = Res}, Name)
 virDomainLookupByID(#resource{type = connect, res = Res}, Id) when is_integer(Id) ->
     call(virDomainLookupByID, [Res, Id]).
 
-%virDomainIsPersistent(#resource{type = domain, res = Res}) ->
-%virDomainIsActive(#resource{type = domain, res = Res}) ->
+virDomainIsPersistent(#resource{type = domain, res = Res}) ->
+    bool(call(virDomainIsPersistent, [Res])).
+virDomainIsActive(#resource{type = domain, res = Res}) ->
+    bool(call(virDomainIsActive, [Res])).
 %virDomainInterfaceStats(#resource{type = domain, res = Res}, Path, Stats, Size) ->
 
 virDomainGetXMLDesc(#resource{type = domain, res = Res}, Flags) ->
@@ -1252,8 +1258,7 @@ keycode(rfb) -> ?VIR_KEYCODE_SET_RFB;
 keycode(last) -> ?VIR_KEYCODE_SET_LAST.
 
 bool({ok, 0}) -> false;
-bool({ok, 1}) -> true;
-bool(Error) -> Error.
+bool({ok, 1}) -> true.
 
 ok({ok, _}) -> ok;
 ok(Error) -> Error.

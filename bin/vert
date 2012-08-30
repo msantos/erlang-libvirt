@@ -246,13 +246,13 @@ call(["net-info", Name | Arg]) ->
     {ok, Network} = network(Connect, Name),
 
     {ok, UUID} = vert:virNetworkGetUUIDString(Network),
-    {ok, Persistent} = vert:virNetworkIsPersistent(Network),
+    Persistent = vert:virNetworkIsPersistent(Network),
     Autostart = vert:virNetworkGetAutostart(Network),
     {ok, Bridge} = vert:virNetworkGetBridgeName(Network),
 
     rp({ok, [
         {uuid, UUID},
-        {persistent, bool(Persistent)},
+        {persistent, Persistent},
         {autostart, Autostart},
         {bridgename, Bridge}
         ]});
@@ -260,7 +260,13 @@ call(["net-info", Name | Arg]) ->
 call(["net-list" | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    rp(vert:virConnectListNetworks(Connect));
+    {ok, Nets} = vert:virConnectListNetworks(Connect),
+    rp({ok, [ begin
+        {ok, Net} = vert:lookup(Connect, {network, Name}),
+        Active = vert:virNetworkIsActive(Net),
+        Autostart = vert:virNetworkGetAutostart(Net),
+        {Name, [{state, Active}, {autostart, Autostart}]}
+      end || Name <- Nets ]});
 
 call(["net-name", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -390,9 +396,9 @@ call(["pool-list" | Arg]) ->
     {ok, Pools} = vert:virConnectListStoragePools(Connect),
     rp({ok, [ begin
         {ok, Pool} = storagepool(Connect, Name),
-        {ok, Active} = vert:virStoragePoolIsActive(Pool),
+        Active = vert:virStoragePoolIsActive(Pool),
         Autostart = vert:virStoragePoolGetAutostart(Pool),
-        {Name, [{state, bool(Active)}, {autostart, Autostart}]}
+        {Name, [{state, Active}, {autostart, Autostart}]}
       end || Name <- Pools ]});
 
 call(["pool-name", Name | Arg]) ->
@@ -665,11 +671,6 @@ getopt(["--" ++ Key], Acc) ->
     getopt([], [{Key, true}|Acc]);
 getopt(["--" ++ Key, Val | Rest], Acc) ->
     getopt(Rest, [{Key, Val}|Acc]).
-
-bool(true) -> 1;
-bool(false) -> 0;
-bool(1) -> true;
-bool(0) -> false.
 
 connect(Opt) ->
     URI = proplists:get_value("uri", Opt, "qemu:///system"),
