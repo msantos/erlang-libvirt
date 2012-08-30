@@ -1,4 +1,5 @@
 #!/usr/bin/env escript
+%%! -smp enable
 
 %%%
 %%% Command line interface to libvirt
