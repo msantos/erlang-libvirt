@@ -36,7 +36,7 @@ call(["capabilities" | Arg]) ->
 
 call(["console", Name | Arg]) ->
     Opt = getopt(Arg),
-    URI = proplists:get_value("uri", Opt, "qemu:///session"),
+    URI = proplists:get_value("uri", Opt, "qemu:///system"),
 
     io:setopts(standard_io, [binary]),
 
