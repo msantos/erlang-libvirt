@@ -576,6 +576,43 @@ call(["secret-undefine", Name | Arg]) ->
     {ok, Secret} = secret(Connect, Name),
     rp(vert:virSecretUndefine(Secret));
 
+call(["nodedev-create", Name, File | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Dev} = vert:lookup(Connect, {nodedevice, Name}),
+    {ok, XML} = file:read_file(File),
+    rp(vert:virNodeDeviceCreateXML(Dev, XML));
+
+call(["nodedev-destroy", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Dev} = vert:lookup(Connect, {nodedevice, Name}),
+    rp(vert:virNodeDeviceDestroy(Dev));
+
+call(["nodedev-dumpxml", Name | Arg]) ->
+    Opt = getopt(Arg),
+    Flags = proplists:get_value("flags", Opt, 0),
+    {ok, Connect} = connect(Opt),
+    {ok, Dev} = vert:lookup(Connect, {nodedevice, Name}),
+    rp(vert:virNodeDeviceGetXMLDesc(Dev, Flags));
+
+call(["nodedev-list" | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    rp(vert:virNodeListDevices(Connect));
+
+call(["nodedev-reattach", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Dev} = vert:lookup(Connect, {nodedevice, Name}),
+    rp(vert:virNodeDeviceReattach(Dev));
+
+call(["nodedev-reset", Name | Arg]) ->
+    Opt = getopt(Arg),
+    {ok, Connect} = connect(Opt),
+    {ok, Dev} = vert:lookup(Connect, {nodedevice, Name}),
+    rp(vert:virNodeDeviceReset(Dev));
+
 call(_) ->
     Help = [
         "autostart",
@@ -608,6 +645,14 @@ call(_) ->
         "net-start",
         "net-undefine",
         "net-uuid",
+
+        "nodedev-create",
+        "nodedev-destroy",
+        "nodedev-dettach",
+        "nodedev-dumpxml",
+        "nodedev-list",
+        "nodedev-reattach",
+        "nodedev-reset",
 
         "nwfilter-define",
         "nwfilter-dumpxml",

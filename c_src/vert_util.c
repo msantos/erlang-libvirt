@@ -133,6 +133,9 @@ vert_cleanup(ErlNifEnv *env, void *obj)
         case VERT_RES_NETWORK:
             (void)virNetworkFree(vp->res);
             break;
+        case VERT_RES_NODEDEVICE:
+            (void)virNodeDeviceFree(vp->res);
+            break;
 #if HAVE_NWFILTER
         case VERT_RES_NWFILTER:
             (void)virNWFilterFree(vp->res);

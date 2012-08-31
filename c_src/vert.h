@@ -50,6 +50,7 @@ ERL_NIF_TERM atom_connect;
 ERL_NIF_TERM atom_domain;
 ERL_NIF_TERM atom_interface;
 ERL_NIF_TERM atom_network;
+ERL_NIF_TERM atom_nodedevice;
 ERL_NIF_TERM atom_nwfilter;
 ERL_NIF_TERM atom_secret;
 ERL_NIF_TERM atom_storagepool;
@@ -92,6 +93,7 @@ enum {
     VERT_RES_FILTER,
     VERT_RES_INTERFACE,
     VERT_RES_NETWORK,
+    VERT_RES_NODEDEVICE,
     VERT_RES_NWFILTER,
     VERT_RES_SECRET,
     VERT_RES_STORAGEPOOL,

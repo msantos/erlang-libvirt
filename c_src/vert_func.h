@@ -135,6 +135,21 @@ ErlNifFunc vert_funcs[] = {
     {"virNetworkSetAutostart", 2, vert_virNetworkSetAutostart},
     {"virNetworkUndefine", 1, vert_virNetworkUndefine},
 
+    /* nodedevice */
+    {"virNodeDeviceCreateXML", 3, vert_virNodeDeviceCreateXML},
+    {"virNodeDeviceDestroy", 1, vert_virNodeDeviceDestroy},
+    {"virNodeDeviceDettach", 1, vert_virNodeDeviceDettach},
+    {"virNodeDeviceGetName", 1, vert_virNodeDeviceGetName},
+    {"virNodeDeviceGetParent", 1, vert_virNodeDeviceGetParent},
+    {"virNodeDeviceGetXMLDesc", 2, vert_virNodeDeviceGetXMLDesc},
+    {"virNodeDeviceListCaps", 2, vert_virNodeDeviceListCaps},
+    {"virNodeDeviceLookupByName", 2, vert_virNodeDeviceLookupByName},
+    {"virNodeDeviceNumOfCaps", 1, vert_virNodeDeviceNumOfCaps},
+    {"virNodeDeviceReAttach", 1, vert_virNodeDeviceReAttach},
+    {"virNodeDeviceReset", 1, vert_virNodeDeviceReset},
+    {"virNodeListDevices", 4, vert_virNodeListDevices},
+    {"virNodeNumOfDevices", 3, vert_virNodeNumOfDevices},
+
     /* nwfilter */
     {"virNWFilterDefineXML", 2, vert_virNWFilterDefineXML},
     {"virNWFilterGetName", 1, vert_virNWFilterGetName},

@@ -54,6 +54,12 @@
         res
     }).
 
+%% virNodeDevicePtr resource
+-record(nodedevice, {
+        ref,
+        res
+    }).
+
 %% virStoragePoolPtr resource
 -record(storagepool, {
         ref,
@@ -67,7 +73,7 @@
     }).
 
 %% virNWFilterPtr resource
--record(filter, {
+-record(nwfilter, {
         ref,
         res
     }).

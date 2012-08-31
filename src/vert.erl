@@ -48,6 +48,20 @@
         virNodeGetInfo/1,
         virNodeGetSecurityModel/1,
 
+        virNodeDeviceCreateXML/2, virNodeDeviceCreateXML/3,
+        virNodeDeviceDestroy/1,
+        virNodeDeviceDettach/1,
+        virNodeDeviceGetName/1,
+        virNodeDeviceGetParent/1,
+        virNodeDeviceGetXMLDesc/1, virNodeDeviceGetXMLDesc/2,
+        virNodeDeviceListCaps/1, virNodeDeviceListCaps/2,
+        virNodeDeviceLookupByName/2,
+        virNodeDeviceNumOfCaps/1,
+        virNodeDeviceReAttach/1,
+        virNodeDeviceReset/1,
+        virNodeListDevices/1, virNodeListDevices/2, virNodeListDevices/4,
+        virNodeNumOfDevices/2, virNodeNumOfDevices/3,
+
         virNetworkCreate/1,
         virNetworkDefineXML/2,
         virNetworkDestroy/1,
@@ -504,8 +518,20 @@ virSecretDefineXML(#resource{type = connect, res = Res}, XML, Flags) ->
 %%% Node
 %%-------------------------------------------------------------------------
 
-%virNodeNumOfDevices(Conn, Cap, Flags) ->
-%virNodeListDevices(Conn, Cap, Names, Maxnames, Flags) ->
+virNodeNumOfDevices(Conn, Cap) ->
+    virNodeNumOfDevices(Conn, Cap, 0).
+virNodeNumOfDevices(#resource{type = connect, res = Res}, Cap, Flags) ->
+    call(virNodeNumOfDevices, [Res, Cap, Flags]).
+
+virNodeListDevices(Res) ->
+    virNodeListDevices(Res, <<>>).
+virNodeListDevices(Res, Cap) ->
+    {ok, Maxnames} = virNodeNumOfDevices(Res, Cap),
+    virNodeListDevices(Res, Cap, Maxnames, 0).
+virNodeListDevices(_Res, _Cap, 0, _Flags) ->
+    {ok, []};
+virNodeListDevices(#resource{type = connect, res = Res}, Cap, Maxnames, Flags) ->
+    call(virNodeListDevices, [Res, Cap, Maxnames, Flags]).
 
 %% struct _virSecurityModel {
 %%  char model[VIR_SECURITY_MODEL_BUFLEN];      /* security model string */
@@ -573,18 +599,48 @@ virNodeGetCellsFreeMemory(#resource{type = connect, res = Res}, MaxCells) ->
 %%% Node Device
 %%-------------------------------------------------------------------------
 
-%virNodeDeviceReset(Dev) ->
-%virNodeDeviceReAttach(Dev) ->
-%virNodeDeviceNumOfCaps(Dev) ->
-%virNodeDeviceLookupByName(Conn, Name) ->
-%virNodeDeviceListCaps(Dev, Names, Maxnames) ->
-%virNodeDeviceGetXMLDesc(Dev, Flags) ->
-%virNodeDeviceGetParent(Dev) ->
-%virNodeDeviceGetName(Dev) ->
-%virNodeDeviceFree(Dev) ->
-%virNodeDeviceDettach(Dev) ->
-%virNodeDeviceDestroy(Dev) ->
-%virNodeDeviceCreateXML(Conn, XmlDesc, Flags) ->
+virNodeDeviceReset(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceReset, [Res]).
+
+virNodeDeviceReAttach(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceReAttach, [Res]).
+
+virNodeDeviceNumOfCaps(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceNumOfCaps, [Res]).
+
+virNodeDeviceLookupByName(#resource{type = connect, res = Res}, Name) ->
+    call(virNodeDeviceLookupByName, [Res, Name]).
+
+virNodeDeviceListCaps(Dev) ->
+    {ok, Maxnames} = virNodeDeviceNumOfCaps(Dev),
+    virNodeDeviceListCaps(Dev, Maxnames).
+virNodeDeviceListCaps(_Dev, 0) ->
+    {ok, []};
+virNodeDeviceListCaps(#resource{type = nodedevice, res = Res}, Maxnames) ->
+    call(virNodeDeviceListCaps, [Res, Maxnames]).
+
+virNodeDeviceGetXMLDesc(Res) ->
+    virNodeDeviceGetXMLDesc(Res, 0).
+virNodeDeviceGetXMLDesc(#resource{type = nodedevice, res = Res}, Flags) ->
+    call(virNodeDeviceGetXMLDesc, [Res, Flags]).
+
+virNodeDeviceGetParent(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceGetParent, [Res]).
+
+virNodeDeviceGetName(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceGetName, [Res]).
+
+% Yes, it's spelt "dettach"
+virNodeDeviceDettach(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceDettach, [Res]).
+
+virNodeDeviceDestroy(#resource{type = nodedevice, res = Res}) ->
+    call(virNodeDeviceDestroy, [Res]).
+
+virNodeDeviceCreateXML(Conn, XML) ->
+    virNodeDeviceCreateXML(Conn, XML, 0).
+virNodeDeviceCreateXML(#resource{type = nodedevice, res = Res}, XML, Flags) ->
+    call(virNodeDeviceCreateXML, [Res, XML, Flags]).
 
 
 %%-------------------------------------------------------------------------
@@ -1138,6 +1194,9 @@ lookup(Connect, {domain, Name}) ->
     Fun = [ fun() -> vert:virDomainLookupByID(Connect, list_to_integer(Name)) end,
             fun() -> vert:virDomainLookupByUUIDString(Connect, Name) end,
             fun() -> vert:virDomainLookupByName(Connect, Name) end ],
+    lookup_1(Fun);
+lookup(Connect, {nodedevice, Name}) ->
+    Fun = [ fun() -> vert:virNodeDeviceLookupByName(Connect, Name) end ],
     lookup_1(Fun);
 lookup(Connect, {network, Name}) ->
     Fun = [ fun() -> vert:virNetworkLookupByUUIDString(Connect, Name) end,
