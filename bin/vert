@@ -66,13 +66,8 @@ call(["ctl-alt-del", Name | Arg]) ->
 call(["define", File | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(File) of
-        {ok, XML} ->
-            vert:virDomainDefineXML(Connect, XML);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(File),
+    rp(vert:virDomainDefineXML(Connect, XML));
 
 call(["destroy", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -220,13 +215,8 @@ call(["net-create", Name | Arg]) ->
 call(["net-define", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(Name) of
-        {ok, XML} ->
-            vert:virNetworkDefineXML(Connect, XML);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(Name),
+    rp(vert:virNetworkDefineXML(Connect, XML));
 
 call(["net-destroy", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -277,7 +267,7 @@ call(["net-name", Name | Arg]) ->
 call(["net-undefine", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    {ok, Network} = nwfilter(Connect, Name),
+    {ok, Network} = network(Connect, Name),
     rp(vert:virNetworkUndefine(Network));
 
 call(["net-uuid", Name | Arg]) ->
@@ -289,13 +279,8 @@ call(["net-uuid", Name | Arg]) ->
 call(["nwfilter-define", File | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(File) of
-        {ok, XML} ->
-            vert:virNWFilterDefineXML(Connect, XML);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(File),
+    rp(vert:virNWFilterDefineXML(Connect, XML));
 
 call(["nwfilter-dumpxml", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -317,13 +302,8 @@ call(["nwfilter-undefine", Name | Arg]) ->
 call(["find-storage-pool-sources", Type, File | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(File) of
-        {ok, Spec} ->
-            vert:virConnectFindStoragePoolSources(Connect, Type, Spec);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(File),
+    rp(vert:virConnectFindStoragePoolSources(Connect, Type, XML));
 
 call(["pool-autostart", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -357,13 +337,8 @@ call(["pool-create", Name | Arg]) ->
 call(["pool-define", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(Name) of
-        {ok, XML} ->
-            vert:virStoragePoolDefineXML(Connect, XML);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(Name),
+    rp(vert:virStoragePoolDefineXML(Connect, XML));
 
 call(["pool-delete", Name | Arg]) ->
     Opt = getopt(Arg),
@@ -533,13 +508,8 @@ call(["vol-wipe", Name | Arg]) ->
 call(["secret-define", Name | Arg]) ->
     Opt = getopt(Arg),
     {ok, Connect} = connect(Opt),
-    Res = case file:read_file(Name) of
-        {ok, XML} ->
-            vert:virSecretDefineXML(Connect, XML);
-        Error ->
-            Error
-    end,
-    rp(Res);
+    {ok, XML} = file:read_file(Name),
+    rp(vert:virSecretDefineXML(Connect, XML));
 
 call(["secret-dumpxml", Name | Arg]) ->
     Opt = getopt(Arg),
