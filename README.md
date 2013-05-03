@@ -4,12 +4,14 @@ Erlang bindings to the libvirt virtualization API.
 
 ## ALTERNATIVES
 
-An (almost) pure Erlang libvirt binding is available here:
+A "pure" Erlang libvirt interface is available here:
 
-<https://github.com/msantos/erlang-libvirt-remote>
+<https://github.com/msantos/verx>
 
-libvirt-remote uses the libvirtd remote procotol over a socket (by
-default, a Unix socket).
+verx uses the libvirtd remote procotol over a socket. By default, verx
+uses a Unix socket which depends on a library written in C but verx
+also supports TCP and TLS transports which do not have any external
+dependencies.
 
 
 ## WARNING
