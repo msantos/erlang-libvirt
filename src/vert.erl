@@ -1248,15 +1248,15 @@ cast_2(Fun, [Arg1, Arg2, Arg3, Arg4, Arg5]) ->
     cast(Fun, Arg1, Arg2, Arg3, Arg4, Arg5).
 
 cast(_,_) ->
-    erlang:error(not_implemented).
+    erlang:nif_error(not_implemented).
 cast(_,_,_) ->
-    erlang:error(not_implemented).
+    erlang:nif_error(not_implemented).
 cast(_,_,_,_) ->
-    erlang:error(not_implemented).
+    erlang:nif_error(not_implemented).
 cast(_,_,_,_,_) ->
-    erlang:error(not_implemented).
+    erlang:nif_error(not_implemented).
 cast(_,_,_,_,_,_) ->
-    erlang:error(not_implemented).
+    erlang:nif_error(not_implemented).
 
 %%-------------------------------------------------------------------------
 %%% Blocking API
